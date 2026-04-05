@@ -4,10 +4,12 @@ FROM node:20 AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci                    # ← dùng npm ci thay vì npm install
+RUN npm ci
 
 COPY . .
-RUN npm run build
+
+# Chạy trực tiếp vite thay vì qua npm script
+RUN ./node_modules/.bin/vite build
 
 # run stage
 FROM nginx:stable-alpine
