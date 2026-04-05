@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VnBook Search – Test UI</title>
+<style>
+  :root {
+    --bg: #0f1117; --card: #1a1d27; --border: #2d3148;
+    --accent: #6c63ff; --accent2: #ff6584; --text: #e2e8f0;
+    --muted: #718096; --green: #48bb78; --yellow: #ecc94b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    background: linear-gradient(135deg, #1a1d27 0%, #252842 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .topbar h1 { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .badge { background: var(--accent); color: #fff; font-size: 0.65rem; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; margin-left: auto; }
+  .status-label { font-size: 0.75rem; color: var(--muted); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--muted); transition: all .2s; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Search panel */
+  .search-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+  .search-bar input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-size: 1rem; outline: none; transition: border-color .2s; }
+  .search-bar input:focus { border-color: var(--accent); }
+  .btn { padding: 10px 22px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; transition: all .2s; font-size: 0.9rem; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-danger { background: var(--accent2); color: #fff; }
+
+  /* Filters */
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+  .filter-group select, .filter-group input[type=number] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; color: var(--text); font-size: 0.85rem; outline: none; min-width: 140px;
+  }
+
+  /* Suggest dropdown */
+  .suggest-wrap { position: relative; flex: 1; }
+  .suggest-list { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--card); border: 1px solid var(--accent); border-radius: 10px; z-index: 99; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+  .suggest-item { padding: 10px 16px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+  .suggest-item:hover { background: rgba(108,99,255,.15); }
+  .suggest-item .cover { width: 32px; height: 44px; object-fit: cover; border-radius: 4px; background: var(--border); }
+  .suggest-item .info small { color: var(--muted); font-size: 0.75rem; }
+
+  /* Results */
+  .results-info { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+  .results-info strong { color: var(--text); }
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .book-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; transition: transform .2s, box-shadow .2s; cursor: default;
+  }
+  .book-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(108,99,255,.2); border-color: var(--accent); }
+  .book-card img { width: 100%; height: 180px; object-fit: cover; background: var(--border); }
+  .book-card .card-body { padding: 12px; }
+  .book-card .book-title { font-size: 0.85rem; font-weight: 700; line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .book-card .book-author { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+  .book-card .book-price { font-size: 0.9rem; font-weight: 700; color: var(--accent2); }
+  .book-card .book-rating { font-size: 0.72rem; color: var(--yellow); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 600; margin-top: 4px; }
+  .tag-instock { background: rgba(72,187,120,.15); color: var(--green); }
+  .tag-outstock { background: rgba(255,101,132,.1); color: var(--accent2); }
+
+  /* Pagination */
+  .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
+  .page-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; font-size: 0.85rem; }
+  .page-btn.active { background: var(--accent); border-color: var(--accent); font-weight: 700; }
+  .page-btn:hover:not(.active) { border-color: var(--accent); }
+
+  /* Admin panel */
+  .admin-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .admin-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
+  .endpoint-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .method-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; min-width: 48px; text-align: center; }
+  .GET  { background: rgba(72,187,120,.15); color: var(--green); }
+  .POST { background: rgba(108,99,255,.15); color: var(--accent); }
+  .endpoint-row input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 0.85rem; flex: 1; min-width: 160px; outline: none; }
+  .result-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 0.78rem; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; color: #a0aec0; margin-top: 8px; }
+  .result-box.success { border-color: var(--green); }
+  .result-box.error   { border-color: var(--accent2); }
+
+  /* Queue stats */
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 140px; }
+  .stat-card .val { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+  .stat-card .key { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  /* Loader */
+  .loader { display: none; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🔍 VnBook Search Service</h1>
+  <span class="badge">v2.0 Event-Driven</span>
+  <span class="status-label">Worker</span>
+  <div class="status-dot" id="workerDot" style="background:#718096; box-shadow:none;"></div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('search')">🔍 Tìm kiếm</div>
+    <div class="tab" onclick="switchTab('admin')">⚙️ Admin / Sync</div>
+  </div>
+
+  <!-- SEARCH TAB -->
+  <div id="tab-search">
+    <div class="search-panel">
+      <div class="search-bar">
+        <div class="suggest-wrap">
+          <input type="text" id="q" placeholder="Tìm sách, tác giả, NXB..."
+                 oninput="onInput()" onkeydown="onKeyDown(event)">
+          <div class="suggest-list hidden" id="suggestList"></div>
+        </div>
+        <button class="btn btn-primary" onclick="doSearch(1)">Tìm</button>
+        <div class="loader" id="loader"></div>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <label>Sắp xếp</label>
+          <select id="sort">
+            <option value="relevance">Liên quan</option>
+            <option value="newest">Mới nhất</option>
+            <option value="rating_desc">Đánh giá cao</option>
+            <option value="price_asc">Giá tăng dần</option>
+            <option value="price_desc">Giá giảm dần</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Tình trạng</label>
+          <select id="inStock">
+            <option value="">Tất cả</option>
+            <option value="true">Còn hàng</option>
+            <option value="false">Hết hàng</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Thể loại</label>
+          <input type="text" id="category" placeholder="Ngôn tình..." style="min-width:160px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 12px; color:var(--text); font-size:.85rem; outline:none;">
+        </div>
+        <div class="filter-group">
+          <label>Số kết quả</label>
+          <select id="limit">
+            <option value="12">12</option>
+            <option value="24" selected>24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultsInfo" class="results-info hidden"></div>
+    <div class="book-grid" id="bookGrid"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div id="tab-admin" class="hidden">
+    <div class="admin-panel">
+      <h3>⚡ Queue Worker Status</h3>
+      <button class="btn btn-secondary" onclick="loadHealth()">Refresh</button>
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="val" id="statQueue">—</div><div class="key">Queue size</div></div>
+        <div class="stat-card"><div class="val" id="statWorker">—</div><div class="key">Worker alive</div></div>
+        <div class="stat-card"><div class="val" id="statOS">—</div><div class="key">OpenSearch</div></div>
+      </div>
+
+      <hr style="border-color:var(--border); margin:20px 0;">
+      <h3>📡 Sync Endpoints</h3>
+
+      <div class="endpoint-row">
+        <span class="method-badge POST">POST</span>
+        <code style="color:var(--muted); font-size:.8rem; align-self:center;">/admin/books/{id}/sync</code>
+        <input type="number" id="syncId" placeholder="book_id" style="max-width:120px;">
+        <button class="btn btn-primary" onclick="syncOne()">Sync 1 sách</button>
+      </div>
+
+      <div class="endpoint-row">
+        <span class="method-badge POST">POST</span>
+        <code style="color:var(--muted); font-size:.8rem; align-self:center;">/admin/books/bulk-sync</code>
+        <input type="text" id="bulkIds" placeholder="101,102,103">
+        <button class="btn btn-primary" onclick="bulkSync()">Bulk Sync</button>
+      </div>
+
+      <div class="endpoint-row">
+        <span class="method-badge POST">POST</span>
+        <code style="color:var(--muted); font-size:.8rem; align-self:center;">/admin/reindex-full</code>
+        <button class="btn btn-danger" onclick="reindexFull()">Full Reindex (chạy nền)</button>
+      </div>
+
+      <div id="adminResult" class="result-box hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = '';   // relative URL – hoạt động cả local lẫn prod
+let currentPage = 1;
+let suggestTimer = null;
+
+/* ── Tab switching ───────────────────────────────────────── */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  if (name === 'admin') loadHealth();
+}
+
+/* ── Health / Worker status ──────────────────────────────── */
+async function loadHealth() {
+  try {
+    const r = await fetch(BASE + '/admin/healthcheck');
+    const d = await r.json();
+    document.getElementById('statQueue').textContent  = d.queue_size ?? '—';
+    document.getElementById('statWorker').textContent = d.worker_alive ? '✅' : '❌';
+    document.getElementById('statOS').textContent     = d.opensearch_reachable ? '✅' : '❌';
+    const dot = document.getElementById('workerDot');
+    dot.style.background = d.worker_alive ? 'var(--green)' : '#718096';
+    dot.style.boxShadow  = d.worker_alive ? '0 0 6px var(--green)' : 'none';
+  } catch(e) { console.error(e); }
+}
+loadHealth();
+setInterval(loadHealth, 10000);
+
+/* ── Suggest (autocomplete) ──────────────────────────────── */
+function onInput() {
+  clearTimeout(suggestTimer);
+  const q = document.getElementById('q').value.trim();
+  if (q.length < 2) { hideSuggest(); return; }
+  suggestTimer = setTimeout(() => fetchSuggest(q), 250);
+}
+
+async function fetchSuggest(q) {
+  try {
+    const r = await fetch(BASE + `/books/suggest?q=${encodeURIComponent(q)}&limit=8`);
+    const items = await r.json();
+    renderSuggest(items);
+  } catch(e) { hideSuggest(); }
+}
+
+function renderSuggest(items) {
+  const el = document.getElementById('suggestList');
+  if (!items.length) { hideSuggest(); return; }
+  el.innerHTML = items.map(b => `
+    <div class="suggest-item" onclick="selectSuggest(${JSON.stringify(b.title || '')})">
+      <img class="cover" src="${b.main_image_url || ''}" onerror="this.style.display='none'">
+      <div class="info">
+        <div>${b.title || ''}</div>
+        <small>${b.author_name || ''} · ${b.price ? Number(b.price).toLocaleString()+'₫' : ''}</small>
+      </div>
+    </div>`).join('');
+  el.classList.remove('hidden');
+}
+
+function selectSuggest(title) {
+  document.getElementById('q').value = title;
+  hideSuggest();
+  doSearch(1);
+}
+
+function hideSuggest() { document.getElementById('suggestList').classList.add('hidden'); }
+
+function onKeyDown(e) {
+  if (e.key === 'Enter') { hideSuggest(); doSearch(1); }
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.suggest-wrap')) hideSuggest();
+});
+
+/* ── Search ──────────────────────────────────────────────── */
+async function doSearch(page = 1) {
+  currentPage = page;
+  const q        = document.getElementById('q').value.trim();
+  const sort     = document.getElementById('sort').value;
+  const inStock  = document.getElementById('inStock').value;
+  const category = document.getElementById('category').value.trim();
+  const limit    = document.getElementById('limit').value;
+
+  if (!q) { document.getElementById('bookGrid').innerHTML = ''; return; }
+
+  let url = `${BASE}/books/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}&sort=${sort}`;
+  if (inStock)  url += `&in_stock=${inStock}`;
+  if (category) url += `&category=${encodeURIComponent(category)}`;
+
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('bookGrid').innerHTML   = '';
+
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    showResults(d, page, limit);
+  } catch(e) {
+    document.getElementById('resultsInfo').textContent = '❌ Lỗi kết nối search service';
+    document.getElementById('resultsInfo').classList.remove('hidden');
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+}
+
+function showResults(d, page, limit) {
+  const info  = document.getElementById('resultsInfo');
+  const grid  = document.getElementById('bookGrid');
+  const pgn   = document.getElementById('pagination');
+
+  info.classList.remove('hidden');
+  info.innerHTML = `Tìm thấy <strong>${(d.total||0).toLocaleString()}</strong> sách · trang ${page}/${Math.ceil((d.total||0)/limit)||1}`;
+
+  if (!d.items || !d.items.length) {
+    grid.innerHTML = '<p style="color:var(--muted); grid-column:1/-1; text-align:center; padding:40px;">Không tìm thấy kết quả nào 🙁</p>';
+  } else {
+    grid.innerHTML = d.items.map(b => `
+      <div class="book-card">
+        <img src="${b.main_image_url || ''}" alt="${b.title}" onerror="this.src=''">
+        <div class="card-body">
+          <div class="book-title">${highlight(b.title || '', b.highlight)}</div>
+          <div class="book-author">${b.author_name || 'Không rõ'}</div>
+          <div class="book-price">${b.price ? Number(b.price).toLocaleString()+'₫' : ''}</div>
+          <div class="book-rating">${stars(b.avg_rating)} ${b.avg_rating ? Number(b.avg_rating).toFixed(1) : ''}</div>
+          <span class="tag ${b.in_stock ? 'tag-instock':'tag-outstock'}">${b.in_stock ? 'Còn hàng':'Hết hàng'}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // Pagination
+  const total = d.total || 0;
+  const pages = Math.ceil(total / limit) || 1;
+  let html = '';
+  if (page > 1)  html += `<button class="page-btn" onclick="doSearch(${page-1})">‹</button>`;
+  for (let i = Math.max(1,page-2); i <= Math.min(pages,page+2); i++)
+    html += `<button class="page-btn ${i===page?'active':''}" onclick="doSearch(${i})">${i}</button>`;
+  if (page < pages) html += `<button class="page-btn" onclick="doSearch(${page+1})">›</button>`;
+  pgn.innerHTML = html;
+}
+
+function highlight(title, hl) {
+  if (hl && hl.title && hl.title[0]) return hl.title[0];
+  return title;
+}
+function stars(r) {
+  const n = Math.round(r || 0);
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+/* ── Admin actions ───────────────────────────────────────── */
+async function adminAction(url, method='POST', body=null) {
+  const el = document.getElementById('adminResult');
+  el.classList.remove('hidden','success','error');
+  el.textContent = 'Đang gửi...';
+  try {
+    const opts = { method };
+    if (body) { opts.headers={'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
+    const r = await fetch(BASE + url, opts);
+    const d = await r.json();
+    el.textContent = JSON.stringify(d, null, 2);
+    el.classList.add(r.ok ? 'success' : 'error');
+    loadHealth();
+  } catch(e) {
+    el.textContent = '❌ ' + e.message;
+    el.classList.add('error');
+  }
+}
+
+function syncOne()    { const id = document.getElementById('syncId').value; if(!id){alert('Nhập book_id');return;} adminAction(`/admin/books/${id}/sync`); }
+function bulkSync()   { const ids = document.getElementById('bulkIds').value.split(',').map(Number).filter(Boolean); if(!ids.length){alert('Nhập book_ids');return;} adminAction('/admin/books/bulk-sync','POST',{book_ids:ids}); }
+function reindexFull(){ if(!confirm('Chạy Full Reindex? Có thể mất vài phút.'))return; adminAction('/admin/reindex-full'); }
+</script>
+</body>
+</html>

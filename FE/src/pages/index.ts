@@ -1,0 +1,11 @@
+export { AccountPage } from './AccountPage';
+export { AdminPage } from './AdminPage';
+export { BookDetailPage } from './BookDetailPage';
+export { CheckoutPage } from './CheckoutPage';
+export { LoginPage } from './LoginPage';
+export { PaymentPage } from './PaymentPage';
+export { PaymentReturnPage } from './PaymentReturnPage';
+export { PaymentCancelPage } from './PaymentCancelPage';
+export { SearchResultsPage } from './SearchResultsPage';
+export { ForgotPasswordPage } from './ForgotPasswordPage';
+export { ResetPasswordSuccessPage } from './ResetPasswordSuccessPage';

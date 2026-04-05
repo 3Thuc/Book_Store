@@ -1,0 +1,17 @@
+Q: Website bán những loại sách nào?
+A: Website BookStore bán đa dạng các thể loại: văn học, kỹ năng sống, kinh tế kinh doanh, tâm lý học, thiếu nhi, lịch sử, khoa học công nghệ, lập trình, triết học, tôn giáo tâm linh, y học sức khỏe, nấu ăn, du lịch và nhiều thể loại khác.
+
+Q: Làm sao để tìm sách theo tác giả?
+A: Bạn dùng thanh tìm kiếm ở đầu trang và nhập tên tác giả. Hệ thống sẽ hiển thị tất cả sách của tác giả đó.
+
+Q: Có thể thanh toán bằng những phương thức nào?
+A: Hỗ trợ: COD (thanh toán khi nhận hàng), chuyển khoản ngân hàng, và ví điện tử VNPay.
+
+Q: Làm sao để theo dõi đơn hàng?
+A: Bạn có thể vào mục "Đơn hàng của tôi" sau khi đăng nhập, hoặc hỏi chatbot với mã đơn hàng (ví dụ: #12345).
+
+Q: Tôi có thể mua sách mà không cần đăng ký tài khoản không?
+A: Bạn cần đăng ký tài khoản để đặt hàng, giúp bạn theo dõi đơn và nhận ưu đãi.
+
+Q: Sách có được bảo hành không?
+A: Sách là sản phẩm văn hóa, không có bảo hành, nhưng bạn có thể đổi trả nếu sách bị lỗi in hoặc giao sai sản phẩm trong vòng 7 ngày.

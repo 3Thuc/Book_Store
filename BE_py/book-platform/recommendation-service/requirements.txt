@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+mysql-connector-python
+pydantic
+scikit-learn
+pandas
+numpy
+# Collaborative Filtering (ALS) – nâng cấp từ Brute Force kNN
+implicit
+scipy
+sqlalchemy

@@ -1,0 +1,60 @@
+[
+  {"text": "xin chào", "intent": "greeting"},
+  {"text": "chào bạn", "intent": "greeting"},
+  {"text": "hello bookstore", "intent": "greeting"},
+  {"text": "hi, tôi cần hỗ trợ", "intent": "greeting"},
+
+  {"text": "tạm biệt", "intent": "farewell"},
+  {"text": "cảm ơn bạn nhiều", "intent": "farewell"},
+  {"text": "thank you, bye", "intent": "farewell"},
+
+  {"text": "gợi ý cho tôi vài cuốn sách hay", "intent": "book_recommendation"},
+  {"text": "tôi muốn tìm sách về kỹ năng sống", "intent": "book_recommendation"},
+  {"text": "có sách nào về tâm lý học không", "intent": "book_recommendation"},
+  {"text": "nên đọc sách gì về kinh doanh", "intent": "book_recommendation"},
+  {"text": "tư vấn sách cho người mới đi làm", "intent": "book_recommendation"},
+  {"text": "sách thiếu nhi hay nhất là gì", "intent": "book_recommendation"},
+  {"text": "đề xuất sách văn học Việt Nam", "intent": "book_recommendation"},
+  {"text": "sách lập trình python cho người mới", "intent": "book_recommendation"},
+  {"text": "muốn đọc sách về lịch sử Việt Nam", "intent": "book_recommendation"},
+  {"text": "có cuốn nào về triết học dễ đọc không", "intent": "book_recommendation"},
+
+  {"text": "tìm sách đắc nhân tâm", "intent": "book_search"},
+  {"text": "giá cuốn nhà giả kim là bao nhiêu", "intent": "book_search"},
+  {"text": "có sách của Nguyễn Nhật Ánh không", "intent": "book_search"},
+  {"text": "tìm sách tác giả Paulo Coelho", "intent": "book_search"},
+  {"text": "bán cuốn atomic habits không", "intent": "book_search"},
+  {"text": "sách đắc nhân tâm còn hàng không", "intent": "book_search"},
+
+  {"text": "đơn hàng của tôi đến đâu rồi", "intent": "order_status"},
+  {"text": "theo dõi đơn hàng số 12345", "intent": "order_status"},
+  {"text": "tôi đặt hàng 3 ngày rồi chưa nhận được", "intent": "order_status"},
+  {"text": "trạng thái giao hàng của tôi", "intent": "order_status"},
+  {"text": "đơn hàng #67890 đang ở đâu", "intent": "order_status"},
+  {"text": "ship bao lâu thì tới nơi", "intent": "order_status"},
+
+  {"text": "tôi đã mua những sách gì", "intent": "order_history"},
+  {"text": "lịch sử mua hàng của tôi", "intent": "order_history"},
+  {"text": "danh sách đơn hàng cũ của tôi", "intent": "order_history"},
+  {"text": "tôi mua gì rồi nhỉ", "intent": "order_history"},
+
+  {"text": "chính sách đổi trả như thế nào", "intent": "policy_return"},
+  {"text": "tôi muốn trả lại sách bị lỗi", "intent": "policy_return"},
+  {"text": "sách rách có được đổi không", "intent": "policy_return"},
+  {"text": "thời hạn đổi trả là bao lâu", "intent": "policy_return"},
+  {"text": "tôi nhận được sách sai muốn hoàn hàng", "intent": "policy_return"},
+  {"text": "quy trình hoàn tiền như thế nào", "intent": "policy_return"},
+
+  {"text": "phí ship bao nhiêu", "intent": "policy_shipping"},
+  {"text": "có miễn phí vận chuyển không", "intent": "policy_shipping"},
+  {"text": "giao hàng mất bao nhiêu ngày", "intent": "policy_shipping"},
+  {"text": "đơn bao nhiêu thì được freeship", "intent": "policy_shipping"},
+  {"text": "giao hàng đến tỉnh có được không", "intent": "policy_shipping"},
+  {"text": "thứ 7 có giao hàng không", "intent": "policy_shipping"},
+
+  {"text": "có những phương thức thanh toán nào", "intent": "policy_payment"},
+  {"text": "có thanh toán cod không", "intent": "policy_payment"},
+  {"text": "thanh toán bằng vnpay được không", "intent": "policy_payment"},
+  {"text": "xuất hóa đơn vat được không", "intent": "policy_payment"},
+  {"text": "chuyển khoản ngân hàng nào được chấp nhận", "intent": "policy_payment"}
+]

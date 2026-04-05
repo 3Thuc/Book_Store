@@ -1,0 +1,24 @@
+Chính sách thanh toán của BookStore:
+
+Phương thức thanh toán được chấp nhận:
+1. COD (Cash on Delivery) - Thanh toán khi nhận hàng:
+   - Áp dụng cho đơn hàng trong phạm vi giao hàng.
+   - Khách hàng trả tiền mặt trực tiếp cho nhân viên giao hàng.
+
+2. Chuyển khoản ngân hàng:
+   - Hỗ trợ tất cả ngân hàng nội địa.
+   - Thanh toán ngay sau khi đặt hàng, đơn sẽ được xử lý sau khi xác nhận chuyển khoản.
+
+3. VNPay:
+   - Thanh toán trực tuyến qua cổng VNPay.
+   - Hỗ trợ thẻ ATM, thẻ tín dụng Visa/Mastercard, và ví điện tử VNPay.
+
+Lưu ý khi thanh toán:
+- Giá trên website đã bao gồm VAT.
+- Phí vận chuyển được tính riêng dựa trên địa chỉ giao hàng.
+- Đối với thanh toán chuyển khoản, đơn hàng sẽ xử lý trong 24 giờ làm việc sau khi nhận được xác nhận.
+
+Hóa đơn và xuất VAT:
+- Khách hàng có thể yêu cầu xuất hóa đơn VAT khi đặt hàng.
+- Cần cung cấp thông tin công ty: MST, tên công ty, địa chỉ.
+- Hóa đơn sẽ được gửi qua email trong vòng 3 ngày làm việc.

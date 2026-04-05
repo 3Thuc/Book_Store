@@ -1,0 +1,17 @@
+# Docker ignore – không copy các file không cần thiết vào image
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+.env
+*.log
+logs/
+model_data/
+faiss_index/
+*.ipynb
+.git/
+.gitignore

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác thực tài khoản</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto; /* Đảm bảo container nằm giữa trong table cell */
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .header {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #ffffff;
+            border-radius: 50% 50% 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 50px 40px 40px;
+            line-height: 1.8;
+            color: #333333;
+        }
+        .content h2 {
+            color: #1a1a1a;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .content p {
+            margin: 0 0 20px;
+            font-size: 15px;
+            color: #555555;
+        }
+        .highlight-box {
+            background-color: #f8f8f8;
+            border-left: 4px solid #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #1a1a1a;
+            color: #ffffff !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(26, 26, 26, 0.2);
+            margin: 25px 0;
+        }
+        .cta-button:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(26, 26, 26, 0.3);
+        }
+        .link-fallback {
+            font-size: 13px;
+            color: #888888;
+            word-break: break-all;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #dddddd;
+            margin: 20px 0;
+        }
+        .link-fallback a {
+            color: #1a1a1a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .expiration-notice {
+            background-color: #fff9e6;
+            border-left: 4px solid #f4a460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #856404;
+        }
+        .footer {
+            background-color: #fafafa;
+            color: #777777;
+            padding: 30px;
+            text-align: center;
+            font-size: 13px;
+            border-top: 1px solid #eeeeee;
+        }
+        .footer p {
+            margin: 8px 0;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            margin: 30px 0;
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        .stats-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<table width="100%" border="0" cellspacing="0" cellpadding="20" style="width: 100%; background-color: #f5f5f5;">
+    <tr>
+        <td align="center" valign="top">
+            <div class="container">
+                <div class="header">
+                    <div class="icon"> </div>
+                    <h1>BookStore</h1>
+                </div>
+                <div class="content">
+                    <h2>Chào <span th:text="${fullName}">[Tên người dùng]</span>! 👋</h2>
+
+                    <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>BookStore</strong>. Chúng tôi rất vui mừng chào đón bạn đến với thế giới tri thức!</p>
+
+                    <p>Để bắt đầu khám phá hàng nghìn cuốn sách và trải nghiệm đầy đủ các tính năng, vui lòng xác thực địa chỉ email của bạn bằng cách nhấn vào nút bên dưới:</p>
+
+                    <div style="text-align: center;">
+                        <a th:href="${verifyLink}" class="cta-button">✓ Kích hoạt tài khoản ngay</a>
+                    </div>
+
+                    <div class="highlight-box">
+                        <strong> Mẹo:</strong> Nếu nút trên không hoạt động, bạn có thể sao chép và dán liên kết dưới đây vào trình duyệt:
+                    </div>
+
+                    <div class="link-fallback">
+                        <a th:href="${verifyLink}" th:text="${verifyLink}">[Verification Link]</a>
+                    </div>
+
+                    <div class="expiration-notice">
+                        ⏰ <strong>Lưu ý:</strong> Liên kết xác thực này sẽ hết hạn sau <strong th:text="${expirationHours}">1</strong> giờ. Vui lòng hoàn tất xác thực sớm nhất có thể.
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <p style="font-size: 14px; color: #888888;">
+                        <em>Nếu bạn không phải là người yêu cầu đăng ký này, vui lòng bỏ qua email này. Tài khoản sẽ không được kích hoạt nếu không có xác thực.</em>
+                    </p>
+
+                    <div class="signature">
+                        <p style="font-weight: 600; color: #333333;">Trân trọng,</p>
+                        <p style="color: #1a1a1a; font-weight: 600;">Đội ngũ BookStore</p>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p style="font-weight: 600;">&copy; 2025 BookStore. All rights reserved.</p>
+                    <p>📧 Đây là email tự động, vui lòng không trả lời.</p>
+                    <p style="margin-top: 15px; color: #999999;">Cần hỗ trợ? Liên hệ chúng tôi qua support@bookstore.com</p>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

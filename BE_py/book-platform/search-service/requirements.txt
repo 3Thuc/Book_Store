@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+pymysql
+opensearch-py
+# AI Semantic Embedding – SBERT k-NN Vector Search
+sentence-transformers
+torch
+# Image Search – CLIP Model for Vision-Language Understanding
+transformers>=4.30.0
+Pillow>=10.0.0
+opencv-python>=4.8.0.74
