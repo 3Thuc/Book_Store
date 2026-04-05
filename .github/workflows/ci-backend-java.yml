@@ -64,7 +64,7 @@ jobs:
         with:
           context: ./BE/BookStorage
           push: true
-          tags: ghcr.io/${{ github.repository }}/backend-java:latest
+          tags: ghcr.io/3thuc/book_store/backend-java:latest
 
       # - name: Trigger Render deploy
       #   if: ${{ secrets.RENDER_API_KEY != '' && secrets.RENDER_SERVICE_ID != '' }}
