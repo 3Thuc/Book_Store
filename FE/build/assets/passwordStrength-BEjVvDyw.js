@@ -1,0 +1,6 @@
+import{c as n}from"./index-DFJIAshN.js";/**
+ * @license lucide-react v0.552.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const s=[["path",{d:"M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",key:"ct8e1f"}],["path",{d:"M14.084 14.158a3 3 0 0 1-4.242-4.242",key:"151rxh"}],["path",{d:"M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",key:"13bj9a"}],["path",{d:"m2 2 20 20",key:"1ooewy"}]],h=n("eye-off",s),b=t=>{if(!t)return{label:"",score:0,level:"weak",text:"",color:"#94A3B8",bgColor:"#F1F5F9"};const o=t.length,l=/[a-z]/.test(t),r=/[A-Z]/.test(t),a=/[0-9]/.test(t),c=/[^A-Za-z0-9]/.test(t);let e=0;return o>=8&&(e+=25),l&&(e+=15),r&&(e+=15),a&&(e+=20),c&&(e+=25),[l,r,a,c].filter(Boolean).length===4&&o>=12&&(e+=10),e>100&&(e=100),e<40?{label:"",score:e,level:"weak",text:"Yếu",color:"#EF4444",bgColor:"#FEE2E2"}:e<60?{label:"",score:e,level:"fair",text:"Trung bình",color:"#F97316",bgColor:"#FFEDD5"}:e<=90?{label:"",score:e,level:"good",text:"Tốt",color:"#3B82F6",bgColor:"#DBEAFE"}:{label:"",score:e,level:"strong",text:"Mạnh",color:"#10B981",bgColor:"#D1FAE5"}};export{h as E,b as c};
