@@ -4,10 +4,9 @@ FROM node:20 AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
-RUN npm install --include=dev
-COPY . .
+RUN npm ci                    # ← dùng npm ci thay vì npm install
 
+COPY . .
 RUN npm run build
 
 # run stage
