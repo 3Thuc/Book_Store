@@ -9,5 +9,5 @@ __pycache__/
 
 # Ignore node modules
 */node_modules/
-
+.env.docker
 .venv/
