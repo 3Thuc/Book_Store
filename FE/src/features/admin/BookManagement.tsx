@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAdmin } from './AdminContext';
 import adminService from '../../services/adminService';
 import { Book } from '../../types/book';
@@ -24,6 +24,7 @@ import { BookOpen, Plus, Edit, Trash2, Search, ChevronsUpDown, Check } from 'luc
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
 import { ImageWithFallback } from '../../components/fallbackimg/ImageWithFallback';
+import { toast } from 'sonner';
 
 export const BookManagement: React.FC = () => {
   const { books, addBook, updateBook, deleteBook, categories, publishers, authors } = useAdmin();
@@ -48,6 +49,13 @@ export const BookManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Debounce search: chứ 400ms sau khi gõ xong mới fetch API
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Helper to map server book shape to UI Book with status
   const mapServerBook = (b: any): Book => {
@@ -81,9 +89,9 @@ export const BookManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPage(currentPage, pageSize, searchTerm, filterCategory);
+    fetchPage(currentPage, pageSize, debouncedSearchTerm, filterCategory);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, searchTerm, filterCategory]);
+  }, [currentPage, pageSize, debouncedSearchTerm, filterCategory]);
 
   const fetchPage = async (page = 1, limit = pageSize, search?: string, category?: string) => {
     setLoading(true);
@@ -199,6 +207,8 @@ export const BookManagement: React.FC = () => {
     setDialogOpen(true);
   };
 
+
+
   const handleSubmit = () => {
     const priceNum = parseFloat(formData.price || '0');
     const publishedYearNum = parseInt(formData.publishedYear || new Date().getFullYear().toString(), 10);
@@ -234,14 +244,27 @@ export const BookManagement: React.FC = () => {
     };
 
     (async () => {
-      if (editingBook) {
-        await updateBook({ ...bookData, bookId: editingBook.bookId ?? bookData.bookId });
-      } else {
-        await addBook(bookData);
+      try {
+        if (editingBook) {
+          await updateBook({ ...bookData, bookId: editingBook.bookId ?? bookData.bookId });
+          toast.success('Cập nhật sách thành công!', {
+            description: `"${formData.title}" đã được cập nhật.`,
+          });
+        } else {
+          await addBook(bookData);
+          toast.success('Thêm sách thành công!', {
+            description: `"${formData.title}" đã được thêm vào hệ thống.`,
+          });
+        }
+        await fetchPage(currentPage, pageSize, searchTerm, filterCategory);
+        setDialogOpen(false);
+        resetForm();
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Có lỗi xảy ra, vui lòng thử lại.';
+        toast.error(editingBook ? 'Cập nhật thất bại' : 'Thêm sách thất bại', {
+          description: msg,
+        });
       }
-      await fetchPage(currentPage, pageSize, searchTerm, filterCategory);
-      setDialogOpen(false);
-      resetForm();
     })();
   };
 
@@ -253,10 +276,19 @@ export const BookManagement: React.FC = () => {
   const confirmDelete = () => {
     if (bookToDelete) {
       (async () => {
-        await deleteBook(bookToDelete.bookId.toString());
-        await fetchPage(currentPage, pageSize, searchTerm, filterCategory);
-        setDeleteDialogOpen(false);
-        setBookToDelete(null);
+        try {
+          await deleteBook(bookToDelete.bookId.toString());
+          toast.success('Xóa sách thành công!', {
+            description: `"${bookToDelete.title}" đã được xóa khỏi hệ thống.`,
+          });
+        } catch (err: any) {
+          const msg = err?.response?.data?.message || err?.message || 'Xóa thất bại.';
+          toast.error('Xóa sách thất bại', { description: msg });
+        } finally {
+          await fetchPage(currentPage, pageSize, searchTerm, filterCategory);
+          setDeleteDialogOpen(false);
+          setBookToDelete(null);
+        }
       })();
     }
   };
@@ -495,6 +527,8 @@ export const BookManagement: React.FC = () => {
             {/* Basic Information Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium border-b pb-2">Thông tin cơ bản</h3>
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-sm font-medium">Tên sách *</Label>

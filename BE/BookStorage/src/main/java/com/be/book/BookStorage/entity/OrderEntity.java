@@ -39,7 +39,7 @@ public class OrderEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.pending;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = com.be.book.BookStorage.enums.Oder.PaymentMethodConverter.class)
     private PaymentMethod paymentMethod = PaymentMethod.COD;
 
     @Enumerated(EnumType.STRING)

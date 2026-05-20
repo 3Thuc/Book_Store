@@ -1,0 +1,292 @@
+[
+  {
+    "rating_id": 58045,
+    "user_id": 293,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Hoàn toàn hài lòng, sẽ giới thiệu cho bạn bè.",
+    "status": "approved",
+    "created_at": "2025-12-25T13:58:34",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58046,
+    "user_id": 115,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Một trong những cuốn hay nhất tôi từng đọc.",
+    "status": "approved",
+    "created_at": "2026-02-03T23:49:49",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58047,
+    "user_id": 232,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Sách hay, nội dung bổ ích.",
+    "status": "approved",
+    "created_at": "2026-02-20T00:56:07",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58048,
+    "user_id": 283,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Sách chất lượng tốt, nội dung phong phú.",
+    "status": "approved",
+    "created_at": "2026-02-12T13:31:32",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58049,
+    "user_id": 13,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Một trong những cuốn hay nhất tôi từng đọc.",
+    "status": "approved",
+    "created_at": "2025-12-25T13:22:51",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58050,
+    "user_id": 112,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2026-03-27T00:59:41",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58051,
+    "user_id": 88,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2026-01-22T07:06:44",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58052,
+    "user_id": 186,
+    "book_id": 9360,
+    "rating": 1,
+    "review": "Sách không hay, không đáng tiền.",
+    "status": "approved",
+    "created_at": "2025-12-21T02:07:18",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58053,
+    "user_id": 161,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Sách hay, nội dung bổ ích.",
+    "status": "approved",
+    "created_at": "2026-03-17T06:57:05",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 58054,
+    "user_id": 78,
+    "book_id": 9360,
+    "rating": 3,
+    "review": "Nội dung ổn nhưng hơi nhàm.",
+    "status": "approved",
+    "created_at": "2026-01-18T10:44:10",
+    "updated_at": "2026-03-28T10:45:21"
+  },
+  {
+    "rating_id": 514311,
+    "user_id": 75,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2026-02-10T19:15:38",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514312,
+    "user_id": 99,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2026-01-03T09:34:32",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514313,
+    "user_id": 119,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Tuyệt vời! Giao hàng nhanh, sách đẹp.",
+    "status": "approved",
+    "created_at": "2026-01-07T02:15:34",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514314,
+    "user_id": 187,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Sách chất lượng tốt, nội dung phong phú.",
+    "status": "approved",
+    "created_at": "2025-12-02T00:41:27",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514315,
+    "user_id": 239,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2025-10-01T03:48:21",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514316,
+    "user_id": 19,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2025-10-20T00:16:31",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514317,
+    "user_id": 48,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Một trong những cuốn hay nhất tôi từng đọc.",
+    "status": "approved",
+    "created_at": "2025-11-30T19:15:41",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514318,
+    "user_id": 36,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2025-11-21T08:29:49",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514319,
+    "user_id": 298,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2026-02-26T02:03:06",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514320,
+    "user_id": 236,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Nội dung xuất sắc, rất đáng tiền.",
+    "status": "approved",
+    "created_at": "2025-12-02T16:07:34",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514321,
+    "user_id": 108,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2025-11-12T11:19:38",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514322,
+    "user_id": 73,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Đọc được, có một số chỗ hơi dài dòng.",
+    "status": "approved",
+    "created_at": "2025-10-08T16:19:00",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514323,
+    "user_id": 212,
+    "book_id": 9360,
+    "rating": 3,
+    "review": "Đọc được, phù hợp cho người mới bắt đầu.",
+    "status": "approved",
+    "created_at": "2025-10-19T14:29:50",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514324,
+    "user_id": 190,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2025-11-15T00:13:08",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514325,
+    "user_id": 58,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Nhìn chung tốt, giao hàng khá nhanh.",
+    "status": "approved",
+    "created_at": "2025-12-23T15:18:17",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514326,
+    "user_id": 178,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Hoàn toàn hài lòng, sẽ giới thiệu cho bạn bè.",
+    "status": "approved",
+    "created_at": "2025-12-13T20:17:29",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514327,
+    "user_id": 105,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Sách rất hay, đọc xong còn muốn đọc lại!",
+    "status": "approved",
+    "created_at": "2026-01-08T12:11:32",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514328,
+    "user_id": 63,
+    "book_id": 9360,
+    "rating": 4,
+    "review": "Nhìn chung tốt, giao hàng khá nhanh.",
+    "status": "approved",
+    "created_at": "2025-12-29T16:18:07",
+    "updated_at": "2026-03-28T11:18:39"
+  },
+  {
+    "rating_id": 514329,
+    "user_id": 271,
+    "book_id": 9360,
+    "rating": 5,
+    "review": "Hoàn toàn hài lòng, sẽ giới thiệu cho bạn bè.",
+    "status": "approved",
+    "created_at": "2026-02-13T00:00:21",
+    "updated_at": "2026-03-28T11:18:39"
+  }
+]

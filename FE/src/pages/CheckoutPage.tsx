@@ -225,25 +225,42 @@ export const CheckoutPage: React.FC = () => {
     setIsCheckingOut(true); 
 
     try {
-      const orderDetails = items.map(item => ({
-        bookId: Number((item.book as any).bookId),
-        quantity: item.quantity,
-      }));
+      // Validate và build orderDetails
+      const orderDetails = items.map(item => {
+        const book = item.book as any;
+        const bookId = Number(book.bookId ?? book.id);
+        if (!bookId || isNaN(bookId)) {
+          throw new Error(`Sách không hợp lệ (bookId không tồn tại): ${JSON.stringify(book)}`);
+        }
+        return {
+          bookId,
+          quantity: item.quantity,
+        };
+      });
 
-      const paymentMethodMap: Record<PaymentMethod, 'COD'  | 'CreditCard'> = {
+      // Validate addressId
+      const addressId = Number(selectedAddress.id ?? (selectedAddress as any).idAddress);
+      if (!addressId || isNaN(addressId)) {
+        toast.error('Địa chỉ không hợp lệ. Vui lòng chọn lại!');
+        setIsProcessing(false);
+        setIsCheckingOut(false);
+        return;
+      }
+
+      const paymentMethodMap: Record<PaymentMethod, 'COD' | 'CreditCard'> = {
         'COD': 'COD',
         'CreditCard': 'CreditCard',
       };
 
       const requestPayload = {
-        addressId: Number(selectedAddress.id),
+        addressId,
         paymentMethod: paymentMethodMap[formData.paymentMethod],
         promoCode: appliedPromo?.code ?? (appliedPromo as any)?.promotionCode ?? undefined,
-        promoId: appliedPromo ? Number((appliedPromo as any).promotionId ?? appliedPromo.id) : undefined,
         note: formData.note || undefined,
-        orderDetails: orderDetails,
+        orderDetails,
       };
-      
+
+      console.log('[CheckoutPage] Sending order payload:', JSON.stringify(requestPayload, null, 2));
 
       const response = await OrderService.createOrder(requestPayload);
 
@@ -282,9 +299,10 @@ export const CheckoutPage: React.FC = () => {
           navigate('/account');
         }, 1000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      toast.error('Đã có lỗi xảy ra. Vui lòng thử lại!');
+      const errorMessage = error.response?.data?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại!';
+      toast.error(errorMessage);
       setIsCheckingOut(false);
     } finally {
       setIsProcessing(false);

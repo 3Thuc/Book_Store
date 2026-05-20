@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập nhật đơn hàng</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            padding: 36px 30px 28px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            margin: 24px auto 0;
+            letter-spacing: 0.3px;
+        }
+
+        .content {
+            padding: 40px 40px 32px;
+            line-height: 1.8;
+            color: #333333;
+        }
+
+        .content h2 {
+            color: #1a1a1a;
+            font-size: 22px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .content p {
+            margin: 0 0 16px;
+            font-size: 15px;
+            color: #555555;
+        }
+
+        .order-box {
+            background-color: #f8f8f8;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+
+        .order-box .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eeeeee;
+            font-size: 14px;
+        }
+
+        .order-box .row:last-child {
+            border-bottom: none;
+        }
+
+        .order-box .label {
+            color: #888888;
+        }
+
+        .order-box .value {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .note-box {
+            background-color: #fff9e6;
+            border-left: 4px solid #f4a460;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #1a1a1a;
+            color: #ffffff !important;
+            padding: 14px 36px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            margin: 20px 0 8px;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+            margin: 28px 0;
+        }
+
+        .footer {
+            background-color: #fafafa;
+            color: #777777;
+            padding: 24px 30px;
+            text-align: center;
+            font-size: 13px;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .footer p {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <table width="100%" border="0" cellspacing="0" cellpadding="20" style="background-color:#f5f5f5;">
+        <tr>
+            <td align="center" valign="top">
+                <div class="container">
+
+                    <!-- HEADER -->
+                    <div class="header">
+                        <div style="font-size:40px; margin-bottom:8px;" th:text="${statusEmoji}">📦</div>
+                        <h1>BookStore</h1>
+                        <p>Thông báo cập nhật đơn hàng</p>
+                        <div class="status-badge"
+                            th:style="'background-color:' + ${badgeBg} + '; color:' + ${badgeColor} + ';'"
+                            th:text="${statusLabel}">
+                            Trạng thái
+                        </div>
+                    </div>
+
+                    <!-- CONTENT -->
+                    <div class="content">
+                        <h2>Xin chào <span th:text="${customerName}">[Tên khách hàng]</span>! 👋</h2>
+
+                        <p th:text="${statusMessage}">
+                            Đơn hàng của bạn đã được cập nhật trạng thái.
+                        </p>
+
+                        <!-- Order Details Box — dùng table thay div+flex cho tương thích email client -->
+                        <table class="order-box" width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background-color:#f8f8f8; border:1px solid #e8e8e8; border-radius:12px; width:100%; border-collapse:separate; border-spacing:0;">
+                            <tr style="border-bottom:1px solid #eeeeee;">
+                                <td style="padding:12px 20px; color:#888888; font-size:14px; width:50%;">Mã đơn hàng
+                                </td>
+                                <td style="padding:12px 20px; font-weight:600; color:#1a1a1a; font-size:14px; text-align:right;"
+                                    th:text="'#' + ${orderId}">#12345</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #eeeeee;">
+                                <td style="padding:12px 20px; color:#888888; font-size:14px;">Trạng thái mới</td>
+                                <td style="padding:12px 20px; font-weight:600; color:#1a1a1a; font-size:14px; text-align:right;"
+                                    th:text="${statusLabel}">Đang xử lý</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #eeeeee;">
+                                <td style="padding:12px 20px; color:#888888; font-size:14px;">Tổng tiền</td>
+                                <td style="padding:12px 20px; font-weight:600; color:#1a1a1a; font-size:14px; text-align:right;"
+                                    th:text="${totalAmount}">0 đ</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 20px; color:#888888; font-size:14px;">Thời gian cập nhật</td>
+                                <td style="padding:12px 20px; font-weight:600; color:#1a1a1a; font-size:14px; text-align:right;"
+                                    th:text="${updatedAt}">[Thời gian]</td>
+                            </tr>
+                        </table>
+
+
+                        <!-- Note box nếu có ghi chú -->
+                        <div class="note-box" th:if="${statusNote != null and !#strings.isEmpty(statusNote)}">
+                            📝 <strong>Lưu ý:</strong> <span th:text="${statusNote}"></span>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <div style="text-align:center;">
+                            <a th:href="${orderDetailUrl}" class="cta-button">Xem chi tiết đơn hàng</a>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <p style="font-size:14px; color:#888888;">
+                            <em>Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ chúng tôi qua
+                                <a href="mailto:support@bookstore.com" style="color:#1a1a1a;">support@bookstore.com</a>
+                            </em>
+                        </p>
+
+                        <div style="margin-top:28px; padding-top:20px; border-top:2px solid #f0f0f0;">
+                            <p style="font-weight:600; color:#333333;">Trân trọng,</p>
+                            <p style="color:#1a1a1a; font-weight:600;">Đội ngũ BookStore</p>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="footer">
+                        <p style="font-weight:600;">© 2026 BookStore. All rights reserved.</p>
+                        <p>📧 Đây là email tự động, vui lòng không trả lời.</p>
+                        <p style="margin-top:12px; color:#999999;">
+                            Cần hỗ trợ? Liên hệ: support@bookstore.com
+                        </p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

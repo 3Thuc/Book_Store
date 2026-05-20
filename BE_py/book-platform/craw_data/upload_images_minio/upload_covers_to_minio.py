@@ -31,7 +31,7 @@ MINIO_SECRET    = "admin123456789"
 MINIO_BUCKET    = "bookstore"
 MINIO_SECURE    = False              # True nếu dùng HTTPS
 
-COVERS_DIR      = Path(r"E:\KLTN\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\covers\books")
+COVERS_DIR      = Path(r"D:\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\covers\books")
 EXTENSIONS      = {".jpg", ".jpeg", ".png", ".webp"}
 # ─────────────────────────────────────────────────────────────────────────────
 

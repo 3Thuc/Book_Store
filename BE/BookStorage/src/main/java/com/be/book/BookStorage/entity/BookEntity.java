@@ -3,6 +3,7 @@ package com.be.book.BookStorage.entity;
 import com.be.book.BookStorage.enums.BookFormat;
 import com.be.book.BookStorage.enums.Status;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -51,6 +52,7 @@ public class BookEntity {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "book_categories",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -71,6 +73,7 @@ public class BookEntity {
     @Transient
     private Integer availableQuantity;
 
+    @JsonIgnore
     @OneToOne(mappedBy = "book", fetch = FetchType.LAZY)
     private BookImageEntity image;
 }

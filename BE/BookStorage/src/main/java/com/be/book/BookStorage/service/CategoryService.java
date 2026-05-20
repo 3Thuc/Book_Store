@@ -1,10 +1,8 @@
 package com.be.book.BookStorage.service;
 
 import com.be.book.BookStorage.dto.Request.Admin.CategoryReq;
-import com.be.book.BookStorage.dto.Response.Admin.PublishersRes;
 import com.be.book.BookStorage.dto.Response.Book.CategoryRes;
 import com.be.book.BookStorage.entity.CategoryEntity;
-import com.be.book.BookStorage.entity.PublisherEntity;
 import com.be.book.BookStorage.entity.UserEntity;
 import com.be.book.BookStorage.enums.Role;
 import com.be.book.BookStorage.enums.Status;
@@ -29,7 +27,7 @@ public class CategoryService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getRole() != Role.admin && user.getRole() != Role.staff ) {
+        if (user.getRole() != Role.admin && user.getRole() != Role.staff) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         if (user.getStatus() != Status.active) {
@@ -44,9 +42,12 @@ public class CategoryService {
                 .map(category -> CategoryRes.builder()
                         .categoryId(category.getCategoryId())
                         .categoryName(category.getCategoryName())
+                        .status(category.getStatus())
+                        .bookCount(categoryRepository.countBooksByCategoryId(category.getCategoryId()))
                         .build())
                 .toList();
     }
+
     public List<CategoryRes> getUserCategories() {
         return categoryRepository.findAllActive()
                 .stream()
@@ -57,17 +58,18 @@ public class CategoryService {
                 .toList();
     }
 
-    public CategoryRes addCategory(String email, CategoryReq categoryReq){
+    public CategoryRes addCategory(String email, CategoryReq categoryReq) {
         checkPermission(email);
         String name = categoryReq.getCategoryName().trim();
 
-        if (categoryRepository.existsByCategoryName(name)) {
+        // Chỉ chặn trùng tên với danh mục ACTIVE (không chặn trùng với deleted)
+        if (categoryRepository.existsByActiveCategoryName(name)) {
             throw new AppException(ErrorCode.CATEGORY_ALREADY_EXISTED);
         }
 
         CategoryEntity category = new CategoryEntity();
         category.setCategoryName(name);
-        category.setStatus(categoryReq.getStatus());
+        category.setStatus(categoryReq.getStatus() != null ? categoryReq.getStatus() : Status.active);
         category.setCreatedAt(LocalDateTime.now());
         category.setUpdatedAt(LocalDateTime.now());
         CategoryEntity saved = categoryRepository.save(category);
@@ -75,9 +77,11 @@ public class CategoryService {
         return CategoryRes.builder()
                 .categoryId(saved.getCategoryId())
                 .categoryName(saved.getCategoryName())
+                .status(saved.getStatus())
                 .build();
     }
-    public CategoryRes updateCategory(String email, CategoryReq categoryReq, Integer id){
+
+    public CategoryRes updateCategory(String email, CategoryReq categoryReq, Integer id) {
         checkPermission(email);
 
         CategoryEntity category = categoryRepository.findById(id)
@@ -91,8 +95,9 @@ public class CategoryService {
             throw new AppException(ErrorCode.CATEGORY_ALREADY_EXISTED);
         }
         category.setCategoryName(categoryReq.getCategoryName());
-        category.setStatus(categoryReq.getStatus());
-        category.setCreatedAt(LocalDateTime.now());
+        if (categoryReq.getStatus() != null) {
+            category.setStatus(categoryReq.getStatus());
+        }
         category.setUpdatedAt(LocalDateTime.now());
         CategoryEntity saved = categoryRepository.save(category);
         return CategoryRes.builder()
@@ -102,12 +107,27 @@ public class CategoryService {
                 .build();
     }
 
-    public void deleteCategory(String email, Integer id){
+    /** Soft delete: đổi status → deleted, giữ record trong DB */
+    public void deleteCategory(String email, Integer id) {
         checkPermission(email);
         CategoryEntity category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         category.setStatus(Status.deleted);
         category.setUpdatedAt(LocalDateTime.now());
         categoryRepository.save(category);
+    }
+
+    /** Hard delete: xóa vĩnh viễn — chỉ cho phép khi danh mục không có sách nào */
+    public void hardDeleteCategory(String email, Integer id) {
+        checkPermission(email);
+        CategoryEntity category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        long bookCount = categoryRepository.countBooksByCategoryId(id);
+        if (bookCount > 0) {
+            throw new AppException(ErrorCode.CATEGORY_HAS_BOOKS);
+        }
+
+        categoryRepository.delete(category);
     }
 }

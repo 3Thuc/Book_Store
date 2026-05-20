@@ -1,28 +1,47 @@
+# ==============================================================================
+# requirements.txt – FastAPI Platform API (Port 8000)
+#
+# ⚠️  Lưu ý quan trọng:
+# platform_api/main.py dùng sys.path.insert để import code trực tiếp từ:
+#   - search-service/     (search_app.*)
+#   - recommendation-service/ (recommend_app.*)
+#   - chatbot-service/    (chatbot_app.*)
+#
+# Do đó, file này phải chứa TẤT CẢ dependencies của cả 3 service con.
+# ==============================================================================
 
-# Core FastAPI
+# ── Core FastAPI ──────────────────────────────────────────────────────────────
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.7.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.9
 
-# Database
-mysql-connector-python>=9.0.0
+# ── Database ──────────────────────────────────────────────────────────────────
+mysql-connector-python>=9.0.0   # Dùng bởi recommend_app + chatbot_app
+PyMySQL>=1.1.0                   # Dùng bởi search_app
 
-httpx>=0.27.0
+# ── HTTP Client ───────────────────────────────────────────────────────────────
+httpx>=0.27.0                    # Dùng bởi chatbot_app (gọi Ollama)
 
-# Search (OpenSearch)
-opensearch-py>=2.5.0
+# ── Search (OpenSearch) ───────────────────────────────────────────────────────
+opensearch-py>=2.5.0             # Dùng bởi search_app + recommend_app (cb_service)
 
-scikit-learn>=1.5.0
-pandas>=2.2.0
-numpy>=1.26.0
-scipy>=1.13.0
+# ── Recommendation ────────────────────────────────────────────────────────────
+scikit-learn>=1.5.0              # Content-based filtering (TF-IDF, cosine similarity)
+pandas>=2.2.0                    # DataFrame operations
+numpy>=1.26.0,<2.0.0            # Giới hạn <2.0 (chatbot/sentence-transformers chưa test numpy 2.x)
+scipy>=1.13.0                    # Sparse matrix (Collaborative Filtering)
 
-# Chatbot – Embedding & Vector Search
-sentence-transformers>=3.0.0
-faiss-cpu>=1.8.0
+# ── Chatbot – Embedding & Vector Search ──────────────────────────────────────
+sentence-transformers>=3.0.0     # SBERT embedding cho semantic search
+faiss-cpu>=1.8.0                 # Vector similarity search (knowledge base chatbot)
+transformers==4.40.1             # HuggingFace Transformers (BERT family)
+torch>=2.0.0                     # PyTorch (sentence-transformers + SBERT phụ thuộc)
 
-underthesea>=6.8.4
+# ── Chatbot – NLP tiếng Việt ──────────────────────────────────────────────────
+underthesea>=6.8.4               # Tokenization, NER tiếng Việt
 
-httpx>=0.27.0
+# ── Rate Limiting & Cache (Phase 1 + Phase 2+3) ──────────────────────────────
+slowapi>=0.1.9                   # Rate limiting cho search + recommend endpoints
+redis>=5.0.0                     # Redis client cho analytics (P2.1) + A/B testing (P3.1)

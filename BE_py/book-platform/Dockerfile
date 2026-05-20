@@ -29,5 +29,7 @@ COPY . .
 # Expose port FastAPI
 EXPOSE 8000
 
-# Chạy FastAPI với uvicorn (hot reload cho dev)
-CMD ["uvicorn", "platform_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Chạy FastAPI với uvicorn (stable mode - không hot-reload để tránh drop request giữa chừng)
+# 1 worker (FastAPI async đủ dùng), graceful shutdown 30s cho request đang chạy
+CMD ["uvicorn", "platform_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "30"]
+

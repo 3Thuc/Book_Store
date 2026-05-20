@@ -56,26 +56,36 @@ def index_one_book(book_id: int) -> dict:
       Backend thêm sách → POST /admin/books/{id}/sync
         → Queue Worker gọi hàm này
           → Query MySQL lấy metadata
-          → Encode SBERT (≈ 30-80ms trên CPU)  ← MỚI
+          → Encode SBERT (≈ 30-80ms trên CPU)
           → Upsert Document vào OpenSearch
+
+    Fix #2: conn.close() luôn được gọi trong finally → trả kết nối về pool,
+    tránh connection leak khi có exception ở giữa chừng.
     """
     conn = get_mysql_conn()
-    with conn.cursor() as cur:
-        cur.execute(SQL_ONE_BOOK, (book_id,))
-        b = cur.fetchone()
+    b = None
+    t = {}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(SQL_ONE_BOOK, (book_id,))
+            b = cur.fetchone()
 
-        client = get_os_client()
+            if not b:
+                # Sách không tồn tại trong MySQL → xóa khỏi OpenSearch
+                client = get_os_client()
+                client.delete(index=INDEX, id=str(book_id), ignore=[404])
+                return {"ok": True, "action": "delete_missing", "book_id": book_id}
 
-        if not b:
-            client.delete(index=INDEX, id=str(book_id), ignore=[404])
-            return {"ok": True, "action": "delete_missing", "book_id": book_id}
+            if b["status"] == "deleted":
+                # Sách bị xóa mềm → xóa khỏi OpenSearch
+                client = get_os_client()
+                client.delete(index=INDEX, id=str(book_id), ignore=[404])
+                return {"ok": True, "action": "delete", "book_id": book_id}
 
-        if b["status"] == "deleted":
-            client.delete(index=INDEX, id=str(book_id), ignore=[404])
-            return {"ok": True, "action": "delete", "book_id": book_id}
-
-        cur.execute(SQL_TREND_ONE, (book_id,))
-        t = cur.fetchone() or {}
+            cur.execute(SQL_TREND_ONE, (book_id,))
+            t = cur.fetchone() or {}
+    finally:
+        conn.close()  # Trả kết nối về pool (không đóng TCP thật sự khi dùng PooledDB)
 
     popularity, trending = calc_scores(t)
 

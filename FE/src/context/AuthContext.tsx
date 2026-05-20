@@ -21,6 +21,7 @@ interface AuthContextType {
   setDefaultAddress: (addressId: string) => Promise<boolean>;
   getDefaultAddress: () => Address | null;
   refreshOrders: () => Promise<void>;
+  updateOrderStatusLocal: (orderId: string, newStatus: string) => void;
   getOrderDetail: (orderId: string) => Promise<any>;
   loginWithGoogle: (code: string) => Promise<boolean>;
   redirectToGoogle: () => void;
@@ -138,13 +139,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (e) {}
 
       try {
-        // Check if we have a token (either from storage or from OAuth flow)
-        if (hasToken) {
+        const params = new URLSearchParams(window.location.search);
+        const googleLoginParam = params.get('google_login');
+        const isServerOAuthCallback = googleLoginParam === '1';
+        const isCodeOAuthCallback = params.has('code') || params.has('state') || params.has('oauth_token');
+
+        if (isServerOAuthCallback) {
+          // Server-side Google OAuth: backend set access token trong URL hash fragment (#_token=...)
+          // Hash fragment KHÔNG gửi lên server, chỉ JS đọc được → an toàn, không bị SameSite block
+          const hash = window.location.hash; // e.g. "#_token=eyJhbGci..."
+          const tokenMatch = hash.match(/#_token=(.+)/);
+          const hashToken = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+
+          if (hashToken) {
+            setAuthToken(hashToken);
+            await loadCurrentUser();
+          } else {
+            // Fallback: thử dùng refresh token cookie (nếu có) để lấy access token mới
+            await loadCurrentUser({ silent: true });
+          }
+          // Dọn URL: xóa ?google_login=1 và hash khỏi thanh địa chỉ
+          window.history.replaceState({}, '', window.location.pathname);
+
+        } else if (isCodeOAuthCallback) {
+          // Legacy: Google redirect trả code về FE trực tiếp (không qua server callback)
+          const pollAuthAndInit = async () => {
+            const maxAttempts = 20; // ~10s
+            for (let i = 0; i < maxAttempts; i++) {
+              try {
+                const resp = await AuthService.getCurrentUserSilent();
+                if (resp && (resp as any).result) {
+                  await loadCurrentUser();
+                  return;
+                }
+              } catch (e) {
+                // ignore and retry
+              }
+              await new Promise((r) => setTimeout(r, 500));
+            }
+            await loadCurrentUser({ silent: true });
+          };
+          await pollAuthAndInit();
+
+        } else if (hasToken) {
           // only attempt to load current user if we have a token
           await loadCurrentUser();
         } else {
-          // no token: skip loading current user
-          // OAuth callback will be handled by GoogleCallbackPage, which will set token and trigger 'auth:tokenChanged' event
+          // no token and not an OAuth callback: skip loading current user
         }
       } catch (e) {
         console.debug('Auth bootstrap error', e);
@@ -189,8 +230,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             updatedAt: addr.updatedAt ? new Date(addr.updatedAt) : new Date()
           };
         });
-
-        
+  // Ensure default address is shown first in the UI
   normalized.sort((a: any, b: any) => Number(b.isDefault) - Number(a.isDefault));
   setAddresses(normalized);
       }
@@ -205,15 +245,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoadingOrders(true);
     try {
       const ordersData = await UserService.getMyOrders();
-      console.log('Fetched orders from API:', ordersData);
       if (Array.isArray(ordersData)) {
-        setOrders(ordersData);
+        // Chỉ update state khi data thực sự thay đổi
+        // → tránh React re-render + ảnh nháy do polling 15s
+        setOrders(prev => {
+          const fingerprint = (arr: any[]) =>
+            arr.map(o => `${o.orderId ?? o.id}:${o.status}:${o.paymentStatus ?? ''}`).join('|');
+          if (fingerprint(prev) === fingerprint(ordersData)) {
+            return prev; // Không thay đổi → giữ nguyên reference → không re-render
+          }
+          return ordersData;
+        });
       }
     } catch (err) {
       console.warn('Failed to refresh orders:', err);
     } finally {
       setIsLoadingOrders(false);
     }
+  };
+
+
+  // Cập nhật trạng thái 1 đơn hàng trong local state ngay lập tức
+  // → dùng sau confirmDelivery/cancelOrder/returnOrder để tránh gọi refreshOrders()
+  const updateOrderStatusLocal = (orderId: string, newStatus: string) => {
+    setOrders(prev =>
+      prev.map(o =>
+        (o.orderId ?? o.id) === orderId ? { ...o, status: newStatus } : o
+      )
+    );
   };
 
   const getOrderDetail = async (orderId: string): Promise<any> => {
@@ -485,6 +544,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDefaultAddress,
       getDefaultAddress,
       refreshOrders,
+      updateOrderStatusLocal,
       getOrderDetail,
       redirectToGoogle,
       loginWithGoogle

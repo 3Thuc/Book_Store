@@ -1,13 +1,31 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-pydantic
-pymysql
-opensearch-py
-# AI Semantic Embedding – SBERT k-NN Vector Search
-sentence-transformers
-torch
-# Image Search – CLIP Model for Vision-Language Understanding
-transformers>=4.30.0
-Pillow>=10.0.0
-opencv-python>=4.8.0.74
+# ==============================================================================
+# requirements.txt – Search Service (Port 8000 standalone / shared via platform)
+#
+# Imports thực tế từ code:
+#   opensearchpy   → opensearch-py
+#   mysql.connector → mysql-connector-python
+#   sentence_transformers → sentence-transformers
+#   torch (phụ thuộc của sentence-transformers)
+# ==============================================================================
+
+# ── Core FastAPI ──────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+pymysql>=1.1.0                  # search_app/db/mysql.py dùng pymysql.connect
+dbutils>=3.0.3                  # Connection pool (PooledDB) — tránh tạo mới conn mỗi lần index
+
+# ── Search Engine ─────────────────────────────────────────────────────────────
+opensearch-py>=2.5.0             # search_app/search/client.py: from opensearchpy import OpenSearch
+
+# ── AI Semantic Embedding – SBERT k-NN Vector Search ─────────────────────────
+sentence-transformers>=3.0.0     # search_app/utils/sbert_model.py
+torch>=2.0.0                     # Phụ thuộc của sentence-transformers
+
+# ── Numerical ─────────────────────────────────────────────────────────────────
+numpy>=1.26.0,<2.0.0             # Tương thích với sentence-transformers
+slowapi>=0.1.9                  # Rate limiting (Phase 1.2)
+redis>=5.0.0                    # Analytics logger (search:analytics:* keys)

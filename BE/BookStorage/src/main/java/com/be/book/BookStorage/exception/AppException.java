@@ -1,8 +1,5 @@
 package com.be.book.BookStorage.exception;
 
-import lombok.Getter;
-
-@Getter
 public class AppException extends RuntimeException {
 
     private final ErrorCode errorCode;
@@ -33,5 +30,9 @@ public class AppException extends RuntimeException {
             }
         }
         return result;
+    }
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }

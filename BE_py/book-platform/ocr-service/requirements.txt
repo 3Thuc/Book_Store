@@ -1,0 +1,34 @@
+# ============================================================
+# OCR Service – Python dependencies
+# Port 8005 | EasyOCR (primary) + Tesseract (fallback)
+# ============================================================
+
+# --- Core FastAPI ---
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9      # Bắt buộc để nhận file upload (UploadFile)
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+
+# --- OCR Engines ---
+easyocr>=1.7.1               # Primary engine: CRAFT detection + CRNN recognition
+pytesseract>=0.3.13          # Fallback engine: Python wrapper cho Tesseract binary
+
+# --- Image Processing ---
+Pillow>=10.3.0               # Đọc/ghi ảnh, convert format
+opencv-python-headless>=4.10.0  # headless: không cần GUI/display server (phù hợp Docker)
+
+# --- Numerical ---
+numpy>=1.26.0,<2.0.0        # Giới hạn <2.0 vì EasyOCR chưa test với numpy 2.x
+
+# --- HTTP Client (gọi Search Service :8000) ---
+httpx>=0.27.0                # Async HTTP client, dùng trong search_integrator
+
+# --- NLP tiếng Việt (đã có trong project, dùng lại NER) ---
+underthesea>=6.8.4           # Named Entity Recognition: nhận diện tên người/tổ chức
+
+# --- Visual Similarity (pHash) ---
+mysql-connector-python>=8.0.0  # Kết nối MySQL lấy 100% sách
+scipy>=1.11.0                # 2D-DCT cho pHash chính xác hơn (fallback: numpy FFT)
+                             # Dùng trong: image_similarity_engine.py
+slowapi>=0.1.9             # Rate limiting (Phase 1.2)

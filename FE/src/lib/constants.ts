@@ -1,11 +1,17 @@
-export const API_BASE_URL = 'https://localhost:8443/bookdb';
+export const API_BASE_URL = '/bookdb';
+
+// Direct backend URL - used only for OAuth (Google needs an absolute redirect URI)
+export const API_BASE_URL_ABSOLUTE = 'https://localhost:8443/bookdb';
+
+// MinIO images are served through the Vite proxy at /minio
+export const MINIO_PROXY_BASE = '/minio/bookstore';
 
 export const API_VERSION = 'v1';
 
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login',
-    GMAIL_REDIRECT: `${API_BASE_URL}/auth/google`,
+    GMAIL_REDIRECT: `${API_BASE_URL_ABSOLUTE}/auth/google`,
     GMAIL_LOGIN: "/auth/login/google",
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
@@ -47,9 +53,9 @@ export const API_ENDPOINTS = {
   },
 
   ORDERS: {
-    LIST: '/orders',
-    DETAIL: (id: string) => `/orders/${id}`,
-    CREATE: '/orders',
+    LIST: '/user/orders',                                     // GET /user/orders (UserController)
+    DETAIL: (id: string) => `/user/orders/${id}`,             // GET /user/orders/:id (UserController)
+    CREATE: '/orders',                                        // POST /orders (OrderController)
     UPDATE_STATUS: (id: string) => `/orders/${id}/status`,
     CANCEL: (id: string) => `/orders/${id}/cancel`,
     RETURN: (id: string) => `/orders/${id}/return`,

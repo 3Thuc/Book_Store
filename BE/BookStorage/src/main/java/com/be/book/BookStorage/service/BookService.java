@@ -15,6 +15,9 @@ import com.be.book.BookStorage.exception.AppException;
 import com.be.book.BookStorage.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +43,44 @@ public class BookService {
     private final PublishersRepository publishersRepository;
     private final CategoryRepository categoryRepository;
     private final BookImageRepository bookImageRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${python.search.api.url:http://localhost:8000}")
+    private String pythonSearchApiUrl;
+
+    @Value("${ADMIN_API_KEY:ed8fc15c4634bdbdf4fe16135f717ffad99afb49d6c7cd60b089797c7b04aac5}")
+    private String adminApiKey;
+
+    private void syncBookToSearch(Integer bookId) {
+        syncBookToSearch(bookId, false);
+    }
+
+    private void syncBookToSearch(Integer bookId, boolean deleted) {
+        CompletableFuture.runAsync(() -> {
+            // 1. Đồng bộ vào OpenSearch (text/vector search)
+            try {
+                String url = pythonSearchApiUrl + "/admin/books/" + bookId + "/sync";
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("X-Admin-Key", adminApiKey);
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+                restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            } catch (Exception e) {
+                System.err.println("OpenSearch sync failed for book ID " + bookId + ": " + e.getMessage());
+            }
+
+            // 2. Đồng bộ vào OCR visual pHash index (tìm kiếm bằng ảnh bìa)
+            try {
+                String ocrUrl = "http://localhost:8005/api/ocr/index-book/" + bookId;
+                HttpHeaders ocrHeaders = new HttpHeaders();
+                ocrHeaders.set("X-Admin-Key", adminApiKey);
+                HttpEntity<String> ocrEntity = new HttpEntity<>(ocrHeaders);
+                HttpMethod method = deleted ? HttpMethod.DELETE : HttpMethod.POST;
+                restTemplate.exchange(ocrUrl, method, ocrEntity, String.class);
+            } catch (Exception e) {
+                System.err.println("OCR pHash index sync failed for book ID " + bookId + ": " + e.getMessage());
+            }
+        });
+    }
 
     private UserEntity validateAndGetUser(String email) {
         UserEntity user = userRepository.findByEmail(email)
@@ -51,18 +98,10 @@ public class BookService {
     }
 
     private BookRes mapToBookRes(BookEntity entity) {
+        // getCachedPresignedUrl: first call hits MinIO SDK (slow), subsequent calls instant
         String imageUrl = null;
         if (entity.getImage() != null && entity.getImage().getImageUrl() != null) {
-            try {
-                String rawImageUrl = entity.getImage().getImageUrl();
-                imageUrl = minioService.getPresignedUrl(rawImageUrl);
-                System.out.println("[BookService] Book " + entity.getBookId() + " (" + entity.getTitle() + ") - Raw image: " + rawImageUrl + " -> Presigned: " + imageUrl);
-            } catch (Exception e) {
-                System.err.println("[BookService] Error getting presigned URL for book " + entity.getBookId() + " (" + entity.getTitle() + "): " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("[BookService] Book " + entity.getBookId() + " (" + entity.getTitle() + ") - NO IMAGE (entity.image=" + entity.getImage() + ")");
+            imageUrl = minioService.getCachedPresignedUrl(entity.getImage().getImageUrl());
         }
 
         BookRes res = new BookRes(
@@ -87,7 +126,11 @@ public class BookService {
                         ) : null,
                 entity.getCategories() != null ?
                         entity.getCategories().stream()
-                                .map(c -> new CategoryRes(c.getCategoryId(), c.getCategoryName(), c.getStatus()))
+                                .map(c -> CategoryRes.builder()
+                                        .categoryId(c.getCategoryId())
+                                        .categoryName(c.getCategoryName())
+                                        .status(c.getStatus())
+                                        .build())
                                 .toList() : List.of()
         );
 
@@ -147,15 +190,57 @@ public class BookService {
     }
 
 
-    public PageRes<BookRes> getAdminBooks(int page, int size, Long category, String search) {
+    /**
+     * Giống mapToBookRes nhưng BỎ QUA việc lấy presigned URL từ MinIO.
+     * Dùng cho dashboard (không hiển thị ảnh trong stats cards).
+     * 500 sách → 0 MinIO calls thay vì 500 calls tuần tự.
+     */
+    private BookRes mapToBookResNoImage(BookEntity entity) {
+        BookRes res = new BookRes(
+                entity.getBookId(),
+                entity.getTitle(),
+                entity.getAuthor() != null ? entity.getAuthor().getAuthorName() : null,
+                entity.getPrice(),
+                entity.getPublicationYear(),
+                entity.getDescription(),
+                entity.getAvgRating(),
+                entity.getRatingCount(),
+                entity.getFormat(),
+                entity.getLanguage(),
+                entity.getStockQuantity(),
+                entity.getAvailableQuantity(),
+                entity.getStatus(),
+                null, // imageUrl = null → FE dùng icon placeholder, không ảnh hưởng stats
+                entity.getPublisher() != null ?
+                        new PublisherRes(
+                                entity.getPublisher().getPublisherId(),
+                                entity.getPublisher().getPublisherName()
+                        ) : null,
+                entity.getCategories() != null ?
+                        entity.getCategories().stream()
+                                .map(c -> CategoryRes.builder()
+                                        .categoryId(c.getCategoryId())
+                                        .categoryName(c.getCategoryName())
+                                        .status(c.getStatus())
+                                        .build())
+                                .toList() : List.of()
+        );
+        return res;
+    }
 
+    /**
+     * Load toàn bộ sách cho dashboard — KHÔNG sinh presigned URL.
+     * Nhanh hơn getAdminBooks ~20-50x với dataset lớn.
+     * @Cacheable: lần 2 trở đi trả tức thì từ RAM (~50ms).
+     */
+    @Cacheable(value = "adminDashboard", key = "'booksSlim'")
+    public PageRes<BookRes> getAdminBooksSlim(int page, int size, Long category, String search) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("bookId").ascending());
-
         Page<BookEntity> bookPage = bookRepository.findAllWithDetails(category, search, pageable);
 
         List<BookRes> books = bookPage.getContent()
                 .stream()
-                .map(this::mapToBookRes)
+                .map(this::mapToBookResNoImage)
                 .toList();
 
         return new PageRes<>(
@@ -167,13 +252,102 @@ public class BookService {
         );
     }
 
+    /**
+     * Tr\u1ea3 \u0111\u01b0\u1eddng d\u1eabn \u1ea3nh qua proxy /minio/bookstore/{path}.
+     * MinIO bucket \u0111\u00e3 public-read \u2192 Nginx/Vite proxy serve tr\u1ef1c ti\u1ebfp.
+     * 0 MinIO SDK calls \u2192 l\u1ea5y trang qu\u1ea3n l\u00fd s\u00e1ch t\u1ee9c th\u00ec.
+     */
+    private static final String MINIO_PROXY_PREFIX = "/minio/bookstore/";
+
+    private BookRes mapToBookResWithProxyPath(BookEntity entity) {
+        String imagePath = entity.getImage() != null && entity.getImage().getImageUrl() != null
+                ? entity.getImage().getImageUrl()
+                : null;
+        String proxyImageUrl = imagePath != null ? MINIO_PROXY_PREFIX + imagePath : null;
+
+        return new BookRes(
+                entity.getBookId(),
+                entity.getTitle(),
+                entity.getAuthor() != null ? entity.getAuthor().getAuthorName() : null,
+                entity.getPrice(),
+                entity.getPublicationYear(),
+                entity.getDescription(),
+                entity.getAvgRating(),
+                entity.getRatingCount(),
+                entity.getFormat(),
+                entity.getLanguage(),
+                entity.getStockQuantity(),
+                entity.getAvailableQuantity(),
+                entity.getStatus(),
+                proxyImageUrl,
+                entity.getPublisher() != null ?
+                        new PublisherRes(
+                                entity.getPublisher().getPublisherId(),
+                                entity.getPublisher().getPublisherName()
+                        ) : null,
+                entity.getCategories() != null ?
+                        entity.getCategories().stream()
+                                .map(c -> CategoryRes.builder()
+                                        .categoryId(c.getCategoryId())
+                                        .categoryName(c.getCategoryName())
+                                        .status(c.getStatus())
+                                        .build())
+                                .toList() : List.of()
+        );
+    }
+
+    /**
+     * Danh s\u00e1ch s\u00e1ch cho admin \u2014 d\u00f9ng proxy URL thay v\u00ec presigned URL.
+     * K\u1ebft qu\u1ea3 \u0111\u01b0\u1ee3c cache theo t\u1ed5 h\u1ee3p (page, size, category, search).
+     * Hi\u1ec7u su\u1ea5t: 0 MinIO calls, t\u1ed1c \u0111\u1ed9 page load ~5-10x nhanh h\u01a1n.
+     */
+    @Cacheable(value = "adminBooks", key = "#page + '-' + #size + '-' + #category + '-' + #search")
+    public PageRes<BookRes> getAdminBooks(int page, int size, Long category, String search) {
+        Pageable pageable = PageRequest.of(page - 1, size); // không cần sort vì query đã ORDER BY b.bookId ASC
+
+        // B\u01b0\u1edbc 1: Paginate ch\u1ec9 tr\u00ean IDs \u2014 DB-level LIMIT/OFFSET, kh\u00f4ng in-memory
+        Page<Integer> idsPage = bookRepository.findBookIdsPaged(category, search, pageable);
+
+        if (idsPage.isEmpty()) {
+            return new PageRes<>(List.of(), page, size, 0L, 0);
+        }
+
+        // B\u01b0\u1edbc 2: Fetch chi ti\u1ebft ch\u1ec9 cho nh\u1eefng ID v\u1eeba l\u1ea5y
+        List<Integer> ids = idsPage.getContent();
+        List<BookEntity> entities = bookRepository.findByIdsWithDetails(ids);
+
+        // Gi\u1eef \u0111\u00fang th\u1ee9 t\u1ef1 c\u1ee7a trang (sort theo th\u1ee9 t\u1ef1 ID)
+        Map<Integer, BookEntity> entityMap = entities.stream()
+                .collect(java.util.stream.Collectors.toMap(BookEntity::getBookId, e -> e));
+
+        List<BookRes> books = ids.stream()
+                .map(entityMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(this::mapToBookResWithProxyPath)
+                .toList();
+
+        return new PageRes<>(
+                books,
+                idsPage.getNumber() + 1,
+                idsPage.getSize(),
+                idsPage.getTotalElements(),
+                idsPage.getTotalPages()
+        );
+    }
+
 
     public BookRes getBookDetail(Integer id) {
         BookEntity entity = bookRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_FOUND));
 
-        Integer reserved = bookRepository.getReservedQuantity(id);
-        Integer available = entity.getStockQuantity() - reserved;
+        // Dùng getAvailableQuantity (SQL COALESCE) để tránh NullPointerException khi chưa có đơn nào
+        Integer available = bookRepository.getAvailableQuantity(id);
+        if (available == null) {
+            // Chưa có đơn nào pending/processing/shipped → tồn kho = stockQuantity
+            available = entity.getStockQuantity() != null ? entity.getStockQuantity() : 0;
+        }
+        // Đảm bảo không âm
+        available = Math.max(0, available);
 
         entity.setAvailableQuantity(available);
 
@@ -182,6 +356,7 @@ public class BookService {
 
         return res;
     }
+
 
 
 
@@ -212,6 +387,10 @@ public class BookService {
         );
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "adminDashboard", key = "'booksSlim'"),
+            @CacheEvict(value = "adminBooks", allEntries = true)
+    })
     public BookRes addBooks(String email, BookReq bookReq, org.springframework.web.multipart.MultipartFile imageFile) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -286,9 +465,15 @@ public class BookService {
             bookImageRepository.save(bookImage);
         }
 
+        syncBookToSearch(savedBook.getBookId());
+
         return mapToBookRes(savedBook);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "adminDashboard", allEntries = true),
+            @CacheEvict(value = "adminBooks", allEntries = true)
+    })
     public BookRes updateBook(String email, Integer bookId, BookReq bookReq, org.springframework.web.multipart.MultipartFile imageFile) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -394,6 +579,8 @@ public class BookService {
         book.setUpdatedAt(LocalDateTime.now());
         BookEntity updatedBook = bookRepository.save(book);
 
+        syncBookToSearch(updatedBook.getBookId());
+
         return mapToBookRes(updatedBook);
     }
 
@@ -479,6 +666,10 @@ public class BookService {
         int diff = distance.apply(s1, s2);
         return 1.0 - (double) diff / maxLen;
     }
+    @Caching(evict = {
+            @CacheEvict(value = "adminDashboard", allEntries = true),
+            @CacheEvict(value = "adminBooks", allEntries = true)
+    })
     public void deleteBook(String email, Integer id) {
         UserEntity user = validateAndGetUser(email);
 
@@ -493,6 +684,8 @@ public class BookService {
         book.setUpdatedAt(LocalDateTime.now());
         book.setDeletedBy(user.getUserId());
         bookRepository.save(book);
+
+        syncBookToSearch(book.getBookId(), true);  // true = xóa khỏi OCR + đánh dấu deleted trong OpenSearch
     }
 
 }

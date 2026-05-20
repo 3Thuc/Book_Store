@@ -33,6 +33,8 @@ public class SecurityConfig {
             "/api/payment/**",
             "/img/**",
             "/ws/**",
+            "/error",
+            "/admin/cache/evict"   // Internal: Python chatbot dùng X-Admin-Key, không cần JWT
     };
 
     private final CustomJwtDecoder customJwtDecoder;

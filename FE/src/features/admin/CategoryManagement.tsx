@@ -4,41 +4,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
-import { Switch } from '../../components/ui/switch';
-import { Plus, Edit, Trash2, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, PowerOff, RotateCcw, AlertTriangle } from 'lucide-react';
 import PaginationControls from '../../components/admin/PaginationControls';
 
 export const CategoryManagement: React.FC = () => {
-  const { categories, books, addCategory, updateCategory, deleteCategory } = useAdmin();
+  const { categories, addCategory, updateCategory, deleteCategory, hardDeleteCategory } = useAdmin();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    categoryName: '',
-    status: ItemStatus.Active,
-  });
-  // pagination for categories similar to authors/publishers
+  const [formData, setFormData] = useState({ categoryName: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  // Confirm dialog state
+  type ConfirmAction = 'deactivate' | 'restore' | 'hardDelete';
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>('deactivate');
+  const [actionTarget, setActionTarget] = useState<Category | null>(null);
+
+  // Dùng bookCount từ server (được tính chính xác trong CategoryRes)
+  const getCategoryBookCount = (category: Category): number =>
+    (category as any).bookCount ?? 0;
 
   const handleOpenDialog = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({
-        categoryName: category.categoryName,
-        
-        status: category.status ?? ItemStatus.Active,
-      });
+      setFormData({ categoryName: category.categoryName });
     } else {
       setEditingCategory(null);
-      setFormData({
-        categoryName: '',
-        status: ItemStatus.Active,
-      });
+      setFormData({ categoryName: '' });
     }
     setDialogOpen(true);
   };
@@ -49,37 +44,73 @@ export const CategoryManagement: React.FC = () => {
     if (editingCategory) {
       updateCategory(editingCategory.id, {
         categoryName: formData.categoryName.trim(),
-        status: formData.status,
+        status: editingCategory.status, // giữ nguyên status khi edit tên
       });
     } else {
       addCategory({
         categoryName: formData.categoryName.trim(),
-        status: formData.status,
+        status: ItemStatus.Active,
       });
     }
 
     setDialogOpen(false);
-    setFormData({ categoryName: '', status: ItemStatus.Active });
+    setFormData({ categoryName: '' });
     setEditingCategory(null);
   };
 
-  const handleDelete = (category: Category) => {
-    setCategoryToDelete(category);
-    setDeleteDialogOpen(true);
+  const openConfirm = (action: ConfirmAction, category: Category, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmAction(action);
+    setActionTarget(category);
+    setConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (categoryToDelete) {
-      deleteCategory(categoryToDelete.id);
-      setDeleteDialogOpen(false);
-      setCategoryToDelete(null);
+  const handleConfirm = async () => {
+    if (!actionTarget) return;
+    setConfirmOpen(false);
+
+    if (confirmAction === 'deactivate') {
+      await deleteCategory(actionTarget.id);
+    } else if (confirmAction === 'restore') {
+      await updateCategory(actionTarget.id, { status: ItemStatus.Active, categoryName: actionTarget.categoryName });
+    } else if (confirmAction === 'hardDelete') {
+      await hardDeleteCategory(actionTarget.id);
     }
+
+    setActionTarget(null);
   };
 
-  // Get book count for each category
-  const getCategoryBookCount = (categoryName: string) => {
-    return books.filter(book => Array.isArray(book.categories) && book.categories.some((c: any) => c.categoryName === categoryName)).length;
+  const confirmMeta = {
+    deactivate: {
+      title: 'Vô hiệu hóa danh mục',
+      desc: (name: string, count: number) =>
+        `Danh mục "${name}" có ${count} sách. Vô hiệu hóa sẽ ẩn danh mục khỏi trang người dùng nhưng sách vẫn được giữ nguyên.`,
+      btnLabel: 'Vô hiệu hóa',
+      btnVariant: 'destructive' as const,
+    },
+    restore: {
+      title: 'Kích hoạt lại danh mục',
+      desc: (name: string) => `Danh mục "${name}" sẽ được kích hoạt và hiển thị lại trên trang người dùng.`,
+      btnLabel: 'Kích hoạt',
+      btnVariant: 'default' as const,
+    },
+    hardDelete: {
+      title: 'Xóa vĩnh viễn danh mục',
+      desc: (name: string) =>
+        `Bạn có chắc muốn xóa vĩnh viễn danh mục "${name}"? Thao tác này KHÔNG thể hoàn tác.`,
+      btnLabel: 'Xóa vĩnh viễn',
+      btnVariant: 'destructive' as const,
+    },
   };
+
+  const sorted = [...categories].sort((a, b) => {
+    const aActive = a.status === ItemStatus.Active;
+    const bActive = b.status === ItemStatus.Active;
+    if (aActive === bActive) return a.categoryName.localeCompare(b.categoryName, 'vi');
+    return aActive ? -1 : 1;
+  });
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = sorted.slice(start, start + pageSize);
 
   return (
     <div className="space-y-6">
@@ -88,7 +119,7 @@ export const CategoryManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Quản lý danh mục</CardTitle>
-              <CardDescription>Thêm, sửa, xóa danh mục sách</CardDescription>
+              <CardDescription>Thêm, sửa, vô hiệu hóa hoặc xóa danh mục sách</CardDescription>
             </div>
             <Button onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
@@ -98,67 +129,80 @@ export const CategoryManagement: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {(() => {
-              const sorted = [...categories].sort((a, b) => {
-                const aActive = a.status === ItemStatus.Active;
-                const bActive = b.status === ItemStatus.Active;
-                if (aActive === bActive) return 0;
-                return aActive ? -1 : 1;
-              });
-              const total = sorted.length;
-              const totalPages = Math.max(1, Math.ceil(total / pageSize));
-              const start = (currentPage - 1) * pageSize;
-              const pageItems = sorted.slice(start, start + pageSize);
+            {pageItems.map((category) => {
+              const bookCount = getCategoryBookCount(category);
+              const isActive = category.status === ItemStatus.Active;
 
-              return pageItems.map((category) => {
-                const bookCount = getCategoryBookCount(category.categoryName);
-                const statusActive = category.status === ItemStatus.Active;
+              return (
+                <Card
+                  key={category.id}
+                  className={`relative cursor-pointer transition-all ${isActive ? 'hover:shadow-md' : 'opacity-60 grayscale'}`}
+                  onClick={() => handleOpenDialog(category)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-5 w-5 text-primary shrink-0" />
+                        <CardTitle className="text-base leading-snug">{category.categoryName}</CardTitle>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        <Badge variant={isActive ? 'secondary' : 'destructive'} className="text-xs">
+                          {isActive ? 'active' : 'deleted'}
+                        </Badge>
+                        {/* Nút Sửa tên */}
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={(e) => { e.stopPropagation(); handleOpenDialog(category); }}
+                          title="Chỉnh sửa tên"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
 
-                return (
-                  <Card key={category.id} className={`relative cursor-pointer ${statusActive ? '' : 'opacity-60 grayscale'}`} onClick={() => handleOpenDialog(category)}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-5 w-5 text-primary" />
-                          <CardTitle className="text-lg">{category.categoryName}</CardTitle>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={statusActive ? 'secondary' : 'destructive'}>{statusActive ? 'active' : 'deleted'}</Badge>
+                        {isActive ? (
                           <>
+                            {/* Vô hiệu hóa */}
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); handleOpenDialog(category); }}
+                              variant="ghost" size="sm"
+                              onClick={(e) => openConfirm('deactivate', category, e)}
+                              title="Vô hiệu hóa"
                             >
-                              <Edit className="h-4 w-4" />
+                              <PowerOff className="h-4 w-4 text-amber-500" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); handleDelete(category); }}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            {/* Xóa vĩnh viễn — chỉ hiện khi 0 sách */}
+                            {bookCount === 0 && (
+                              <Button
+                                variant="ghost" size="sm"
+                                onClick={(e) => openConfirm('hardDelete', category, e)}
+                                title="Xóa vĩnh viễn"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
                           </>
-                        </div>
+                        ) : (
+                          /* Kích hoạt lại */
+                          <Button
+                            variant="ghost" size="sm"
+                            onClick={(e) => openConfirm('restore', category, e)}
+                            title="Kích hoạt lại"
+                          >
+                            <RotateCcw className="h-4 w-4 text-green-600" />
+                          </Button>
+                        )}
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Số lượng sách</span>
-                          <Badge variant="secondary">{bookCount}</Badge>
-                        </div>
-                        {/* description removed per UI requirement */}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              });
-            })()}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Số lượng sách</span>
+                      <Badge variant="secondary">{bookCount}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
-          {/* Pagination controls for categories */}
           <PaginationControls
             totalItems={categories.length}
             currentPage={currentPage}
@@ -167,7 +211,7 @@ export const CategoryManagement: React.FC = () => {
             onPageChange={(p: number) => setCurrentPage(p)}
             onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
             loading={false}
-            pageSizeOptions={[6,9,12,15]}
+            pageSizeOptions={[6, 9, 12, 15]}
           />
 
           {categories.filter(cat => cat.status === ItemStatus.Active).length === 0 && (
@@ -180,16 +224,15 @@ export const CategoryManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Dialog — chỉ sửa TÊN, không động status */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}</DialogTitle>
+            <DialogTitle>{editingCategory ? 'Chỉnh sửa tên danh mục' : 'Thêm danh mục mới'}</DialogTitle>
             <DialogDescription>
-              {editingCategory 
-                ? 'Cập nhật thông tin danh mục'
-                : 'Nhập thông tin danh mục mới cho sách'
-              }
+              {editingCategory
+                ? 'Cập nhật tên danh mục. Trạng thái không thay đổi.'
+                : 'Nhập tên danh mục mới cho sách'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -198,27 +241,15 @@ export const CategoryManagement: React.FC = () => {
               <Input
                 id="categoryName"
                 value={formData.categoryName}
-                onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })}
+                onChange={(e) => setFormData({ categoryName: e.target.value })}
                 placeholder="VD: Khoa học viễn tưởng"
                 autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               />
             </div>
-            <div className="flex items-center gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="categoryActive">Trạng thái</Label>
-                <div className="flex items-center gap-2">
-                  <Switch id="categoryActive" checked={formData.status === ItemStatus.Active} onCheckedChange={(v) => setFormData({ ...formData, status: v ? ItemStatus.Active : ItemStatus.Deleted })} />
-                  <span className="text-sm text-muted-foreground">{formData.status === ItemStatus.Active ? 'active' : 'deleted'}</span>
-                </div>
-              </div>
-            </div>
-            {/* slug removed: UI uses `name` only */}
-            {/* description field removed */}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Hủy
-            </Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Hủy</Button>
             <Button onClick={handleSubmit} disabled={!formData.categoryName.trim()}>
               {editingCategory ? 'Cập nhật' : 'Thêm danh mục'}
             </Button>
@@ -226,24 +257,27 @@ export const CategoryManagement: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Confirm Action Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xóa danh mục</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {confirmAction === 'hardDelete' && <AlertTriangle className="h-5 w-5 text-destructive" />}
+              {actionTarget && confirmMeta[confirmAction].title}
+            </DialogTitle>
             <DialogDescription>
-              Bạn có chắc muốn xóa danh mục "{categoryToDelete?.categoryName}"?
-              <br />
-              <br />
-              Thao tác này sẽ ẩn danh mục khỏi hệ thống. Các sách thuộc danh mục này ({getCategoryBookCount(categoryToDelete?.categoryName || '')}) sẽ vẫn giữ nguyên.
+              {actionTarget && confirmAction === 'deactivate' &&
+                confirmMeta.deactivate.desc(actionTarget.categoryName, getCategoryBookCount(actionTarget))}
+              {actionTarget && confirmAction === 'restore' &&
+                confirmMeta.restore.desc(actionTarget.categoryName)}
+              {actionTarget && confirmAction === 'hardDelete' &&
+                confirmMeta.hardDelete.desc(actionTarget.categoryName)}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Xóa danh mục
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Hủy</Button>
+            <Button variant={confirmMeta[confirmAction]?.btnVariant} onClick={handleConfirm}>
+              {confirmMeta[confirmAction]?.btnLabel}
             </Button>
           </DialogFooter>
         </DialogContent>

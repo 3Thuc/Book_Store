@@ -7,6 +7,7 @@ import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,34 @@ public class MinioService {
                         .expiry(7, TimeUnit.DAYS)
                         .build()
         );
+    }
+
+    /**
+     * Presigned URL được CACHE để tránh gọi MinIO SDK lặp lại.
+     * Lần đầu gọi: chậm (SDK call) → cache kết quả.
+     * Các lần sau: instant từ cache.
+     * Cache tên: "imageUrls", key = objectName.
+     */
+    @Cacheable(value = "imageUrls", key = "#objectName")
+    public String getCachedPresignedUrl(String objectName) {
+        if (objectName == null || objectName.isBlank()) return null;
+        if (objectName.startsWith("http")) return objectName;
+        try {
+            return getPresignedUrl(objectName);
+        } catch (Exception e) {
+            // Fallback: direct URL qua Vite proxy /minio/*
+            return getPublicUrl(objectName);
+        }
+    }
+
+    /**
+     * URL trực tiếp qua FE proxy (/minio/bucket/objectName) — không cần presigning.
+     * Chỉ hoạt động nếu MinIO bucket có public-read policy.
+     */
+    public String getPublicUrl(String objectName) {
+        if (objectName == null || objectName.isBlank()) return null;
+        if (objectName.startsWith("http")) return objectName;
+        return "/minio/" + bucketName + "/" + objectName;
     }
 
     public String uploadFile(MultipartFile file, String objectPath) throws Exception {

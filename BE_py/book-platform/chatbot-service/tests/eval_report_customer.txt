@@ -1,0 +1,47 @@
+
+==============================================================================
+  📊 KẾT QUẢ CUSTOMER EVALUATION v6 – 125 cases
+==============================================================================
+  API OK        : 125/125 = 100.0%
+  Intent Acc    : 123/125 = 98.4%
+  Keyword Found : 96/125 = 76.8%
+  SERVER_ERROR  : 0
+  CONN_ERROR    : 0
+  Latency avg   : 765ms
+──────────────────────────────────────────────────────────────────────────────
+  Intent                           OK  Total     Acc  Bar
+──────────────────────────────────────────────────────────────────────────────
+  account_help                      3/3      100.0%  ██████████
+  book_availability                 4/4      100.0%  ██████████
+  book_compare                      4/4      100.0%  ██████████
+  book_detail                       5/5      100.0%  ██████████
+  book_review                       4/4      100.0%  ██████████
+  book_search                       6/6      100.0%  ██████████
+  cart_help                         3/4       75.0%  ███████░░░
+  chitchat                          5/5      100.0%  ██████████
+  complaint_damaged                 4/4      100.0%  ██████████
+  complaint_wrong                   3/4       75.0%  ███████░░░
+  confirmation_no                   2/2      100.0%  ██████████
+  confirmation_yes                  2/2      100.0%  ██████████
+  loyalty_points                    4/4      100.0%  ██████████
+  order_cancel                      5/5      100.0%  ██████████
+  order_history                     4/4      100.0%  ██████████
+  order_status                      6/6      100.0%  ██████████
+  out_of_scope                      3/3      100.0%  ██████████
+  payment_issue                     5/5      100.0%  ██████████
+  payment_method                    6/6      100.0%  ██████████
+  promotion_current                 4/4      100.0%  ██████████
+  recommend_category                5/5      100.0%  ██████████
+  recommend_combo                   4/4      100.0%  ██████████
+  recommend_gift                    4/4      100.0%  ██████████
+  recommend_personal                5/5      100.0%  ██████████
+  recommend_trending                5/5      100.0%  ██████████
+  return_policy                     5/5      100.0%  ██████████
+  return_request                    5/5      100.0%  ██████████
+  store_info                        4/4      100.0%  ██████████
+  voucher_apply                     4/4      100.0%  ██████████
+
+  ❌ 2 FAILED CASES:
+    C1069 [cart_help] "them sach nay vao gio hang giup minh voi" → got [book_search]
+    C1097 [complaint_wrong] "dat sach tieng anh ma nhan ban tieng viet" → got [book_detail]
+==============================================================================

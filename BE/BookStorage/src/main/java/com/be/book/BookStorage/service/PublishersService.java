@@ -1,18 +1,13 @@
 package com.be.book.BookStorage.service;
 
-import com.be.book.BookStorage.dto.Request.Admin.AuthorReq;
 import com.be.book.BookStorage.dto.Request.Admin.PublishersReq;
-import com.be.book.BookStorage.dto.Response.Admin.AuthorRes;
 import com.be.book.BookStorage.dto.Response.Admin.PublishersRes;
-import com.be.book.BookStorage.dto.Response.Book.CategoryRes;
-import com.be.book.BookStorage.entity.AuthorEntity;
 import com.be.book.BookStorage.entity.PublisherEntity;
 import com.be.book.BookStorage.entity.UserEntity;
 import com.be.book.BookStorage.enums.Role;
 import com.be.book.BookStorage.enums.Status;
 import com.be.book.BookStorage.exception.AppException;
 import com.be.book.BookStorage.exception.ErrorCode;
-import com.be.book.BookStorage.repository.CategoryRepository;
 import com.be.book.BookStorage.repository.PublishersRepository;
 import com.be.book.BookStorage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +27,7 @@ public class PublishersService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getRole() != Role.admin && user.getRole() != Role.staff ) {
+        if (user.getRole() != Role.admin && user.getRole() != Role.staff) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         if (user.getStatus() != Status.active) {
@@ -45,11 +40,13 @@ public class PublishersService {
 
         return publishersRepository.findAll()
                 .stream()
-                .map(publisher -> new PublishersRes(
-                        publisher.getPublisherId(),
-                        publisher.getPublisherName(),
-                        publisher.getStatus()
-                ))
+                .map(publisher -> PublishersRes.builder()
+                        .publisherId(publisher.getPublisherId())
+                        .publisherName(publisher.getPublisherName())
+                        .status(publisher.getStatus())
+                        .bookCount(publishersRepository.countBooksByPublisherId(publisher.getPublisherId()))
+                        .build()
+                )
                 .toList();
     }
 
@@ -58,12 +55,14 @@ public class PublishersService {
 
         String name = publishersReq.getPublisherName().trim();
 
-        if (publishersRepository.existsByPublisherName(name)) {
+        // Chỉ chặn trùng tên với NXB ACTIVE (không chặn trùng với deleted)
+        if (publishersRepository.existsByActivePublisherName(name)) {
             throw new AppException(ErrorCode.PUBLISHER_ALREADY_EXISTED);
         }
 
         PublisherEntity publisher = new PublisherEntity();
         publisher.setPublisherName(name);
+        publisher.setStatus(publishersReq.getStatus() != null ? publishersReq.getStatus() : Status.active);
         publisher.setCreatedAt(LocalDateTime.now());
         publisher.setUpdatedAt(LocalDateTime.now());
         PublisherEntity saved = publishersRepository.save(publisher);
@@ -71,6 +70,7 @@ public class PublishersService {
         return PublishersRes.builder()
                 .publisherId(saved.getPublisherId())
                 .publisherName(saved.getPublisherName())
+                .status(saved.getStatus())
                 .build();
     }
 
@@ -89,7 +89,9 @@ public class PublishersService {
             throw new AppException(ErrorCode.PUBLISHER_ALREADY_EXISTED);
         }
         publisher.setPublisherName(publishersReq.getPublisherName());
-        publisher.setStatus(publishersReq.getStatus());
+        if (publishersReq.getStatus() != null) {
+            publisher.setStatus(publishersReq.getStatus());
+        }
         publisher.setUpdatedAt(LocalDateTime.now());
         PublisherEntity saved = publishersRepository.save(publisher);
         return PublishersRes.builder()
@@ -99,6 +101,7 @@ public class PublishersService {
                 .build();
     }
 
+    /** Soft delete: đổi status → deleted, giữ record trong DB */
     public void deletePublishers(String email, Integer id) {
         checkPermission(email);
 
@@ -110,5 +113,19 @@ public class PublishersService {
 
         publishersRepository.save(publisher);
     }
-}
 
+    /** Hard delete: xóa vĩnh viễn — chỉ cho phép khi NXB không có sách nào */
+    public void hardDeletePublisher(String email, Integer id) {
+        checkPermission(email);
+
+        PublisherEntity publisher = publishersRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PUBLISHER_NOT_FOUND));
+
+        long bookCount = publishersRepository.countBooksByPublisherId(id);
+        if (bookCount > 0) {
+            throw new AppException(ErrorCode.PUBLISHER_HAS_BOOKS);
+        }
+
+        publishersRepository.delete(publisher);
+    }
+}

@@ -1,11 +1,8 @@
 package com.be.book.BookStorage.service;
 
 import com.be.book.BookStorage.dto.Request.Admin.AuthorReq;
-import com.be.book.BookStorage.dto.Request.Admin.PublishersReq;
 import com.be.book.BookStorage.dto.Response.Admin.AuthorRes;
-import com.be.book.BookStorage.dto.Response.Admin.PublishersRes;
 import com.be.book.BookStorage.entity.AuthorEntity;
-import com.be.book.BookStorage.entity.PublisherEntity;
 import com.be.book.BookStorage.entity.UserEntity;
 import com.be.book.BookStorage.enums.Role;
 import com.be.book.BookStorage.enums.Status;
@@ -24,15 +21,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthorService {
     private final AuthorRepository authorRepository;
-
-
     private final UserRepository userRepository;
 
     private void checkPermission(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (user.getRole() != Role.admin && user.getRole() != Role.staff ) {
+        if (user.getRole() != Role.admin && user.getRole() != Role.staff) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         if (user.getStatus() != Status.active) {
@@ -45,12 +40,14 @@ public class AuthorService {
 
         return authorRepository.findAll()
                 .stream()
-                .map(authors -> new AuthorRes(
-                        authors.getAuthorId(),
-                        authors.getAuthorName(),
-                        authors.getBio(),
-                        authors.getStatus()
-                ))
+                .map(author -> AuthorRes.builder()
+                        .authorId(author.getAuthorId())
+                        .authorName(author.getAuthorName())
+                        .bio(author.getBio())
+                        .status(author.getStatus())
+                        .bookCount(authorRepository.countBooksByAuthorId(author.getAuthorId()))
+                        .build()
+                )
                 .toList();
     }
 
@@ -59,7 +56,8 @@ public class AuthorService {
 
         String name = authorReq.getAuthorName().trim();
 
-        if (authorRepository.existsByAuthorName(name)) {
+        // Chỉ chặn trùng tên với tác giả ACTIVE (không chặn trùng với deleted)
+        if (authorRepository.existsByActiveAuthorName(name)) {
             throw new AppException(ErrorCode.AUTHOR_ALREADY_EXISTED);
         }
 
@@ -68,7 +66,7 @@ public class AuthorService {
         author.setBio(authorReq.getBio());
         author.setCreatedAt(LocalDateTime.now());
         author.setUpdatedAt(LocalDateTime.now());
-        author.setStatus(Status.active);
+        author.setStatus(authorReq.getStatus() != null ? authorReq.getStatus() : Status.active);
         AuthorEntity saved = authorRepository.save(author);
 
         return AuthorRes.builder()
@@ -78,6 +76,7 @@ public class AuthorService {
                 .status(saved.getStatus())
                 .build();
     }
+
     public AuthorRes updateAuthor(String email, AuthorReq authorReq, Integer id) {
         checkPermission(email);
 
@@ -94,7 +93,9 @@ public class AuthorService {
         }
         author.setAuthorName(authorReq.getAuthorName());
         author.setBio(authorReq.getBio());
-        author.setStatus(authorReq.getStatus());
+        if (authorReq.getStatus() != null) {
+            author.setStatus(authorReq.getStatus());
+        }
         author.setUpdatedAt(LocalDateTime.now());
         AuthorEntity saved = authorRepository.save(author);
         return AuthorRes.builder()
@@ -105,6 +106,7 @@ public class AuthorService {
                 .build();
     }
 
+    /** Soft delete: đổi status → deleted, giữ record trong DB */
     public void deleteAuthor(String email, Integer id) {
         checkPermission(email);
 
@@ -113,8 +115,21 @@ public class AuthorService {
 
         author.setStatus(Status.deleted);
         author.setUpdatedAt(LocalDateTime.now());
-
         authorRepository.save(author);
     }
 
+    /** Hard delete: xóa vĩnh viễn — chỉ cho phép khi tác giả không có sách nào */
+    public void hardDeleteAuthor(String email, Integer id) {
+        checkPermission(email);
+
+        AuthorEntity author = authorRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUTHOR_NOT_FOUND));
+
+        long bookCount = authorRepository.countBooksByAuthorId(id);
+        if (bookCount > 0) {
+            throw new AppException(ErrorCode.AUTHOR_HAS_BOOKS);
+        }
+
+        authorRepository.delete(author);
+    }
 }

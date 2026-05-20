@@ -1,0 +1,39 @@
+
+==============================================================================
+  📊 KẾT QUẢ ADMIN EVALUATION v6 – 104 cases
+==============================================================================
+  API OK              : 104/104 = 100.0%
+  Intent Acc (all)    : 104/104 = 100.0%
+  Keyword Found       : 95/104 = 91.3%
+  Regex-guaranteed    : 96/96 = 100.0% (excl. OOS & order_stats)
+  SBERT OOS acc       : 2/2 = 100.0% (model-dependent)
+  order_stats acc     : 6/6 = 100.0% (SERVER_ERROR endpoint)
+  SERVER_ERROR        : 0
+  CONN_ERROR          : 0
+  Latency avg         : 187ms
+──────────────────────────────────────────────────────────────────────────────
+  Intent                               OK  Total     Acc  Bar
+──────────────────────────────────────────────────────────────────────────────
+  admin_book_add_guide                  3/3      100.0%  ██████████
+  admin_book_low_rating                 4/4      100.0%  ██████████
+  admin_book_status_change              4/4      100.0%  ██████████
+  admin_category_manage                 4/4      100.0%  ██████████
+  admin_chitchat                        5/5      100.0%  ██████████
+  admin_dashboard_summary               8/8      100.0%  ██████████
+  admin_escalated_customers             3/3      100.0%  ██████████
+  admin_list_staff                      5/5      100.0%  ██████████
+  admin_order_stats                     6/6      100.0%  ██████████ ⚠️SERVER
+  admin_out_of_scope                    2/2      100.0%  ██████████ ⚠️SBERT
+  admin_promotion_check                 4/4      100.0%  ██████████
+  admin_promotion_create_guide          3/3      100.0%  ██████████
+  admin_promotion_expiring              3/3      100.0%  ██████████
+  admin_promotion_list                  4/4      100.0%  ██████████
+  admin_revenue_report                  8/8      100.0%  ██████████
+  admin_system_health                   4/4      100.0%  ██████████
+  admin_top_books                       5/5      100.0%  ██████████
+  admin_user_lock_unlock                6/6      100.0%  ██████████
+  admin_user_lookup                     6/6      100.0%  ██████████
+  admin_user_reset_password             5/5      100.0%  ██████████
+  admin_user_stats                      6/6      100.0%  ██████████
+  admin_user_update_role                6/6      100.0%  ██████████
+==============================================================================

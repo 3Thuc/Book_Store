@@ -35,7 +35,7 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 export const OrderManagement: React.FC = () => {
-  const { orders, updateOrderStatus, refreshOrders } = useAdmin();
+  const { orders, updateOrderStatus, refreshOrders, prefetchedOrdersPage } = useAdmin();
   const { promotions } = useAdmin();
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -48,12 +48,22 @@ export const OrderManagement: React.FC = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [paginatedOrders, setPaginatedOrders] = useState<Order[]>([]); // Track paginated data separately
-  const [isLoadingPage, setIsLoadingPage] = useState<boolean>(true);
+  // Khởi tạo từ prefetch nếu có — hiển thị ngay, không chờ API
+  const [totalPages, setTotalPages] = useState<number>(prefetchedOrdersPage?.totalPages ?? 1);
+  const [totalItems, setTotalItems] = useState<number>(prefetchedOrdersPage?.totalElements ?? 0);
+  const [paginatedOrders, setPaginatedOrders] = useState<Order[]>(prefetchedOrdersPage?.data ?? []);
+  const [isLoadingPage, setIsLoadingPage] = useState<boolean>(!prefetchedOrdersPage);
   const prevOrdersLength = useRef(orders.length);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  // Cờ kiểm tra đã dude prefetch import vào state chưa
+  const prefetchConsumedRef = useRef(!!prefetchedOrdersPage);
+
+  // Debounce search: chứ 400ms sau khi gõ xong mới fetch lại
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Check for new orders and show notification
   useEffect(() => {
@@ -63,39 +73,43 @@ export const OrderManagement: React.FC = () => {
     prevOrdersLength.current = orders.length;
   }, [orders.length]);
 
-  // Fetch orders when page, pageSize, filter, or search changes
+  // Fetch orders khi page, pageSize, filter, hoặc search thay đổi
   useEffect(() => {
     const fetchOrders = async () => {
+      // Nếu đây là lần render đầu tiên và đã có dữ liệu prefetch (trang 1, không filter)
+      // → hiển thị prefetch ngay, refresh im lặng phía sau
+      const isDefaultView = currentPage === 1 && filterStatus === 'all' && !debouncedSearch.trim();
+      if (prefetchConsumedRef.current && isDefaultView) {
+        prefetchConsumedRef.current = false; // chỉ dùng prefetch 1 lần
+        // Silent refresh: không show loading, cập nhật data trong nền
+        try {
+          const res = await adminService.getOrders({ page: 1, size: pageSize });
+          const data = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
+          const meta = res?.result;
+          if (Array.isArray(data)) {
+            setPaginatedOrders(data);
+            if (meta?.totalPages) setTotalPages(meta.totalPages);
+            if (meta?.totalElements !== undefined) setTotalItems(meta.totalElements);
+          }
+        } catch (e) { /* silent */ }
+        return;
+      }
+
       setIsLoadingPage(true);
       try {
-        const params: any = { 
-          page: currentPage, 
-          size: pageSize 
+        const params: any = {
+          page: currentPage,
+          size: pageSize
         };
-        
-        // Add status filter if not 'all'
-        if (filterStatus !== 'all') {
-          params.status = filterStatus;
-        }
-        
-        // Add search query if exists
-        if (searchQuery.trim()) {
-          params.search = searchQuery.trim();
-        }
-        
+        if (filterStatus !== 'all') params.status = filterStatus;
+        if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+
         const response = await adminService.getOrders(params);
         const data = response?.result?.books ?? response?.result?.data ?? response?.result ?? [];
         const pagination = response?.result;
-        
-        console.log('Orders response:', response);
-        console.log('Orders data:', data);
-        console.log('Pagination:', pagination);
-        
+
         if (Array.isArray(data)) {
-          // Set paginated orders directly from API response (not from context)
           setPaginatedOrders(data);
-          
-          // Update pagination info if available
           if (pagination?.totalPages) setTotalPages(pagination.totalPages);
           if (pagination?.totalElements !== undefined) setTotalItems(pagination.totalElements);
         }
@@ -106,22 +120,123 @@ export const OrderManagement: React.FC = () => {
         setIsLoadingPage(false);
       }
     };
-    
-    fetchOrders();
-  }, [currentPage, pageSize, filterStatus, searchQuery]);
 
-  // Auto refresh orders every 30 seconds (increased to reduce server load)
+    fetchOrders();
+  }, [currentPage, pageSize, filterStatus, debouncedSearch]);
+
+  // Auto refresh orders every 30 seconds — dùng smart merge để giữ optimistic overrides
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('Auto refreshing orders...');
       const params: any = { page: currentPage, size: pageSize };
       if (filterStatus !== 'all') params.status = filterStatus;
       if (searchQuery.trim()) params.search = searchQuery.trim();
-      refreshOrders(params);
+
+      adminService.getOrders(params).then(res => {
+        const data: Order[] = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
+        if (!Array.isArray(data)) return;
+
+        const overrides = optimisticOverridesRef.current;
+        if (overrides.size === 0) {
+          // Không có override → cập nhật bình thường
+          setPaginatedOrders(data);
+          return;
+        }
+        // Có override → merge để giữ lại
+        const merged = data.map(order => {
+          const sid = String(order.id);
+          const override = overrides.get(sid);
+          if (!override) return order;
+          if (order.status === override) { overrides.delete(sid); return order; }
+          return { ...order, status: override };
+        });
+        setPaginatedOrders(merged);
+      }).catch(() => {});
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [refreshOrders, currentPage, pageSize, filterStatus, searchQuery]);
+  }, [currentPage, pageSize, filterStatus, searchQuery]);
+
+  // Lắng nghe sự kiện từ Chatbot (Optimistic Update)
+  // Dùng ref để track các override đang "pending" — tránh bị background fetch xóa mất
+  const optimisticOverridesRef = useRef<Map<string, OrderStatus>>(new Map());
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        source?: string; role?: string;
+        orderId?: number | null; newStatus?: string | null;
+      };
+
+      if (detail.orderId && detail.newStatus) {
+        // Phase 1: Cập nhật ngay lập tức UI trên bảng (0ms)
+        const id = String(detail.orderId);
+        const newSt = detail.newStatus as OrderStatus;
+
+        // Lưu override vào ref để background fetch biết mà giữ lại
+        optimisticOverridesRef.current.set(id, newSt);
+
+        // Map status code → label tiếng Việt để hiển thị toast
+        const statusLabels: Record<string, string> = {
+          pending: 'Chờ xử lý', processing: 'Đang xử lý',
+          shipped: 'Đang giao hàng', delivered: 'Đã giao',
+          cancelled: 'Đã hủy', cancel_requested: 'Yêu cầu hủy',
+          failed: 'Giao thất bại', returned: 'Đã hoàn hàng',
+          return_requested: 'Yêu cầu hoàn',
+        };
+        const statusLabel = statusLabels[detail.newStatus] ?? detail.newStatus;
+
+        setPaginatedOrders(prev => prev.map(order =>
+          String(order.id) === id ? { ...order, status: newSt } : order
+        ));
+
+        // 🔔 Hiển thị toast thành công ngay lập tức
+        toast.success(`✅ Đơn #${id} → ${statusLabel}`, {
+          description: 'Cập nhật từ Staff AI Chatbot',
+          duration: 4000,
+        });
+      } else if (detail.source === 'chatbot') {
+        // Mutation detected nhưng không parse được order/status → toast generic
+        toast.info('🤖 Staff AI đã cập nhật dữ liệu', { duration: 3000 });
+      }
+
+      // Phase 2: Delay 2s để Java cache kịp evict trước khi fetch lại
+      // Sau khi fetch, MERGE với optimistic overrides thay vì replace hoàn toàn
+      setTimeout(() => {
+        const params: any = { page: currentPage, size: pageSize };
+        if (filterStatus !== 'all') params.status = filterStatus;
+        if (searchQuery.trim()) params.search = searchQuery.trim();
+
+        adminService.getOrders(params).then(res => {
+          const data: Order[] = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
+          if (!Array.isArray(data)) return;
+
+          const overrides = optimisticOverridesRef.current;
+
+          // Smart merge: áp dụng lại optimistic overrides lên data server
+          // Nếu server đã có status mới → xóa override (server đã catch up)
+          const merged = data.map(order => {
+            const sid = String(order.id);
+            const override = overrides.get(sid);
+            if (!override) return order;
+
+            if (order.status === override) {
+              // Server đã catch up → xóa override khỏi tracking
+              overrides.delete(sid);
+              return order;
+            }
+            // Server vẫn trả status cũ → giữ optimistic override
+            return { ...order, status: override };
+          });
+
+          setPaginatedOrders(merged);
+        }).catch(() => {});
+      }, 2000);
+    };
+
+    window.addEventListener('bookstore:data-changed', handler);
+    return () => window.removeEventListener('bookstore:data-changed', handler);
+  }, [currentPage, pageSize, filterStatus, searchQuery]);
+
 
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -137,7 +252,7 @@ export const OrderManagement: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedOrderIds(new Set()); // Clear selection when filter changes
-  }, [filterStatus, searchQuery]);
+  }, [filterStatus, debouncedSearch]);
 
   // Clear selection when changing page
   useEffect(() => {
@@ -220,7 +335,7 @@ export const OrderManagement: React.FC = () => {
         color: 'text-red-700 bg-red-200'
       },
     };
-    return configs[status] || { 
+    return configs[String(status).toUpperCase() as OrderStatus] || { 
       label: status, 
       variant: 'secondary' as const, 
       icon: Clock,
@@ -241,20 +356,24 @@ export const OrderManagement: React.FC = () => {
 
   // Workflow: Các trạng thái tiếp theo có thể chuyển đến
   const getNextStatuses = (currentStatus: OrderStatus, order?: Order): OrderStatus[] => {
-    const workflow: Partial<Record<OrderStatus, OrderStatus[]>> = {
-      PENDING: ['PROCESSING', 'CANCEL_REQUESTED'],
-      PROCESSING: ['SHIPPED', 'CANCEL_REQUESTED'],
-      SHIPPED: ['FAILED'],
-      DELIVERED: [],
+    const workflow: Partial<Record<string, OrderStatus[]>> = {
+      PENDING:          ['PROCESSING', 'CANCEL_REQUESTED'],
+      PROCESSING:       ['SHIPPED', 'CANCEL_REQUESTED'],
+      SHIPPED:          ['FAILED'],
+      DELIVERED:        [],
       CANCEL_REQUESTED: ['CANCELLED'],
       RETURN_REQUESTED: ['RETURNED'],
-      CANCELLED: [],
-      RETURNED: [],
-      FAILED: [],
+      CANCELLED:        [],
+      RETURNED:         [],
+      FAILED:           ['PENDING'],   // Staff có thể re-queue để giao lại
     };
 
-    return (workflow[currentStatus] as OrderStatus[] | undefined) || [];
+    // Normalize: Python chatbot trả lowercase ('processing'), Java trả UPPERCASE ('PROCESSING')
+    // → chuẩn hóa về UPPERCASE để lookup đúng
+    const key = String(currentStatus).toUpperCase();
+    return (workflow[key] as OrderStatus[] | undefined) || [];
   };
+
 
   // Check if transition is auto or manual
   const isAutoStatus = (fromStatus: OrderStatus, toStatus: OrderStatus): boolean => {
@@ -288,27 +407,20 @@ export const OrderManagement: React.FC = () => {
       // Gửi API để cập nhật trạng thái
       await adminService.updateOrderStatus(order.id, { status: newStatus });
       
-      // Fetch lại dữ liệu từ API ngay lập tức
+      // Fetch lại dữ liệu từ API ngay lập tức (chỉ 1 call, bỏ qua double-fetch)
       const params: any = { page: currentPage, size: pageSize };
       if (filterStatus !== 'all') params.status = filterStatus;
       if (searchQuery.trim()) params.search = searchQuery.trim();
-      
+
       const response = await adminService.getOrders(params);
       const data = response?.result?.books ?? response?.result?.data ?? response?.result ?? [];
-      
+
       if (Array.isArray(data)) {
         setPaginatedOrders(data);
-        
-        // Cập nhật selectedOrder với dữ liệu mới từ API
-        const updatedOrder = data.find(o => String(o.id) === String(order.id));
-        if (updatedOrder) {
-          setSelectedOrder(updatedOrder);
-        }
+        const updatedOrder = data.find((o: any) => String(o.id) === String(order.id));
+        if (updatedOrder) setSelectedOrder(updatedOrder);
       }
-      
-      // Cũng refresh context orders
-      await refreshOrders(params);
-      
+
       toast.success('Cập nhật trạng thái thành công', { id: toastId });
     } catch (err) {
       toast.error('Lỗi khi cập nhật trạng thái', { id: toastId });
@@ -402,7 +514,7 @@ export const OrderManagement: React.FC = () => {
     }
   };
 
-  // Statistics from context orders (same as dashboard for consistency)
+  // Statistics fetched from dedicated API endpoint (accurate, not from partial context)
   const [statistics, setStatistics] = useState<{
     totalOrders: number;
     pendingOrders: number;
@@ -415,24 +527,41 @@ export const OrderManagement: React.FC = () => {
     totalRevenue: 0,
   });
 
-  // Calculate statistics from orders context (same logic as dashboard)
+  // Fetch statistics from API — dùng ORDER_STATS thay vì tính từ orders[] (partial)
   useEffect(() => {
-    if (orders.length > 0) {
-      const totalRevenue = orders
-        .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED')
-        .reduce((sum, o) => sum + o.totalAmount, 0);
+    const fetchStats = async () => {
+      try {
+        const res = await adminService.getOrderStats();
+        const data = res?.result ?? res?.data ?? res;
+        if (data) {
+          setStatistics({
+            totalOrders:           data.totalOrders          ?? data.total          ?? 0,
+            pendingOrders:         data.pendingOrders         ?? data.pending        ?? 0,
+            returnRequestedOrders: data.returnRequestedOrders ?? data.returnRequested ?? 0,
+            totalRevenue:          data.totalRevenue          ?? data.revenue        ?? 0,
+          });
+          return; // API thành công → dùng luôn
+        }
+      } catch {
+        /* API chưa có → fallback tính từ context orders */
+      }
 
-      const pendingOrders = orders.filter(o => o.status === 'PENDING').length;
-      const returnRequestedOrders = orders.filter(o => o.status === 'RETURN_REQUESTED').length;
+      // Fallback: tính từ context orders (không chính xác nếu chưa load hết)
+      if (orders.length > 0) {
+        const totalRevenue = orders
+          .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED')
+          .reduce((sum, o) => sum + o.totalAmount, 0);
+        setStatistics({
+          totalOrders:           orders.length,
+          pendingOrders:         orders.filter(o => o.status === 'PENDING').length,
+          returnRequestedOrders: orders.filter(o => o.status === 'RETURN_REQUESTED').length,
+          totalRevenue,
+        });
+      }
+    };
 
-      setStatistics({
-        totalOrders: orders.length,
-        pendingOrders,
-        returnRequestedOrders,
-        totalRevenue,
-      });
-    }
-  }, [orders]);
+    fetchStats();
+  }, [orders]); // Re-fetch khi orders thay đổi (auto-refresh trigger)
 
   return (
     <div id="order-management" className="space-y-6">
@@ -772,11 +901,11 @@ export const OrderManagement: React.FC = () => {
                         <p className="text-xs text-muted-foreground">{item.author}</p>
                       </div>
                       <div className="text-right whitespace-nowrap">
-                        <p className="font-medium text-sm">{formatCurrency(item.price)}</p>
+                        <p className="font-medium text-sm">{formatCurrency(item.price / item.quantity)}</p>
                         <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                       </div>
                         <div className="font-medium text-sm">
-                          {formatCurrency(item.price * item.quantity)}
+                          {formatCurrency(item.price)}
                         </div>
                       </div>
                     );

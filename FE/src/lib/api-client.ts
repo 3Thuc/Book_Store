@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } f
 import { toast } from "sonner";
 import { API_BASE_URL, API_ENDPOINTS } from "./constants";
 
-const API_TIMEOUT = 30000;
+const API_TIMEOUT = 60000; // 60s – đủ cho lần load đầu tiên
 
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
@@ -118,7 +118,16 @@ apiClient.interceptors.response.use(
         const { status, data } = error.response;
         switch (status) {
           case 403:
-            toast.error("Bạn không có quyền truy cập tài nguyên này.");
+            if (code === 1026) {
+              clearAuth();
+              if (window.location.pathname !== '/login') {
+                window.location.href = "/login?auth_error=locked";
+              } else {
+                toast.error("Tài khoản của bạn đã bị khóa. Không thể đăng nhập.", { duration: 10000 });
+              }
+            } else {
+              toast.error("Bạn không có quyền truy cập tài nguyên này.");
+            }
             break;
           case 404:
             toast.error(data?.message || "Không tìm thấy tài nguyên.");

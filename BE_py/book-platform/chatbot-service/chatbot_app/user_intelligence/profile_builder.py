@@ -32,57 +32,62 @@ def build_user_profile(user_id: int) -> dict:
     """
     Xây dựng profile người dùng từ dữ liệu hành vi trong DB.
     Trả về dict với: favorite_genres, avg_price, cluster_id, tone.
+    FIX: try/except bảo vệ toàn bộ DB calls.
     """
     if not user_id:
         return _default_profile()
 
-    conn = get_connection()
-    cur  = conn.cursor(dictionary=True)
+    try:
+        conn = get_connection()
+        cur  = conn.cursor(dictionary=True)
+        try:
+            # Thể loại yêu thích (từ sách đã mua/xem nhiều)
+            cur.execute("""
+                SELECT c.category_name, SUM(
+                    CASE ua.action_type
+                        WHEN 'purchase'    THEN 8
+                        WHEN 'add_to_cart' THEN 3
+                        WHEN 'view'        THEN 1
+                        ELSE 0
+                    END
+                ) AS w
+                FROM user_actions ua
+                JOIN book_categories bc ON bc.book_id = ua.book_id
+                JOIN categories c ON c.category_id = bc.category_id
+                WHERE ua.user_id = %s
+                GROUP BY c.category_name
+                ORDER BY w DESC
+                LIMIT 3
+            """, (user_id,))
+            fav_genres = [r["category_name"] for r in cur.fetchall()]
 
-    # Thể loại yêu thích (từ sách đã mua/xem nhiều)
-    cur.execute("""
-        SELECT c.category_name, SUM(
-            CASE ua.action_type
-                WHEN 'purchase'    THEN 8
-                WHEN 'add_to_cart' THEN 3
-                WHEN 'view'        THEN 1
-                ELSE 0
-            END
-        ) AS w
-        FROM user_actions ua
-        JOIN book_categories bc ON bc.book_id = ua.book_id
-        JOIN categories c ON c.category_id = bc.category_id
-        WHERE ua.user_id = %s
-        GROUP BY c.category_name
-        ORDER BY w DESC
-        LIMIT 3
-    """, (user_id,))
-    fav_genres = [r["category_name"] for r in cur.fetchall()]
+            # Giá trung bình sách đã mua
+            cur.execute("""
+                SELECT AVG(b.price) AS avg_price
+                FROM user_actions ua
+                JOIN books b ON b.book_id = ua.book_id
+                WHERE ua.user_id = %s AND ua.action_type = 'purchase'
+            """, (user_id,))
+            row = cur.fetchone()
+            avg_price = float(row["avg_price"] or 0) if row else 0.0
+        finally:
+            cur.close()
+            conn.close()
 
-    # Giá trung bình sách đã mua
-    cur.execute("""
-        SELECT AVG(b.price) AS avg_price
-        FROM user_actions ua
-        JOIN books b ON b.book_id = ua.book_id
-        WHERE ua.user_id = %s AND ua.action_type = 'purchase'
-    """, (user_id,))
-    row = cur.fetchone()
-    avg_price = float(row["avg_price"] or 0)
+        # Xác định cluster đơn giản (rule-based, đủ dùng cho MVP)
+        cluster_id = _simple_cluster(avg_price, fav_genres)
 
-    cur.close()
-    conn.close()
-
-    # Xác định cluster đơn giản (rule-based, đủ dùng cho MVP)
-    cluster_id = _simple_cluster(avg_price, fav_genres)
-
-    return {
-        "user_id":      user_id,
-        "cluster_id":   cluster_id,
-        "cluster_name": CLUSTER_NAMES.get(cluster_id, "casual"),
-        "tone":         CLUSTER_TONES.get(cluster_id, CLUSTER_TONES[3]),
-        "favorite_genres": fav_genres,
-        "avg_price":    round(avg_price, 0),
-    }
+        return {
+            "user_id":      user_id,
+            "cluster_id":   cluster_id,
+            "cluster_name": CLUSTER_NAMES.get(cluster_id, "casual"),
+            "tone":         CLUSTER_TONES.get(cluster_id, CLUSTER_TONES[3]),
+            "favorite_genres": fav_genres,
+            "avg_price":    round(avg_price, 0),
+        }
+    except Exception as e:
+        print(f"⚠️ [build_user_profile] DB error for user_id={user_id}: {e}")
+        return _default_profile()
 
 
 def _simple_cluster(avg_price: float, genres: list) -> int:

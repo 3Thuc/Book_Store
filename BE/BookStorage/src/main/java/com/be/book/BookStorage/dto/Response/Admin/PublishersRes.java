@@ -1,6 +1,5 @@
 package com.be.book.BookStorage.dto.Response.Admin;
 
-
 import com.be.book.BookStorage.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublishersRes {
-    private  Integer publisherId;
-    private  String publisherName;
+    private Integer publisherId;
+    private String publisherName;
     private Status status;
+    private long bookCount;
 }

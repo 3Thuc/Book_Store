@@ -11,12 +11,16 @@ export const migrateOrderStatus = () => {
     'paid': 'PAID',
     'confirmed': 'CONFIRMED',
     'packing': 'PACKING',
+    'processing': 'PROCESSING',
     'shipped': 'SHIPPED',
     'completed': 'DELIVERED', // Old 'completed' -> new 'DELIVERED'
     'delivered': 'DELIVERED',
+    'cancel_requested': 'CANCEL_REQUESTED',
     'cancelled': 'CANCELLED',
     'canceled': 'CANCELLED', // Handle typo
+    'return_requested': 'RETURN_REQUESTED',
     'returned': 'RETURNED',
+    'failed': 'FAILED',
   };
 
   try {

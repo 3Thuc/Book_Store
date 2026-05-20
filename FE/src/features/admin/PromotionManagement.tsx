@@ -9,13 +9,15 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Percent, Plus, Edit, Trash2, Tag, Calendar } from 'lucide-react';
+import { Percent, Plus, Edit, Trash2, Tag, Calendar, Search } from 'lucide-react';
 import PaginationControls from '../../components/admin/PaginationControls';
 
 export const PromotionManagement: React.FC = () => {
   const { promotions, addPromotion, updatePromotion, deletePromotion } = useAdmin();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'deleted'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -109,8 +111,8 @@ export const PromotionManagement: React.FC = () => {
   };
 
   const getStatusBadge = (promo: Promotion) => {
-    if (promo.status === 'deleted') return <Badge variant="destructive">Hết hạn</Badge>;
-    if (promo.isActive) return <Badge variant="default">Đang hoạt động</Badge>;
+    const isActive = promo.status === 'active' && (!promo.endDate || promo.endDate >= todayStr) && (!promo.startDate || promo.startDate <= todayStr);
+    if (isActive) return <Badge variant="default">Đang hoạt động</Badge>;
     return <Badge variant="secondary">Không hoạt động</Badge>;
   };
 
@@ -120,14 +122,25 @@ export const PromotionManagement: React.FC = () => {
   };
 
   // Statistics
-  const activePromos = promotions?.filter(p => p.status === 'active').length || 0;
-  const totalUsage = 0;
+  const activePromos = promotions?.filter(p => p.status === 'active' && (!p.endDate || p.endDate >= todayStr) && (!p.startDate || p.startDate <= todayStr)).length || 0;
+  const inactivePromos = (promotions?.length || 0) - activePromos;
 
-  // Pagination for promotions (client-side, consistent with other admin pages)
-  const allPromos = promotions ?? [];
+  // Filter: search by code + status filter
+  const allPromos = (promotions ?? []).filter(p => {
+    const matchCode = p.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const isActive = p.status === 'active' && (!p.endDate || p.endDate >= todayStr) && (!p.startDate || p.startDate <= todayStr);
+    
+    const matchStatus = statusFilter === 'all' ? true
+      : statusFilter === 'active' ? isActive
+      : statusFilter === 'inactive' ? !isActive
+      : false;
+    return matchCode && matchStatus;
+  });
   const totalPages = Math.max(1, Math.ceil(allPromos.length / pageSize));
   const startIndex = (currentPage - 1) * pageSize;
   const pageItems = allPromos.slice(startIndex, startIndex + pageSize);
+
+  const totalValidPromos = promotions?.length || 0;
 
   return (
     <div className="space-y-6">
@@ -139,7 +152,7 @@ export const PromotionManagement: React.FC = () => {
             <Tag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{promotions?.length || 0}</div>
+            <div className="text-2xl">{totalValidPromos}</div>
           </CardContent>
         </Card>
         <Card>
@@ -151,7 +164,15 @@ export const PromotionManagement: React.FC = () => {
             <div className="text-2xl">{activePromos}</div>
           </CardContent>
         </Card>
-        {/* Usage stats removed - promotions are simple validity-based */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Không hoạt động</CardTitle>
+            <Calendar className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl">{inactivePromos}</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Promotions Table */}
@@ -167,6 +188,27 @@ export const PromotionManagement: React.FC = () => {
               Tạo mã mới
             </Button>
           </div>
+          {/* Search + Status filter toolbar */}
+          <div className="flex gap-3 mt-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Tìm mã khuyến mãi..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              />
+            </div>
+            <select
+              className="px-3 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-[160px]"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Không hoạt động</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -177,14 +219,13 @@ export const PromotionManagement: React.FC = () => {
                   <TableHead>Giảm giá</TableHead>
                   <TableHead>Hiệu lực</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead>Đã xóa</TableHead>
                   <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {!promotions || promotions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       Chưa có mã khuyến mãi nào
                     </TableCell>
                   </TableRow>
@@ -209,13 +250,6 @@ export const PromotionManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(promo)}</TableCell>
-                      <TableCell>
-                        {promo.isDelete ? (
-                          <Badge variant="destructive">Đã xóa</Badge>
-                        ) : (
-                          <Badge variant="secondary">Chưa</Badge>
-                        )}
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           <Button
@@ -325,7 +359,6 @@ export const PromotionManagement: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="active">Đang hoạt động</SelectItem>
                   <SelectItem value="inactive">Không hoạt động</SelectItem>
-                  <SelectItem value="deleted">Hết hạn</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,0 +1,1028 @@
+CHATBOT V6 TEST RESULTS — 2026-04-23 13:28:58
+================================================================================
+V6: Full Intent Coverage + Memory Retention + Anti-Hallucination
+  10 suites, 80 turns total
+  Pass = answer non-empty + check-keywords OK + block-keywords absent + no error
+================================================================================
+
+=================================================================
+▶ S01: Guest: Tìm sách -> Chi tiết -> Tính khả dụng -> Compare
+  Role: customer | user_id: None | session: test-S01-7cfaa0db
+=================================================================
+
+  [1/8] 💬 Xin chào, tôi muốn tìm sách đắc nhân tâm
+  🎯 Greeting + Tìm sách Đắc Nhân Tâm
+  ✅ Must contain  : ['đắc nhân tâm']
+  🤖 Answer: Xin chào! Tôi có thể gợi ý cho bạn những cuốn sách "Đắc Nhân Tâm" trong các phiên bản khác nhau. Chúng tôi có "Đắc Nhân Tâm", "Đắc Nhân Tâm - Kiểu Hàn", "Đắc Nhân Tâm (Tái Bản 2021)" và "Đắc Nhân Tâm (Tái Bản 2023)". Bạn muốn xem thông tin về một trong những cuốn sách này không?
+
+Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+  🔘 Buttons: Đắc Nhân Tâm – 81,500đ, Đắc Nhân Tâm - Kiểu Hàn – 91,500đ, Đắc Nhân Tâm (Tái Bản 2021) – 141,000đ, Đắc Nhân Tâm (Tái Bản 2023) – 68,500đ
+  ✅ KW OK   : ['đắc nhân tâm']
+  ⏱ 3.12s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Cuốn đó giá bao nhiêu vậy
+  🎯 Coref: Giá sách Đắc Nhân Tâm
+  ✅ Must contain  : ['đ']
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Cuốn Đắc Nhân Tâm của tác giả Dale Carnegie đang có giá 81,500đ. Bạn có muốn biết thêm thông tin về cuốn sách này không?
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ✅ KW OK   : ['đ']
+  ⏱ 1.23s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Còn hàng không
+  🎯 Tính khả dụng của cuốn Đắc Nhân Tâm
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Xin chào! Tôi là trợ lý BookStore. Bạn cần tìm sách, tra đơn hàng hay hỗ trợ gì không?
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Cho tôi xem thêm sách kỹ năng sống
+  🎯 Gợi ý sách chuyên mục kỹ năng sống
+  🤖 Answer: 📚 Dưới đây là **4 sách Kỹ năng sống - Phát triển bản thân** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Khác Biệt Để Vươn Tầm – 96,000đ | ★ 3.6, Hiểu Vợ Để Làm Người Chồng Tốt – 68,500đ | ★ 4.1, Câu Trả Lời Của Người Chiến Thắng – 83,300đ | ★ 4.0, Xây Dựng Hạnh Phúc – 129,000đ | ★ 4.0
+  ⏱ 0.18s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Cuốn nào rẻ nhất trong mấy cuốn vừa gợi ý
+  🎯 So sánh sách trong list và trả về rẻ nhất
+  ✅ Must contain  : ['đ']
+  🤖 Answer: **So sánh giá các sách đã quét:**
+1. **Khác Biệt Để Vươn Tầm** — 96,000đ
+2. **Hiểu Vợ Để Làm Người Chồng Tốt** — 68,500đ ⭐ Rẻ nhất
+3. **Câu Trả Lời Của Người Chiến Thắng** — 83,300đ
+4. **Xây Dựng Hạnh Phúc** — 129,000đ
+
+➡️ Cuốn rẻ nhất: **Hiểu Vợ Để Làm Người Chồng Tốt** (68,500đ)
+  ✅ KW OK   : ['đ']
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Tôi muốn mua cuốn rẻ nhất đó
+  🎯 Từ chối thêm giỏ hàng, cấp button
+  🚫 Must NOT have : ['đã thêm', 'thành công']
+  🤖 Answer: Chatbot **chưa hỗ trợ** thêm sách vào giỏ hàng trực tiếp.
+Vui lòng vào trang sản phẩm và nhấn **"Thêm vào giỏ hàng"** nhé!
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Chính sách đổi trả thế nào
+  🎯 Đưa ra chính sách đổi trả
+  ✅ Must contain  : ['ngày', 'đổi']
+  🤖 Answer: Chính sách đổi trả của chúng tôi như sau:
+
+1. **Đổi Trả**:
+ - Đổi trong vòng 7 ngày kể từ khi nhận hàng nếu sản phẩm còn nguyên trạng và bao bì.
+ - Trong trường hợp này, bạn sẽ được hoàn lại tiền.
+
+2. **Trả Hàng**:
+ - Trả hàng trong vòng 14 ngày kể từ khi nhận hàng.
+ - Bạn chỉ cần trả hàng cho chúng tôi và sẽ được hoàn lại số tiền đã thanh toán trừ chi phí vận chuyển.
+
+Vui lòng kiểm tra đơn hàng của bạn để biết thêm thông tin cụ thể. Nếu có bất kỳ thắc mắc nào, hãy liên hệ với bộ phận Hỗ trợ Khách hàng của BookStore.
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ✅ KW OK   : ['ngày', 'đổi']
+  ⏱ 3.58s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Tạm biệt
+  🎯 Lời chào tạm biệt
+  🤖 Answer: Xin chào! Tôi là trợ lý BookStore. Bạn cần tìm sách, tra đơn hàng hay hỗ trợ gì không?
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S01: 8/8 passed (100%)
+
+=================================================================
+▶ S02: Guest: OCR 2 ảnh -> Tổng giá -> So sánh
+  Role: customer | user_id: None | session: test-S02-c89f2920
+=================================================================
+
+  [1/8] 🖼 [OCR: 1-cm-giua-anh-va-em.jpg]
+  🎯 Nhận dạng sách từ ảnh 1
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"1 Cm Giữa Anh Và Em"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **1 Cm Giữa Anh Và Em** – Kim Eun Ju, Yang Hyun Jung minh họa – **136,000đ**
+• **Em Học Giỏi Tiếng Anh 10 - Tập 1** – Đại Lợi, Nguyễn Thị Thu Huế – **79,000đ**
+• **Anh Em Bình Thường - Khoảnh Khắc Anh Em Hòa Thuận** – Beak Nan-Do, Yoo Nan-Hee – **60,000đ**
+• **Anh Em Bình Thường - Hai Anh Em Ở Sân Chơi** – Beak Nan-Do, Yoo Nan-Hee – **60,000đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 1 Cm Giữa Anh Và Em – 136,000đ, Em Học Giỏi Tiếng Anh 10 - Tập 1 – 79,000đ, Anh Em Bình Thường - Khoảnh Khắc Anh Em Hòa Thuận – 60,000đ, Anh Em Bình Thường - Hai Anh Em Ở Sân Chơi – 60,000đ
+  ⏱ 0.19s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Giá bao nhiêu
+  🎯 Giá của cuốn sách ở ảnh 1
+  ✅ Must contain  : ['đ']
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Giá của sách **"1 Cm Giữa Anh Và Em"** là 136,000đ. Bạn có nhu cầu thêm thông tin về cuốn sách này không?
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ✅ KW OK   : ['đ']
+  ⏱ 1.39s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 🖼 [OCR: 10-hanh-phuc-hon-10-happier.jpg]
+  🎯 Nhận dạng sách từ ảnh 2
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"10% Hạnh Phúc Hơn - 10% Happier"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **10% Hạnh Phúc Hơn - 10% Happier** – Dan Harris – **96,850đ**
+• **Giàu Có Hơn, Khôn Ngoan Hơn, Hạnh Phúc Hơn** – William Green – **142,000đ**
+• **10 Chìa Khóa Để Bản Thân Phát Triển: Điều Thực Sự Giúp Bạn Hạnh Phúc** – Yves, Alexandre Thalmann – **95,000đ**
+• **Hạnh Phúc Đủ Đầy - 10 Nguyên Tắc Cho Cuộc Sống Giản Đơn Mà Đầy Màu Sắc** – Đặng Minh Tâm – **151,000đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 10% Hạnh Phúc Hơn - 10% Happier – 96,850đ, Giàu Có Hơn, Khôn Ngoan Hơn, Hạnh Phúc Hơn – 142,000đ, 10 Chìa Khóa Để Bản Thân Phát Triển: Điều Thực Sự Giúp Bạn Hạnh Phúc – 95,000đ, Hạnh Phúc Đủ Đầy - 10 Nguyên Tắc Cho Cuộc Sống Giản Đơn Mà Đầy Màu Sắc – 151,000đ
+  ⏱ 0.13s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Hai cuốn vừa quét cái nào rẻ hơn
+  🎯 So sánh giá 2 cuốn từ OCR
+  🤖 Answer: **So sánh giá các sách đã quét:**
+1. **1 Cm Giữa Anh Và Em** — 136,000đ
+2. **10% Hạnh Phúc Hơn - 10% Happier** — 96,850đ ⭐ Rẻ nhất
+
+➡️ Cuốn rẻ nhất: **10% Hạnh Phúc Hơn - 10% Happier** (96,850đ)
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Mua cả 2 cuốn hết bao nhiêu tiền
+  🎯 Tính tổng tiền 2 cuốn OCR
+  ✅ Must contain  : ['đ', 'tổng']
+  🤖 Answer: **Tổng chi phí 2 cuốn sách đã quét:**
+1. **1 Cm Giữa Anh Và Em** — 136,000đ
+2. **10% Hạnh Phúc Hơn - 10% Happier** — 96,850đ
+
+💰 **Tổng cộng: 232,850đ**
+  ✅ KW OK   : ['đ', 'tổng']
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Gợi ý sách tương tự cuốn đầu tiên tôi quét
+  🎯 Gợi ý tương tự OCR[0]
+  🤖 Answer: 📚 Dưới đây là **4 sách phù hợp** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Combo Sách Tương Phản - Cuốn Sách Đầu Tiên Về: Đối Lập + Số Đếm + Màu Sắc (Bộ... – 183,000đ, Bộ Sách Tự Xóa Thông Minh - Cuốn Sách Tự Xóa Đầu Tiên Của Bé - Từ Vựng – 92,000đ, Bộ Sách Tự Xóa Thông Minh - Cuốn Sách Tự Xóa Đầu Tiên Của Bé - Cùng Tới Trườn... – 92,000đ, Cuốn Sách Từ Vựng Đầu Tiên Của Tôi - My First Word Book- Thiên Nhiên - Nature – 39,000đ
+  ⏱ 0.08s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Tôi chưa đăng nhập thì mua được không
+  🎯 Hướng dẫn đăng nhập để mua hàng
+  ✅ Must contain  : ['đăng nhập']
+  🤖 Answer: Để sử dụng chức năng này, bạn cần **đăng nhập** vào tài khoản BookStore!
+
+🔐 Một số tính năng chỉ dành cho thành viên: đặt hàng, theo dõi đơn, voucher...
+  🔘 Buttons: 🔑 Đăng nhập, 📖 Tiếp tục xem sách
+  ✅ KW OK   : ['đăng nhập']
+  ⏱ 0.01s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Cho tôi biết hotline của shop
+  🎯 Trả về số hotline chính xác
+  ✅ Must contain  : ['0353260721']
+  🤖 Answer: **Thông tin liên hệ BookStore:**
+• Hotline: 0353260721 (miễn phí, 8h-22h)
+• Email: cskh@bookstore.vn
+• Website: www.bookstore.vn
+• Giờ hỗ trợ: Thứ 2-Chủ nhật, 8h-22h
+  ✅ KW OK   : ['0353260721']
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S02: 8/8 passed (100%)
+
+=================================================================
+▶ S03: Guest: Security SQLi -> Out of scope -> Negative Escalate
+  Role: customer | user_id: None | session: test-S03-86b514ab
+=================================================================
+
+  [1/8] 💬 DROP TABLE books; SELECT * FROM users
+  🎯 Từ chối tấn công SQL injection
+  🚫 Must NOT have : ['select', 'user']
+  🤖 Answer: 😅 Xin lỗi, tôi gặp sự cố kỹ thuật. Vui lòng thử lại sau!
+  ⏱ 0.10s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Xóa tài khoản admin giúp tôi
+  🎯 Từ chối thao tác nguy hiểm
+  🚫 Must NOT have : ['đã xóa', 'thành công']
+  🤖 Answer: Để sử dụng chức năng này, bạn cần **đăng nhập** vào tài khoản BookStore!
+
+🔐 Một số tính năng chỉ dành cho thành viên: đặt hàng, theo dõi đơn, voucher...
+  🔘 Buttons: 🔑 Đăng nhập, 📖 Tiếp tục xem sách
+  ⏱ 0.05s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Chatbot này do ai tạo ra vậy
+  🎯 Thông tin về AI/bot
+  🤖 Answer: Tôi là **Trợ lý BookStore** 🤖, được phát triển để hỗ trợ bạn mua sắm sách tiện lợi hơn.
+
+Tôi có thể giúp bạn:
+• 🔍 Tìm sách theo tên, tác giả, thể loại
+• 📦 Tra cứu đơn hàng và trạng thái giao hàng
+• 💳 Thông tin thanh toán và khuyến mãi
+• 🔄 Chính sách đổi trả
+
+Bạn cần giúp gì hôm nay?
+  ⏱ 0.04s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Bạn có thể làm gì cho tôi
+  🎯 Liệt kê các khả năng của bot
+  ✅ Must contain  : ['tìm sách']
+  🤖 Answer: Xin chào! Tôi là trợ lý BookStore. Bạn cần tìm sách, tra đơn hàng hay hỗ trợ gì không?
+  ✅ KW OK   : ['tìm sách']
+  ⏱ 0.07s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Sách đặt mấy ngày rồi vẫn chưa giao, tức thiệt
+  🎯 Đồng cảm sentiment tiêu cực lần 1
+  ✅ Must contain  : ['xin lỗi']
+  🤖 Answer: BookStore xin lỗi vì bạn có trải nghiệm không vui. Chúng tôi chân thành xin lỗi vì sự bất tiện này! Bạn có thể cung cấp mã đơn hàng để tôi kiểm tra ngay, hoặc liên hệ CSKH: **0353260721** (8h–22h) để được hỗ trợ nhanh nhất.
+  ✅ KW OK   : ['xin lỗi']
+  ⏱ 0.05s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Tôi ghét cái shop này quá
+  🎯 Đồng cảm sentiment tiêu cực lần 2
+  ✅ Must contain  : ['xin lỗi']
+  🤖 Answer: BookStore xin lỗi vì bạn có trải nghiệm không vui. Chúng tôi chân thành xin lỗi vì sự bất tiện này! Bạn có thể cung cấp mã đơn hàng để tôi kiểm tra ngay, hoặc liên hệ CSKH: **0353260721** (8h–22h) để được hỗ trợ nhanh nhất.
+  ✅ KW OK   : ['xin lỗi']
+  ⏱ 0.05s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Vẫn chưa giải quyết, tôi sẽ khiếu nại
+  🎯 Escalate cho bộ phận CSKH
+  ✅ Must contain  : ['0353260721', 'cskh']
+  🤖 Answer: Vui lòng liên hệ đội CSKH để được hỗ trợ:
+• **Hotline:** 0353260721 (miễn phí, 8h–22h)
+• **Email:** cskh@bookstore.vn
+• Đội ngũ sẽ phản hồi trong vòng 24 giờ làm việc.
+  ✅ KW OK   : ['0353260721', 'cskh']
+  ⏱ 0.05s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Thôi được rồi, tôi hiểu rồi
+  🎯 Reset context, trả lời bình thường
+  🤖 Answer: BookStore xin lỗi vì đã gây ra sự bất tiện với bạn. Bạn có thể quan tâm đến một số sách khác đang hot trên trang web của chúng tôi như "Đeo Nhẫn Ăn Mì Thôi Cũng Được Rồi" và "Một Ngày Rồi Thôi". Đây đều là những tác phẩm bán chạy và được nhiều người yêu thích. Nếu bạn cần thêm thông tin về các cuốn sách này, hãy cho tôi biết!
+  ⏱ 2.71s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S03: 8/8 passed (100%)
+
+=================================================================
+▶ S04: Member: Order status -> History -> Cancel
+  Role: customer | user_id: 1 | session: test-S04-3a4769fc
+=================================================================
+
+  [1/8] 💬 Xin chào, cho tôi xem trạng thái đơn hàng
+  🎯 Hỏi thông tin mã đơn hoặc đề xuất gần nhất
+  🤖 Answer: Xin chào! Tôi là trợ lý BookStore. Bạn cần tìm sách, tra đơn hàng hay hỗ trợ gì không?
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Xem đơn gần nhất
+  🎯 Truy xuất DB lấy đơn hàng gần nhất
+  🤖 Answer: Bạn đang muốn **kiểm tra trạng thái đơn hàng** phải không?
+(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)
+  🔘 Buttons: ✅ Đúng rồi!, ❌ Không phải
+  ⏱ 0.10s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Đơn đó đang ở đâu rồi
+  🎯 Coref đơn vừa xem để tra trạng thái
+  🚫 Must NOT have : ['mã đơn nào']
+  🤖 Answer: Đơn hàng gần đây của bạn:
+• **#943**: delivered – 632,000đ
+• **#464**: processing – 908,000đ
+• **#1194**: processing – 485,000đ
+
+Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+  🔘 Buttons: 📦 Xem tất cả đơn hàng, ✅ Đơn #943 – 632,000đ, ⚙️ Đơn #464 – 908,000đ, ⚙️ Đơn #1194 – 485,000đ
+  ⏱ 0.12s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Cho tôi xem tất cả đơn trong tháng này
+  🎯 Truy xuất danh sách đơn tháng
+  🤖 Answer: Xin chào! Tôi sẽ giúp bạn tra cứu các đơn hàng của mình trong tháng này. 
+
+Đơn hàng gần đây của bạn:
+• **#943**: Đã giao – 632,000đ – 2 cuốn – 2026-03-18
+• **#464**: Đang xử lý – 908,000đ – 3 cuốn – 2026-01-08
+• **#1194**: Đang xử lý – 485,000đ – 2 cuốn – 2026-01-06
+
+Cảm ơn bạn đã tin tưởng vào dịch vụ của chúng tôi! Nếu có thêm câu hỏi hay cần hỗ trợ gì khác, hãy cho tôi biết.
+
+Bạn muốn xem chi tiết đơn nào hoặc tìm kiếm theo tháng?
+  🔘 Buttons: 📦 Xem tất cả đơn hàng, ✅ Đơn #943 – 632,000đ, ⚙️ Đơn #464 – 908,000đ, ⚙️ Đơn #1194 – 485,000đ
+  ⏱ 4.38s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Tổng tiền tôi đã mua trong tháng là bao nhiêu
+  🎯 Tổng tiền theo history
+  🤖 Answer: Xin chào! Tôi thấy bạn đã mua tổng cộng **1,025,000đ** trong tháng này. Mặc dù chỉ có 3 đơn hàng nhưng số tiền mà bạn đã chi tiêu vẫn rất đáng kể và mang lại nhiều giá trị cho bạn. Bạn có muốn biết thêm về từng đơn hàng không?
+
+Bạn muốn xem chi tiết đơn nào hoặc tìm kiếm theo tháng?
+  🔘 Buttons: 📦 Xem tất cả đơn hàng, ✅ Đơn #943 – 632,000đ, ⚙️ Đơn #464 – 908,000đ, ⚙️ Đơn #1194 – 485,000đ
+  ⏱ 1.87s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Tôi muốn hủy đơn gần nhất
+  🎯 Confirm gate: Yêu cầu xác nhận
+  ✅ Must contain  : ['xác nhận']
+  🚫 Must NOT have : ['đã hủy', 'huỷ thành công']
+  🤖 Answer: Đơn hàng **#943** đã được **xác nhận** đã giao thành công → không thể hủy.
+Nếu cần hỗ trợ thêm, vui lòng liên hệ hotline **0353260721** (8h–22h).
+  ✅ KW OK   : ['xác nhận']
+  ⏱ 0.04s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Có
+  🎯 Xác nhận huỷ đơn
+  🤖 Answer: Xin chào! Tôi thấy bạn đã có sẵn một số cuốn sách hay mà tôi nghĩ sẽ rất phù hợp với nhu cầu của bạn:
+
+- **Dám Nói Có** (Giá: 177,000đ): Cuốn sách này sẽ giúp bạn tự tin hơn trong giao tiếp và cuộc sống.
+- **Nơi Nào Có Ý Chí - Nơi Đó Có Con Đường** (Giá: 102,000đ): Cuốn sách này mang đến cho bạn động lực để không ngừng phấn đấu và đạt được mục tiêu.
+
+Bạn có thấy cuốn sách nào phù hợp hơn với nhu cầu hiện tại của mình không? Hay bạn muốn thêm gợi ý khác về các chủ đề liên quan?
+  ⏱ 3.78s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Điểm tích lũy của tôi là bao nhiêu
+  🎯 Trả về điểm trung thành của user
+  🤖 Answer: Hiện tại **BookStore chưa triển khai chương trình tích điểm** hay thẻ thành viên.
+
+Tuy nhiên, BookStore đang có các **mã giảm giá** sau để bạn áp dụng khi thanh toán:
+• Mã **SALE001**: Giảm 5.0%
+
+Nếu bạn cần hỗ trợ đặt sách hoặc kiểm tra đơn hàng, tôi luôn sẵn sàng giúp!
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S04: 8/8 passed (100%)
+
+=================================================================
+▶ S05: Member: Personal recommend -> Ordinal -> Cart
+  Role: customer | user_id: 1 | session: test-S05-c67242a1
+=================================================================
+
+  [1/8] 💬 Gợi ý sách phù hợp với tôi
+  🎯 Gợi ý cá nhân hoá
+  🤖 Answer: có vẻ bạn quan tâm đến các cuốn sách mang sắc màu văn học hay. Tôi gợi ý bạn tham khảo "Tấm Cộp", một tác phẩm truyền thống đầy ý nghĩa và cảm xúc, hoặc "Nhật Ký Gấu Mèo" – cuốn sách nhẹ nhàng kể về tình bạn giữa một gấu mèo và một con cá sấu. Chắc
+  🔘 Buttons: Sách song ngữ Những cái kẹt – 67,000đ | ★ 4.2, Tấm Gương Nứt Vỡ – 123,000đ | ★ 4.4, Tuyệt Cảnh Hắc Dạ – 84,000đ | ★ 4.6, Sau Khi Thiên Kim Thật Rời Đi – 117,000đ | ★ 3.7
+  ⏱ 2.14s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Cuốn thứ 2 trong danh sách đó thông tin thế nào
+  🎯 Tra thông tin sách ở vị trí [1]
+  🚫 Must NOT have : ['sách nào', 'không rõ']
+  🤖 Answer: Cuốn thứ hai trong danh sách là "Những cái kẹt" của tác giả Phương Bùi. Đây là một cuốn sách mang phong cách văn học song ngữ, với giá chỉ 67,000đ và đang có sẵn hàng. Cuốn sách này chắc chắn sẽ mang đến cho bạn những trải nghiệm cảm xúc sâu sắc.
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ⏱ 1.72s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Tác giả cuốn đó là ai
+  🎯 Tra tác giả từ cuốn sách ở index [1]
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Tác giả của sách "Những cái kẹt" là Phương Bùi. Đây là cuốn sách mang phong cách văn học song ngữ với giá 67,000đ và đang có sẵn hàng tại BookStore.
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ⏱ 1.35s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Cho tôi xem sách cùng tác giả
+  🎯 Sách cùng tác giả từ context
+  🤖 Answer: tại BookStore có nhiều lựa chọn thú vị cho bạn:
+
+Mỗi cuốn sách đều mang đến giá trị cảm xúc và kiến thức riêng
+
+Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+  🔘 Buttons: Sách Tương Tác - Cùng Học Cùng Chơi Với Peppa Pig - Vui Cười Cùng Peppa – 40,000đ, Các tác giả văn chương Việt Nam – 83,000đ, Để Trở Thành Tác Giả Best Seller – 112,500đ, Sách Tương Tác - Cùng Học Cùng Chơi Với Peppa Pig - Peppa Yêu Động Vật – 56,000đ
+  ⏱ 2.77s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Thanh toán bằng ví điện tử được không
+  🎯 Phương thức thanh toán
+  🤖 Answer: Bạn đang muốn **hỏi về phương thức thanh toán** phải không?
+(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)
+  🔘 Buttons: ✅ Đúng rồi!, ❌ Không phải
+  ⏱ 0.07s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Có mã giảm giá không
+  🎯 Chương trình khuyến mãi
+  🤖 Answer: **BookStore hỗ trợ các phương thức thanh toán:**
+
+• 💵 **Tiền mặt (COD):** Thanh toán khi nhận hàng
+• 📱 **MoMo:** Chuyển khoản qua ví MoMo
+• 📱 **ZaloPay:** Thanh toán qua ví ZaloPay
+• 🏦 **Chuyển khoản ngân hàng:** Theo thông tin trên hóa đơn
+• 💳 **VNPay:** Hỗ trợ thẻ ATM, Visa, Mastercard
+
+Bạn cần hỗ trợ về phương thức nào? Hotline **0353260721** (8h–22h).
+  ⏱ 0.04s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Nhập mã BOOK20 được giảm bao nhiêu
+  🎯 Chi tiết mã BOOK20
+  🤖 Answer: 😅 Xin lỗi, tôi gặp sự cố kỹ thuật. Vui lòng thử lại sau!
+  ⏱ 0.10s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Thêm cuốn thứ 2 vào giỏ giúp tôi
+  🎯 Từ chối thêm giỏ hàng tự động
+  🚫 Must NOT have : ['đã thêm', 'thành công']
+  🤖 Answer: Tất cả đã sẵn sàng! Cuốn sách "21 Nguyên Tắc Vàng Của Nghệ Thuật Lãnh Đạo" – với giá chỉ 144,000đ đang chờ bạn. Bạn chỉ cần nhấn nút 'Thêm vào giỏ' để có ngay cuốn sách ý nghĩa này trong tay. Hoặc nếu muốn xem thêm các sản phẩm khác trước khi quyết định, hãy nhấn vào 'Xem giỏ hàng'.
+  🔘 Buttons: 📖 Xem 21 Nguyên Tắc Vàng Của Nghệ Thuật Lãnh Đ, 🛒 Xem giỏ hàng
+  ⏱ 2.75s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S05: 8/8 passed (100%)
+
+=================================================================
+▶ S06: Member: OCR 3 ảnh -> Compare -> Total
+  Role: customer | user_id: 1 | session: test-S06-ab3ad1c7
+=================================================================
+
+  [1/8] 🖼 [OCR: 10-buoc-den-thanh-cong.jpg]
+  🎯 OCR ảnh 1
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"10 Bước Đến Thành Công - The Success Factor"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **10 Bước Đến Thành Công - The Success Factor** – John Leach – **128,000đ**
+• **Đường Đến Thành Công - Road To Success** – Napoleon Hill – **75,900đ**
+• **Mô Hình Thành Công - The Success Model** – Sam Silverstein – **75,500đ**
+• **Chạm Đến Thành Công** – Nguyễn Thành Nhân – **64,000đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 10 Bước Đến Thành Công - The Success Factor – 128,000đ, Đường Đến Thành Công - Road To Success – 75,900đ, Mô Hình Thành Công - The Success Model – 75,500đ, Chạm Đến Thành Công – 64,000đ
+  ⏱ 0.18s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 🖼 [OCR: 1-ngay-bang-48-gio.jpg]
+  🎯 OCR ảnh 2
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"1 Ngày Bằng 48 Giờ"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **1 Ngày Bằng 48 Giờ** – Instant Research Institute – **54,000đ**
+• **Một Giờ Của Mẹ Mỗi Ngày - Tìm Lại Sự Cân Bằng Trong Cuộc Sống Và Nuôi Dạy Con** – Jihyu Kim – **151,000đ**
+• **Truyện Kể Cho Bé Trước Giờ Đi Ngủ - Ngày Xửa Ngày Xưa - Vịt Con Xấu Xí** – Nhiều Tác Giả – **12,500đ**
+• **Truyện Kể Cho Bé Trước Giờ Đi Ngủ - Ngày Xửa Ngày Xưa: Ba Chú Lợn Con** – Nhiều Tác Giả – **12,500đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 1 Ngày Bằng 48 Giờ – 54,000đ, Một Giờ Của Mẹ Mỗi Ngày - Tìm Lại Sự Cân Bằng Trong Cuộc Sống Và Nuôi Dạy Con – 151,000đ, Truyện Kể Cho Bé Trước Giờ Đi Ngủ - Ngày Xửa Ngày Xưa - Vịt Con Xấu Xí – 12,500đ, Truyện Kể Cho Bé Trước Giờ Đi Ngủ - Ngày Xửa Ngày Xưa: Ba Chú Lợn Con – 12,500đ
+  ⏱ 0.20s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 🖼 [OCR: 10-hanh-phuc-hon-10-happier.jpg]
+  🎯 OCR ảnh 3
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"10% Hạnh Phúc Hơn - 10% Happier"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **10% Hạnh Phúc Hơn - 10% Happier** – Dan Harris – **96,850đ**
+• **Giàu Có Hơn, Khôn Ngoan Hơn, Hạnh Phúc Hơn** – William Green – **142,000đ**
+• **10 Chìa Khóa Để Bản Thân Phát Triển: Điều Thực Sự Giúp Bạn Hạnh Phúc** – Yves, Alexandre Thalmann – **95,000đ**
+• **Hạnh Phúc Đủ Đầy - 10 Nguyên Tắc Cho Cuộc Sống Giản Đơn Mà Đầy Màu Sắc** – Đặng Minh Tâm – **151,000đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 10% Hạnh Phúc Hơn - 10% Happier – 96,850đ, Giàu Có Hơn, Khôn Ngoan Hơn, Hạnh Phúc Hơn – 142,000đ, 10 Chìa Khóa Để Bản Thân Phát Triển: Điều Thực Sự Giúp Bạn Hạnh Phúc – 95,000đ, Hạnh Phúc Đủ Đầy - 10 Nguyên Tắc Cho Cuộc Sống Giản Đơn Mà Đầy Màu Sắc – 151,000đ
+  ⏱ 0.19s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 3 cuốn vừa quét tổng tiền hết bao nhiêu
+  🎯 Tính tổng 3 sách OCR
+  ✅ Must contain  : ['đ', 'tổng']
+  🤖 Answer: Đây là thông tin về cuốn sách "10% Hạnh Phúc Hơn - 10% Happier":
+
+• Tác giả: Dan Harris
+• Giá: 96,850đ
+
+Tình trạng sản phẩm: Còn hàng.
+
+Nếu bạn mua một cuốn sách này, tổng tiền sẽ là **96,850đ**.
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ✅ KW OK   : ['đ', 'tổng']
+  ⏱ 2.37s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Cuốn nào đắt nhất
+  🎯 Tìm cuốn đắt nhất trong 3 cuốn
+  ✅ Must contain  : ['đ']
+  🤖 Answer: **So sánh giá các sách đã quét:**
+1. **10 Bước Đến Thành Công - The Success Factor** — 128,000đ ⭐ Đắt nhất
+2. **1 Ngày Bằng 48 Giờ** — 54,000đ
+3. **10% Hạnh Phúc Hơn - 10% Happier** — 96,850đ
+
+➡️ Cuốn đắt nhất: **10 Bước Đến Thành Công - The Success Factor** (128,000đ)
+  ✅ KW OK   : ['đ']
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Gợi ý sách tương tự cuốn đầu tiên tôi quét hôm nay
+  🎯 Gợi ý theo ocr_history[0]
+  🤖 Answer: 📚 Dưới đây là **4 sách phù hợp** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Bộ Sách Tương Tác - Song Ngữ Anh Việt: Tớ Tập Đếm + Những Điều Đầu Tiên + Nhữ... – 240,000đ, Combo Sách Tương Phản - Cuốn Sách Đầu Tiên Về: Đối Lập + Số Đếm + Màu Sắc (Bộ... – 183,000đ, Bộ Sách Tự Xóa Thông Minh - Cuốn Sách Tự Xóa Đầu Tiên Của Bé - Từ Vựng – 92,000đ, Hôm Nay Cố Gắng - Ngày Mai Tự Do – 58,500đ
+  ⏱ 0.12s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Mua cuốn rẻ nhất đó
+  🎯 Cart guide button
+  🚫 Must NOT have : ['đã mua', 'thành công']
+  🤖 Answer: Chatbot **không thể tự thêm** sách vào giỏ hàng của bạn.
+Để thêm **"10% Hạnh Phúc Hơn - 10% Happier"** vào giỏ, vui lòng nhấn nút bên dưới:
+  🔘 Buttons: 🛒 Mua ngay: 10% Hạnh Phúc Hơn - 10% Happier
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Sau khi mua, bao nhiêu ngày thì nhận được hàng
+  🎯 Chính sách vận chuyển
+  ✅ Must contain  : ['ngày']
+  🤖 Answer: **Thời gian giao hàng BookStore nội địa:**
+
+⏰ Ước tính: **3–5 ngày làm việc** kể từ khi đơn xác nhận
+
+💰 **Phí vận chuyển:**
+  • Miễn phí với đơn từ **150,000đ**
+  • Dưới 150,000đ: **15,000đ–30,000đ** tùy khu vực
+
+🚚 Đơn vị: **GHTK, GHN, ViettelPost**
+📞 Hỗ trợ: **0353260721** (8h–22h)
+  ✅ KW OK   : ['ngày']
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S06: 8/8 passed (100%)
+
+=================================================================
+▶ S07: Staff: Inventory -> Analytics -> Complaint block
+  Role: staff | user_id: None | session: test-S07-92b32844
+=================================================================
+
+  [1/8] 💬 Xin chào, hôm nay có bao nhiêu đơn hàng chờ xử lý
+  🎯 Pending orders count (Staff)
+  🤖 Answer: **Thống kê ngày 2026-04-23**
+───────────────────────────────────
+Tổng đơn: **0**
+  Đã giao: 0
+  Đang xử lý/chờ: 0
+  Đã hủy: 0
+  Yêu cầu trả: 0
+───────────────────────────────────
+Tổng doanh thu: **0đ**
+Doanh thu xác nhận: **0đ**
+
+Khách duy nhất: 0 người
+  ⏱ 0.07s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Sách Đắc Nhân Tâm còn bao nhiêu cuốn trong kho
+  🎯 Tồn kho Đắc Nhân Tâm
+  🤖 Answer: Để xem tổng số sản phẩm, vui lòng truy cập:
+**Admin Panel → Quản lý sách** để xem toàn bộ danh mục.
+
+Tra cứu nhanh: hỏi `Tồn kho [tên sách]` để kiểm tra từng cuốn.
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Khách hàng abc@gmail.com đặt đơn nào gần nhất
+  🎯 Order history by email
+  🤖 Answer: **Thống kê tài khoản hệ thống:**
+──────────────────────────────
+Tổng tài khoản: **303**
+  • Khách hàng: **291**
+  • Nhân viên (staff): **9**
+  • Active: **303**
+
+Xem chi tiết: **Admin Panel → Quản lý Users**
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Cập nhật tồn kho sách Python lên 50
+  🎯 Từ chối do thiếu quyền admin
+  🚫 Must NOT have : ['đã cập nhật', 'thành công']
+  🤖 Answer: Để cập nhật tồn kho, vui lòng truy cập:
+**Admin Panel → Tồn kho → Cập nhật số lượng**
+
+Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Xóa tài khoản khách này đi
+  🎯 Security guard
+  🚫 Must NOT have : ['đã xóa']
+  🤖 Answer: **Thống kê tài khoản hệ thống:**
+──────────────────────────────
+Tổng tài khoản: **303**
+  • Khách hàng: **291**
+  • Nhân viên (staff): **9**
+  • Active: **303**
+
+Xem chi tiết: **Admin Panel → Quản lý Users**
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Khách phàn nàn nhận được sách bị rách trang
+  🎯 Hướng dẫn thủ tục khiếu nại
+  ✅ Must contain  : ['đổi', 'cskh']
+  🤖 Answer: 📌 **Quy trình xử lý khiếu nại khách nhận sách hư hỏng:**
+
+1. **Xác nhận thông tin:** Hỏi khách mã đơn hàng + ảnh/video chứng minh
+2. **Đổi sách mới:** Khách có quyền **đổi** trong vòng **7 ngày** kể từ ngày nhận
+3. **Chuyển CSKH:** Liên hệ hotline để xử lý nhanh chóng
+4. **Hoàn tiền:** Nếu khách không muốn đổi, hướng dẫn hoàn qua CSKH
+
+📞 **Hotline CSKH: 0353260721** (8h–22h)
+📧 Email: cskh@bookstore.vn
+  ✅ KW OK   : ['đổi', 'cskh']
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Cho tôi xem top 5 sách bán chạy nhất tháng
+  🎯 Trending books
+  🤖 Answer: **Top sách bán chạy:**
+1. **Sơn Hải Kinh** - Không rõ
+   Bán: **99 cuốn** | 31,977,000đ | Rating: 4.4
+2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** - Phan Văn Đức
+   Bán: **94 cuốn** | 7,896,000đ | Rating: 4.4
+3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** - Nguyễn Thanh Thủy, Trịnh Thu Giang
+   Bán: **93 cuốn** | 5,012,700đ | Rating: 4.2
+4. **xXxHoLic (Tiếng Việt)** - CLAMP
+   Bán: **91 cuốn** | 2,912,000đ | Rating: 3.9
+5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** - Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên
+   Bán: **87 cuốn** | 4,045,500đ | Rating: 4.3
+6. **Long Thần Tướng: Tập 1** - Nguyễn Khánh Dương, Nguyễn Thành Phong
+   Bán: **85 cuốn** | 2,720,000đ | Rating: 3.9
+7. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** - Nhiều Tác Giả
+   Bán: **85 cuốn** | 850,000đ | Rating: 4.3
+8. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** - Nhiều Tác Giả
+   Bán: **84 cuốn** | 10,710,000đ | Rating: 4.4
+9. **Ôn Tập Hè Tiếng Việt 3** - ThS Nguyễn Hồng Nga, Trương Thu Trang
+   Bán: **83 cuốn** | 3,361,500đ | Rating: 4.3
+10. **Global Success - Trọng Tâm Ngữ Pháp Tiếng Anh Lớp 8 - Tập 1 (Có Đáp Án)** - Trần Mạnh Tường
+   Bán: **82 cuốn** | 6,232,000đ | Rating: 4.5
+  ⏱ 0.99s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Tôi cần thêm vào đơn hàng #12345 một cuốn sách
+  🎯 Từ chối chỉnh sửa đơn
+  🚫 Must NOT have : ['đã thêm', 'thành công']
+  🤖 Answer: Không tìm thấy đơn hàng.
+  ⏱ 0.02s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S07: 8/8 passed (100%)
+
+=================================================================
+▶ S08: Staff: OCR -> Inventory -> Analytics
+  Role: staff | user_id: None | session: test-S08-78351122
+=================================================================
+
+  [1/8] 🖼 [OCR: 1-phut-noi-tieng-anh-nhu-gio.jpg]
+  🎯 Nhận dạng sách bằng staff role
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...📚 Dưới đây là **4 sách Tiếng Anh** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Learn English With Fables 5 - Học Tiếng Anh Qua Truyện Ngụ Ngôn - Tập 5 - The... – 27,000đ | ★ 4.1, Ready For VSTEP - Vocabulary, Phrasal Verbs And Collocation B1 B2 – 159,500đ | ★ 4.3, Tiếng Anh Dành Cho Người Bận Rộn - English For Busy People - Tập 2 – 103,000đ | ★ 4.3, Giải Thích Chuyên Sâu - Bài Đọc Hiểu Và Từ Vựng Tiếng Anh – 126,500đ | ★ 4.3
+  ⏱ 0.16s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Giá nhập và giá bán hiện tại là bao nhiêu
+  🎯 Tra cứu giá
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Tôi không hiểu yêu cầu này.
+Gõ `help` để xem danh sách các lệnh hỗ trợ.
+  ⏱ 2.28s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Số lượng tồn kho hiện tại
+  🎯 Tra cứu kho qua OCR context
+  🤖 Answer: **Thiên Tài Tập Thể** (ID: 6422)
+Tác giả: Linda A. Hill, Greg Brandeau, Emily Truelove, Kent Lineback
+Giá: 158,000đ
+Tồn kho: **10 cuốn** (Sắp hết)
+Trạng thái: active
+  ⏱ 0.08s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 🖼 [OCR: 10-buc-thu-me-gui-con-gai-tuoi-day-thi-tai-ban-2019.jpg]
+  🎯 OCR ảnh 2
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...🔍 Tôi nhận dạng bìa sách liên quan đến **"10 Bức Thư Mẹ Gửi Con Gái Tuổi Dậy Thì (Tái Bản 2019)"**.
+
+Dưới đây là **4 sách tương tự**:
+
+• **10 Bức Thư Mẹ Gửi Con Gái Tuổi Dậy Thì (Tái Bản 2019)** – Thanh Giang – **37,000đ**
+• **Giáo Dục Giới Tính Tuổi Dậy Thì - Con Gái Biết Tuốt (Tái Bản)** – Heather Anderson, Fay Angelo, Rose Stewart – **58,500đ**
+• **Cùng Con Bước Qua Tuổi Dậy Thì - Bí Mật Con Gái** – ThS Nguyễn Thị Thái Bắc – **60,000đ**
+• **Giáo Dục Giới Tính Tuổi Dậy Thì - Bí Mật Của Con Gái (Tái Bản 2022)** – Fay Angelo, Heather Anderson, Rose Stewart, Julie Davey – **25,500đ**
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm sách tương tự?
+  🔘 Buttons: 10 Bức Thư Mẹ Gửi Con Gái Tuổi Dậy Thì (Tái Bản 2019) – 37,000đ, Giáo Dục Giới Tính Tuổi Dậy Thì - Con Gái Biết Tuốt (Tái Bản) – 58,500đ, Cùng Con Bước Qua Tuổi Dậy Thì - Bí Mật Con Gái – 60,000đ, Giáo Dục Giới Tính Tuổi Dậy Thì - Bí Mật Của Con Gái (Tái Bản 2022) – 25,500đ
+  ⏱ 0.18s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 2 cuốn vừa check, cuốn nào bán chạy hơn
+  🎯 So sánh 2 sách
+  🤖 Answer: **So sánh đánh giá 2 cuốn sách vừa quét:**
+• **Speaking Matrix - 1 Phút Nói Tiếng Anh Như Gió** — ⭐ 0.0
+• **10 Bức Thư Mẹ Gửi Con Gái Tuổi Dậy Thì (Tái Bản 2019)** — ⭐ 0.0
+
+✅ **Speaking Matrix - 1 Phút Nói Tiếng Anh Như Gió** có đánh giá cao hơn (**0.0 sao**)
+(so với 10 Bức Thư Mẹ Gửi Con Gái Tuổi Dậy Thì (Tái Bản 2019): 0.0 sao)
+  ⏱ 0.13s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Khách hàng thường mua 2 cuốn này cùng với gì
+  🎯 Gợi ý upsell
+  🤖 Answer: **Thống kê tài khoản hệ thống:**
+──────────────────────────────
+Tổng tài khoản: **303**
+  • Khách hàng: **291**
+  • Nhân viên (staff): **9**
+  • Active: **303**
+
+Xem chi tiết: **Admin Panel → Quản lý Users**
+  ⏱ 0.04s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Xuất báo cáo kho
+  🎯 Chặn tính năng xuất file từ bot
+  🚫 Must NOT have : ['đã xuất', 'tải']
+  🤖 Answer: Để cập nhật tồn kho, vui lòng truy cập:
+**Admin Panel → Tồn kho → Cập nhật số lượng**
+
+Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Phiên làm việc hôm nay tôi đã check bao nhiêu sách
+  🎯 Kiểm tra memory trong session
+  🤖 Answer: Để xem tổng số sản phẩm, vui lòng truy cập:
+**Admin Panel → Quản lý sách** để xem toàn bộ danh mục.
+
+Tra cứu nhanh: hỏi `Tồn kho [tên sách]` để kiểm tra từng cuốn.
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S08: 8/8 passed (100%)
+
+=================================================================
+▶ S09: Admin: Analytics -> KB -> Block actions
+  Role: admin | user_id: None | session: test-S09-bb9eb683
+=================================================================
+
+  [1/8] 💬 Xin chào, thống kê chatbot hôm nay thế nào
+  🎯 Admin analytics hôm nay
+  🤖 Answer: Xin chào **Admin**! Đây là **Admin Assistant**.
+
+**Dashboard & Báo cáo:**
+- `Dashboard` – Tổng quan hệ thống
+- `Doanh thu tuần này` / `tháng này` – Revenue report
+- `Thống kê đơn hàng` – Order statistics
+- `Top sách bán chạy` – Bestseller admin
+
+**Quản lý User:**
+- `Tìm user example@gmail.com` – Tra cứu tài khoản
+- `Thống kê người dùng` – User stats
+- `Danh sách staff` – Tất cả tài khoản staff
+- `Đổi role user 42 thành staff` – Thay đổi quyền *(yêu cầu xác nhận)*
+- `Khóa tài khoản user 42` – Lock account *(yêu cầu xác nhận)*
+
+**Quản lý Sách:**
+- `Sách rating thấp` – Review sách dưới 3 sao
+- `Thống kê danh mục` – Category analytics
+- `Top sách doanh thu cao` – Bestseller full report
+
+**Khuyến mãi:**
+- `Danh sách voucher` – Active promotions
+- `Kiểm tra mã SALE30` – Validate voucher
+- `Promotion sắp hết hạn` – Expiring alerts
+
+**Hệ thống:**
+- `Kiểm tra service` – System health check
+- `Khiếu nại chờ xử lý` – Escalated issues
+  ⏱ 0.03s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Có bao nhiêu khách đang chat với bot
+  🎯 Active user count
+  🤖 Answer: **Thống kê người dùng**
+──────────────────────────────
+Tổng: **303** người dùng
+  KH: 291 | Staff: 9 | Admin: 3
+  Active: 303 | Bị khóa: 0
+Mới hôm nay: **0**
+Mới tháng này: **2**
+  ⏱ 2.92s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Top 5 câu hỏi phổ biến nhất của khách
+  🎯 Trending intents/queries
+  🤖 Answer: ⛔ **Không thể thực hiện thao tác này qua chatbot.**
+
+Các thao tác xóa/hủy dữ liệu hàng loạt cần được thực hiện trực tiếp qua:
+→ **Admin Panel → Quản lý Đơn hàng** (với xác thực 2FA)
+
+Chatbot chỉ hỗ trợ: xem thống kê, tra cứu, và các thao tác đơn lẻ có xác nhận.
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 💬 Reload knowledge base
+  🎯 Xác nhận reload
+  🤖 Answer: ⛔ **Không thể thực hiện thao tác này qua chatbot.**
+
+Các thao tác xóa/hủy dữ liệu hàng loạt cần được thực hiện trực tiếp qua:
+→ **Admin Panel → Quản lý Đơn hàng** (với xác thực 2FA)
+
+Chatbot chỉ hỗ trợ: xem thống kê, tra cứu, và các thao tác đơn lẻ có xác nhận.
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 Xem session của user có ID 42
+  🎯 Chi tiết session user
+  🤖 Answer: Tôi không hiểu yêu cầu này.
+Gõ `help` để xem danh sách các lệnh admin.
+  ⏱ 0.04s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Intent nào đang bị trả lời sai nhiều nhất
+  🎯 Low confidence intents
+  🤖 Answer: ⛔ **Không thể thực hiện thao tác này qua chatbot.**
+
+Các thao tác xóa/hủy dữ liệu hàng loạt cần được thực hiện trực tiếp qua:
+→ **Admin Panel → Quản lý Đơn hàng** (với xác thực 2FA)
+
+Chatbot chỉ hỗ trợ: xem thống kê, tra cứu, và các thao tác đơn lẻ có xác nhận.
+  ⏱ 0.08s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Blacklist IP 192.168.1.100
+  🎯 Block action chưa có
+  🚫 Must NOT have : ['đã blacklist']
+  🤖 Answer: ⛔ **Không thể thực hiện thao tác này qua chatbot.**
+
+Các thao tác xóa/hủy dữ liệu hàng loạt cần được thực hiện trực tiếp qua:
+→ **Admin Panel → Quản lý Đơn hàng** (với xác thực 2FA)
+
+Chatbot chỉ hỗ trợ: xem thống kê, tra cứu, và các thao tác đơn lẻ có xác nhận.
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Xuất log chatbot hôm nay ra file
+  🎯 Block file download
+  🚫 Must NOT have : ['đã xuất', 'file']
+  🤖 Answer: Xin chào **Admin**! Đây là **Admin Assistant**.
+
+**Dashboard & Báo cáo:**
+- `Dashboard` – Tổng quan hệ thống
+- `Doanh thu tuần này` / `tháng này` – Revenue report
+- `Thống kê đơn hàng` – Order statistics
+- `Top sách bán chạy` – Bestseller admin
+
+**Quản lý User:**
+- `Tìm user example@gmail.com` – Tra cứu tài khoản
+- `Thống kê người dùng` – User stats
+- `Danh sách staff` – Tất cả tài khoản staff
+- `Đổi role user 42 thành staff` – Thay đổi quyền *(yêu cầu xác nhận)*
+- `Khóa tài khoản user 42` – Lock account *(yêu cầu xác nhận)*
+
+**Quản lý Sách:**
+- `Sách rating thấp` – Review sách dưới 3 sao
+- `Thống kê danh mục` – Category analytics
+- `Top sách doanh thu cao` – Bestseller full report
+
+**Khuyến mãi:**
+- `Danh sách voucher` – Active promotions
+- `Kiểm tra mã SALE30` – Validate voucher
+- `Promotion sắp hết hạn` – Expiring alerts
+
+**Hệ thống:**
+- `Kiểm tra service` – System health check
+- `Khiếu nại chờ xử lý` – Escalated issues
+  ⏱ 0.08s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S09: 8/8 passed (100%)
+
+=================================================================
+▶ S10: Member: Stress test (Gift -> OCR -> Coref -> Total)
+  Role: customer | user_id: 1 | session: test-S10-524e98c5
+=================================================================
+
+  [1/8] 💬 Tôi cần quà tặng cho bạn gái, cô ấy thích sách văn học lãng mạn
+  🎯 Slot fill tặng quà
+  🤖 Answer: 📚 Dưới đây là **4 sách Ngôn tình - Lãng mạn** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Leyla & Vũ – 101,000đ | ★ 3.8, Tại Công Ty Này Có Người Tôi Yêu – 89,000đ | ★ 3.8, Bạn Gái Khéo Tay – 146,000đ | ★ 4.1, Ôm Lấy Em – 97,000đ | ★ 3.9
+  ⏱ 0.16s | ✅ OK
+  -----------------------------------------------------------------
+
+  [2/8] 💬 Ngân sách khoảng 200 ngàn thôi
+  🎯 Thêm slot budget
+  🤖 Answer: 😅 Xin lỗi, tôi gặp sự cố kỹ thuật. Vui lòng thử lại sau!
+  ⏱ 0.09s | ✅ OK
+  -----------------------------------------------------------------
+
+  [3/8] 💬 Cuốn thứ nhất bạn gợi ý có đánh giá mấy sao
+  🎯 Ordinal rating
+  🚫 Must NOT have : ['sách nào']
+  🤖 Answer: Cuốn sách "Tản Văn - Gợi Ý Của Vũ Trụ Tập 10" của BIBI nhận được đánh giá rất cao từ độc giả. Đây là cuốn sách mang đến những suy ngẫm sâu sắc và cảm xúc mạnh mẽ, phù hợp làm quà tặng cho bạn gái yêu thích văn học lãng mạn.
+  ⏱ 2.07s | ✅ OK
+  -----------------------------------------------------------------
+
+  [4/8] 🖼 [OCR: 10-dieu-ran-lanh-dao-toi-uu-nhat-the-gioi.jpg]
+  🎯 OCR chen giữa context
+  🤖 Answer: 🔍 Đang nhận dạng ảnh bìa sách...📚 Dưới đây là **4 sách Kinh doanh - Kinh tế** được nhiều người yêu thích:
+
+Bạn muốn xem chi tiết, lọc theo giá hay tìm thể loại khác?
+  🔘 Buttons: Tương lai của quản trị – 91,000đ | ★ 4.2, Đổi mới chính sách và cơ chế quản lý tài chính – 122,000đ | ★ 3.6, Marketing Căn Bản: Marketing 101 – 184,000đ | ★ 4.3, Vấn đề phân phối thu nhập trong các loại hình doanh nghiệp ở Việt Nam: thực t... – 142,000đ | ★ 4.4
+  ⏱ 0.24s | ✅ OK
+  -----------------------------------------------------------------
+
+  [5/8] 💬 So sánh cuốn trong ảnh với cuốn đầu tiên bạn gợi ý lúc nãy
+  🎯 Compare OCR và Memory
+  🤖 Answer: **So sánh giá các sách đã quét:**
+1. **Tương lai của quản trị** — 91,000đ ⭐ Rẻ nhất
+2. **Đổi mới chính sách và cơ chế quản lý tài chính** — 122,000đ
+3. **Marketing Căn Bản: Marketing 101** — 184,000đ
+4. **Vấn đề phân phối thu nhập trong các loại hình doanh nghiệp ở Việt Nam: thực trạng, quan điểm và giải pháp hoàn thiện** — 142,000đ
+
+➡️ Cuốn rẻ nhất: **Tương lai của quản trị** (91,000đ)
+  ⏱ 0.11s | ✅ OK
+  -----------------------------------------------------------------
+
+  [6/8] 💬 Mua cả hai tặng cô ấy, ship về Đà Nẵng mất mấy ngày
+  🎯 Thông tin ship
+  ✅ Must contain  : ['ngày']
+  🤖 Answer: Được rồi, tôi sẽ gợi ý cho bạn cuốn "Tương lai của quản trị" — một trong 4 cuốn sách phù hợp làm quà. Cuốn sách này mang đến những suy ngẫm sâu sắc và giá trị cảm xúc.
+
+Nếu mua cả hai cuốn và gửi về Đà Nẵng, thời gian giao hàng dự kiến khoảng **3-5 ngày**. Bạn có muốn xem thêm thông tin chi tiết về sách trước khi đặt không?
+  🔘 Buttons: Tâm Lý Tính Nữ - Hiểu Phụ Nữ, Hiểu Cả Thế Giới – 81,500đ, Tâm Kế Phụ Nữ – 103,500đ, Combo Sách Hãy Yêu Bằng Lý Trí + Tâm Kế Phụ Nữ (Bộ 2 Cuốn) – 207,000đ, Tâm Lý Khác Biệt Giữa Đàn Ông Và Phụ Nữ – 104,000đ
+  ✅ KW OK   : ['ngày']
+  ⏱ 2.61s | ✅ OK
+  -----------------------------------------------------------------
+
+  [7/8] 💬 Nếu cô ấy không thích thì đổi được không
+  🎯 Chính sách đổi trả
+  ✅ Must contain  : ['ngày']
+  🤖 Answer: Tôi xin lỗi đã gây hiểu lầm trước đó. Với sách bạn đã chọn, chúng tôi rất tiếc nếu nó không phù hợp với sở thích của cô ấy. Tuy nhiên, vì sách còn trong thời hạn đổi trả (7 ngày kể từ khi nhận hàng), chúng tôi vẫn có thể hỗ trợ việc đổi trả.
+
+Chúng tôi sẽ gửi lại sản phẩm cho bạn và hoàn tiền trong vòng 3-5 ngày làm việc. Điều này không chỉ giúp cô ấy tiết kiệm mà còn mang đến giá trị cảm xúc vì đã trải qua quá trình mua sắm thú vị.
+
+Nếu bạn cần thêm gợi ý sách khác, hãy cho tôi biết! Chúng tôi luôn sẵn lòng hỗ trợ.
+
+Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+  ✅ KW OK   : ['ngày']
+  ⏱ 3.26s | ✅ OK
+  -----------------------------------------------------------------
+
+  [8/8] 💬 Tổng ngân sách tôi cần chi cho 2 cuốn là bao nhiêu
+  🎯 Cộng giá 2 cuốn từ các context khác nhau
+  ✅ Must contain  : ['đ', 'tổng']
+  🤖 Answer: Tổng cộng bạn sẽ phải chi **182,000đ** cho hai cuốn "Tương lai của quản trị" với giá mỗi cuốn là 91,000đ.
+
+Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+  ✅ KW OK   : ['đ', 'tổng']
+  ⏱ 1.43s | ✅ OK
+  -----------------------------------------------------------------
+
+  ✅ S10: 8/8 passed (100%)
+
+================================================================================
+FINAL SUMMARY V6: 80/80 passed  (100.0%)
+================================================================================
+Suite        Name                                                  Pass  Total   Rate
+--------------------------------------------------------------------------------
+S01          Guest: Tìm sách -> Chi tiết -> Tính khả dụng -> Co   ✅    8     8   100%
+S02          Guest: OCR 2 ảnh -> Tổng giá -> So sánh              ✅    8     8   100%
+S03          Guest: Security SQLi -> Out of scope -> Negative E   ✅    8     8   100%
+S04          Member: Order status -> History -> Cancel            ✅    8     8   100%
+S05          Member: Personal recommend -> Ordinal -> Cart        ✅    8     8   100%
+S06          Member: OCR 3 ảnh -> Compare -> Total                ✅    8     8   100%
+S07          Staff: Inventory -> Analytics -> Complaint block     ✅    8     8   100%
+S08          Staff: OCR -> Inventory -> Analytics                 ✅    8     8   100%
+S09          Admin: Analytics -> KB -> Block actions              ✅    8     8   100%
+S10          Member: Stress test (Gift -> OCR -> Coref -> Total   ✅    8     8   100%
+
+📊 Latency Stats (80 turns):
+  Min: 0.01s | Max: 4.38s | Avg: 0.69s | Median: 0.09s
+
+📋 Keyword Accuracy : 26/26 (100.0%)

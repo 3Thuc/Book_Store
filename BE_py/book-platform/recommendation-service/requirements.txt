@@ -1,12 +1,30 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-mysql-connector-python
-pydantic
-scikit-learn
-pandas
-numpy
-# Collaborative Filtering (ALS) – nâng cấp từ Brute Force kNN
-implicit
-scipy
-sqlalchemy
+# ==============================================================================
+# requirements.txt – Recommendation Service
+#
+# Imports thực tế từ code (runtime API):
+#   mysql.connector → mysql-connector-python
+#   fastapi, pydantic, python-dotenv → core
+#   scipy.sparse → scipy       (build_cf_purchase.py, build_cf_implicit.py)
+#   numpy, pandas              (CF scripts + utils)
+#   sqlalchemy                 (build_cf scripts – dùng create_engine)
+#   implicit                   (ALS algorithm trong build_cf_implicit.py)
+# ==============================================================================
+
+# ── Core FastAPI ──────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+mysql-connector-python>=9.0.0   # recommend_app/db.py + utils.py dùng mysql.connector
+
+# ── ML / Data Science ─────────────────────────────────────────────────────────
+scikit-learn>=1.5.0              # Content-based: TF-IDF + cosine_similarity
+pandas>=2.2.0                    # DataFrame (build_cf_*.py)
+numpy>=1.26.0,<2.0.0            # Tương thích với scipy + scikit-learn
+scipy>=1.13.0                    # sparse.csr_matrix (Collaborative Filtering)
+
+# ── Collaborative Filtering (ALS) ─────────────────────────────────────────────
+implicit                         # ALS model (build_cf_implicit.py)
+sqlalchemy>=2.0.0                # create_engine dùng khi rebuild CF models

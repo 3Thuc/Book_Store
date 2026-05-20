@@ -51,6 +51,24 @@ def _call_proc(proc_name: str, args: list) -> List[dict]:
         except:
             pass
 
+def _call_query(query: str, args: tuple = ()) -> List[dict]:
+    """Gọi một raw select SQL thay vì stored procedure."""
+    conn = get_connection()
+    cursor = None
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, args)
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"[DB ERROR] Query: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            try: cursor.close()
+            except: pass
+        try: conn.close()
+        except: pass
+
 
 def _rows_to_recommendations(rows: List[dict], default_reason: str) -> List[BookRecommendation]:
     """
@@ -74,7 +92,8 @@ def _rows_to_recommendations(rows: List[dict], default_reason: str) -> List[Book
             final_score=float(row["final_score"]) if row.get(
                 "final_score") is not None else None,
             co_purchase_count=row.get("co_purchase_count"),
-            view_count=row.get("view_count")
+            view_count=row.get("view_count"),
+            category_name=row.get("category_name"),  # P2.3: MMR diversity grouping
         )
         recs.append(rec)
 

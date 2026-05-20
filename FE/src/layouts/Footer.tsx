@@ -29,24 +29,24 @@ export const Footer: React.FC = () => {
               Của hàng sách trực tuyến với sứ mệnh mang tri thức đến mọi người. Mang đến trải nghiệm mua sắm sách tốt nhất.
             </p>
             <div className="flex gap-3">
-              <a 
-                href="#" 
+              <a
+                href="#"
                 onClick={(e) => e.preventDefault()}
                 className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="h-4 w-4" />
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 onClick={(e) => e.preventDefault()}
                 className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter className="h-4 w-4" />
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 onClick={(e) => e.preventDefault()}
                 className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
                 aria-label="Instagram"
@@ -150,7 +150,7 @@ export const Footer: React.FC = () => {
                   className="flex-1 h-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 text-sm focus:bg-white/15 focus:border-white/30"
                   required
                 />
-                <Button 
+                <Button
                   type="submit"
                   className="h-10 bg-white text-[#030213] hover:bg-white/90 px-5 text-sm"
                 >
@@ -164,7 +164,7 @@ export const Footer: React.FC = () => {
         {/* Bottom Section */}
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/60 text-sm">
-            © 2025 BookStore. Tất cả quyền được bảo lưu.
+            © 2026 BookStore. Tất cả quyền được bảo lưu.
           </p>
           <div className="flex gap-6 text-sm">
             <a href="#" onClick={(e) => e.preventDefault()} className="text-white/60 hover:text-white transition-colors">

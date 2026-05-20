@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Star, Calendar, Award, Edit3, User, Key, Eye, EyeOff, RotateCcw, CreditCard, ShoppingBag, Clock, CheckCircle2, DollarSign, MapPin, Phone, Mail, Settings, Plus, Trash2, Check, XCircle } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Package, Star, Calendar, Award, Edit3, User, Key, Eye, EyeOff, RotateCcw, CreditCard, ShoppingBag, Clock, CheckCircle2, DollarSign, MapPin, Phone, Mail, Settings, Plus, Trash2, Check, XCircle, Loader2 } from 'lucide-react';
 import { OrderWorkflowService } from '../utils/orderWorkflowService';
 import { OrderService } from '../services/orderService';
 import { OrderStatus } from '../types/order';
@@ -49,10 +49,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   onLoginClick,
   onBookClick
 }) => {
-  const { user, addresses, orders, isLoadingOrders, changePass, updateProfile, addAddress, updateAddress, deleteAddress, setDefaultAddress, refreshOrders, initializing } = useAuth();
+  const { user, addresses, orders, isLoadingOrders, changePass, updateProfile, addAddress, updateAddress, deleteAddress, setDefaultAddress, refreshOrders, updateOrderStatusLocal, initializing } = useAuth();
   const { getPurchasedBooks, reviews } = useOrder();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('info');
+  const [searchParams] = useSearchParams();
+  // [FIX] Đọng bộ tab với URL query param ?tab=orders
+  const [activeTab, setActiveTab] = useState<string>(
+    searchParams.get('tab') || 'info'
+  );
+  // Khi URL thay đổi (ví dụ: navigate('/account?tab=orders')) → cập nhật tab
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) setActiveTab(tabFromUrl);
+  }, [searchParams]);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
   const [isEditInfoOpen, setIsEditInfoOpen] = useState<boolean>(false);
   const [isAddAddressOpen, setIsAddAddressOpen] = useState<boolean>(false);
@@ -99,6 +108,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   }>({ open: false, orderId: '' });
   const [returnReason, setReturnReason] = useState('');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return'>('all');
+  const [isProcessingAction, setIsProcessingAction] = useState<boolean>(false);
 
   // Backend already filters orders by current user, no need to filter again
   const allOrders = orders;
@@ -147,6 +157,48 @@ export const AccountPage: React.FC<AccountPageProps> = ({
         refreshOrders();
       }
     }, [user, initializing]);
+
+    // ── Auto-refresh đơn hàng khi đang ở tab "orders" ──────────────
+    // Dùng ref để tránh stale closure trong setInterval
+    const refreshOrdersRef = React.useRef(refreshOrders);
+    React.useEffect(() => {
+      refreshOrdersRef.current = refreshOrders;
+    });
+
+    useEffect(() => {
+      if (!user || initializing || activeTab !== 'orders') return;
+
+      // Refresh ngay khi switch sang tab orders
+      refreshOrdersRef.current();
+
+      // Polling 15s để đồng bộ thay đổi trạng thái từ admin/staff
+      const interval = setInterval(() => {
+        refreshOrdersRef.current();
+      }, 15_000);
+
+      return () => clearInterval(interval);
+    }, [user, initializing, activeTab]);
+
+    // Refresh khi: (1) tab trình duyệt được focus lại, (2) cửa sổ được focus lại
+    // visibilitychange: đổi tab trong cùng cửa sổ
+    // window focus: đổi sang cửa sổ khác rồi quay lại (quan trọng trên Windows)
+    useEffect(() => {
+      if (!user || activeTab !== 'orders') return;
+
+      const handleFocus = () => refreshOrdersRef.current();
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') handleFocus();
+      });
+      window.addEventListener('focus', handleFocus);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleFocus);
+        window.removeEventListener('focus', handleFocus);
+      };
+    }, [user, activeTab]);
+
+
   
     if (initializing) {
       return <PageLoader />;
@@ -247,7 +299,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   const getStatusColor = (status: OrderStatus): string => {
-    switch (status) {
+    switch (String(status).toUpperCase()) {
       case 'PENDING': return 'bg-yellow-100 text-yellow-800';
       case 'PAID': return 'bg-blue-100 text-blue-800';
       case 'PROCESSING': return 'bg-blue-100 text-blue-800';
@@ -258,12 +310,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       case 'CANCELLED': return 'bg-red-100 text-red-800';
       case 'RETURN_REQUESTED': return 'bg-orange-100 text-orange-800';
       case 'RETURNED': return 'bg-orange-200 text-orange-900';
+      case 'FAILED': return 'bg-red-200 text-red-900';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status: OrderStatus): string => {
-    switch (status) {
+    switch (String(status).toUpperCase()) {
       case 'PENDING': return 'Chờ xử lý';
       case 'PAID': return 'Đã thanh toán';
       case 'PROCESSING': return 'Đang xử lý';
@@ -274,6 +327,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       case 'CANCELLED': return 'Đã hủy';
       case 'RETURN_REQUESTED': return 'Yêu cầu trả hàng';
       case 'RETURNED': return 'Đã trả hàng';
+      case 'FAILED': return 'Giao thất bại';
       default: return 'Chưa xác định';
     }
   };
@@ -1079,7 +1133,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                             </p>
                             <Separator orientation="vertical" className="h-4" />
                             <p className="text-sm font-semibold text-primary">
-                            {formatPrice(item.price * item.quantity)}
+                            {formatPrice(item.price)}
+
                             </p>
                           </div>
 
@@ -1157,14 +1212,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                     description: 'Bạn xác nhận đã nhận được hàng? Đơn hàng sẽ được chuyển sang trạng thái hoàn thành.',
                                     confirmText: 'Đã nhận hàng',
                                     onConfirm: async () => {
+                                      setIsProcessingAction(true);
                                       try {
                                         await OrderService.confirmDelivery(order.id);
-                                        await refreshOrders();
+                                        updateOrderStatusLocal(order.id, 'DELIVERED');
                                         setConfirmDialog({ ...confirmDialog, open: false });
                                         toast.success('Xác nhận đã nhận hàng thành công');
                                       } catch (error: any) {
                                         toast.error(error?.response?.data?.message || 'Xác nhận thất bại');
                                         setConfirmDialog({ ...confirmDialog, open: false });
+                                      } finally {
+                                        setIsProcessingAction(false);
                                       }
                                     }
                                   });
@@ -1226,14 +1284,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                 confirmText: 'Hủy đơn hàng',
                                 isDestructive: true,
                                 onConfirm: async () => {
+                                  setIsProcessingAction(true);
                                   try {
                                     await OrderService.cancelOrder(order.id);
-                                    await refreshOrders();
+                                    updateOrderStatusLocal(order.id, 'CANCELLED');
                                     setConfirmDialog({ ...confirmDialog, open: false });
                                     toast.success('Đã gửi yêu cầu hủy đơn hàng');
                                   } catch (error: any) {
                                     toast.error(error?.response?.data?.message || 'Hủy đơn hàng thất bại');
                                     setConfirmDialog({ ...confirmDialog, open: false });
+                                  } finally {
+                                    setIsProcessingAction(false);
                                   }
                                 }
                               });
@@ -1594,7 +1655,9 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       </Dialog>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => {
+        if (!isProcessingAction) setConfirmDialog({ ...confirmDialog, open });
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
@@ -1603,13 +1666,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>
+            <AlertDialogCancel 
+              onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+              disabled={isProcessingAction}
+            >
               Hủy
             </AlertDialogCancel>
             <AlertDialogAction 
-              onClick={confirmDialog.onConfirm}
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDialog.onConfirm();
+              }}
               className={confirmDialog.isDestructive ? "bg-red-600 hover:bg-red-700" : ""}
+              disabled={isProcessingAction}
             >
+              {isProcessingAction ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : null}
               {confirmDialog.confirmText || 'Xác nhận'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1617,7 +1688,9 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       </AlertDialog>
 
       {/* Return Reason Dialog */}
-      <Dialog open={returnReasonDialog.open} onOpenChange={(open) => setReturnReasonDialog({ ...returnReasonDialog, open })}>
+      <Dialog open={returnReasonDialog.open} onOpenChange={(open) => {
+        if (!isProcessingAction) setReturnReasonDialog({ ...returnReasonDialog, open });
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Yêu cầu trả hàng</DialogTitle>
@@ -1641,7 +1714,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             <Button variant="outline" onClick={() => {
               setReturnReasonDialog({ open: false, orderId: '' });
               setReturnReason('');
-            }}>
+            }} disabled={isProcessingAction}>
               Hủy
             </Button>
             <Button 
@@ -1650,18 +1723,22 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   toast.error('Vui lòng nhập lý do trả hàng');
                   return;
                 }
+                setIsProcessingAction(true);
                 try {
                   await OrderService.returnOrder(returnReasonDialog.orderId, { reason: returnReason });
-                  await refreshOrders();
+                  updateOrderStatusLocal(returnReasonDialog.orderId, 'RETURN_REQUESTED');
                   setReturnReasonDialog({ open: false, orderId: '' });
                   setReturnReason('');
                   toast.success('Đã gửi yêu cầu trả hàng');
                 } catch (error: any) {
                   toast.error(error?.response?.data?.message || 'Gửi yêu cầu thất bại');
+                } finally {
+                  setIsProcessingAction(false);
                 }
               }}
-              disabled={!returnReason.trim()}
+              disabled={!returnReason.trim() || isProcessingAction}
             >
+              {isProcessingAction ? <Loader2 className="h-4 w-4 animate-spin mr-2 inline" /> : null}
               Gửi yêu cầu
             </Button>
           </DialogFooter>

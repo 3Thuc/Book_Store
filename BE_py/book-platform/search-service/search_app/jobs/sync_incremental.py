@@ -8,7 +8,7 @@ from search_app.search.client import get_os_client
 
 load_dotenv()
 
-INDEX = os.getenv("OPENSEARCH_INDEX", "books_v1")
+INDEX = os.getenv("OPENSEARCH_INDEX", "books_current")
 STATE_PATH = os.getenv("SYNC_STATE_PATH", "search_app/jobs/state.json")
 
 BATCH_LIMIT = int(os.getenv("SYNC_BATCH_LIMIT", "2000")

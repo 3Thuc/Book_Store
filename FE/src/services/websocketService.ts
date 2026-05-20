@@ -19,7 +19,7 @@ class WebSocketService {
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 3000;
 
-  constructor(private baseUrl: string = 'https://localhost:8443') {}
+  constructor(private baseUrl: string = window.location.origin) {}
 
   connect(onNotification: (notification: Notification) => void): void {
     if (this.connected) {
@@ -111,7 +111,4 @@ class WebSocketService {
   }
 }
 
-// Export singleton instance
-export const webSocketService = new WebSocketService(
-  (import.meta as any).env.VITE_API_URL || 'https://localhost:8443'
-);
+export const webSocketService = new WebSocketService();

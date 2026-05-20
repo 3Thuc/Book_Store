@@ -1,0 +1,46 @@
+
+==============================================================================
+  📊 KẾT QUẢ STAFF EVALUATION v6 – 97 cases
+==============================================================================
+  API OK            : 97/97 = 100.0%
+  Intent Acc (all)  : 85/97 = 87.6%
+  Keyword Found     : 84/97 = 86.6%
+  Regex-guaranteed  : 83/95 = 87.4% (excl. OOS)
+  SBERT OOS acc     : 2/2 = 100.0% (model-dependent)
+  SERVER_ERROR      : 0
+  CONN_ERROR        : 0
+  Latency avg       : 148ms
+──────────────────────────────────────────────────────────────────────────────
+  Intent                               OK  Total     Acc  Bar
+──────────────────────────────────────────────────────────────────────────────
+  staff_book_lookup                     6/7       85.7%  ████████░░
+  staff_chitchat                        5/5      100.0%  ██████████
+  staff_complaint_resolve               5/5      100.0%  ██████████
+  staff_customer_lookup                 7/7      100.0%  ██████████
+  staff_escalated_issues                7/7      100.0%  ██████████
+  staff_inventory_check                 6/7       85.7%  ████████░░
+  staff_inventory_low                   5/5      100.0%  ██████████
+  staff_inventory_update                5/7       71.4%  ███████░░░
+  staff_order_list_pending              6/7       85.7%  ████████░░
+  staff_order_lookup                    7/7      100.0%  ██████████
+  staff_order_statistics                3/5       60.0%  ██████░░░░
+  staff_order_status_update             4/7       57.1%  █████░░░░░
+  staff_out_of_scope                    2/2      100.0%  ██████████ ⚠️SBERT
+  staff_return_handle                   6/7       85.7%  ████████░░
+  staff_revenue_today                   6/7       85.7%  ████████░░
+  staff_top_selling                     5/5      100.0%  ██████████
+
+  ❌ 12 FAILED CASES:
+    S1011 [staff_book_lookup] "gia va ton kho sach id 1500 bay gio" → got [staff_inventory_check]
+    S1030 [staff_order_status_update] "chuyen don hang 201 sang trang thai cancelled" → got [staff_out_of_scope]
+    S1031 [staff_order_status_update] "doi trang thai don 29 sang hoan thanh nhe" → got [staff_out_of_scope]
+    S1033 [staff_order_status_update] "chuyen trang thai don sang processing 77" → got [staff_out_of_scope]
+    S1034 [staff_order_list_pending] "danh sach don hang dang cho xu ly hom nay" → got [staff_out_of_scope]
+    S1042 [staff_inventory_check] "con bao nhieu cuon sach id 201 trong kho" → got [staff_book_lookup]
+    S1056 [staff_inventory_update] "update inventory quantity sach id 9 them 13" → got [staff_order_status_update]
+    S1057 [staff_inventory_update] "them so luong sach id 10 vao kho 50 cuon" → got [staff_book_lookup]
+    S1062 [staff_return_handle] "don hoan hang 999 can duyet cho khach" → got [staff_order_list_pending]
+    S1085 [staff_revenue_today] "bao nhieu tien ban duoc ngay hom nay roi" → got [staff_out_of_scope]
+    S1092 [staff_order_statistics] "bao nhieu don da giao thanh cong tuan nay" → got [staff_order_status_update]
+    S1095 [staff_order_statistics] "so don giao thanh cong va bi huy thang nay" → got [staff_order_status_update]
+==============================================================================

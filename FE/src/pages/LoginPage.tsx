@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Book, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { calculatePasswordStrength } from '../utils/passwordStrength';
 
@@ -27,7 +27,10 @@ interface SignupData {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onLogoClick }) => {
   const navigate = useNavigate();
-  const [isSignIn, setIsSignIn] = useState<boolean>(true);
+  const { login, signup, redirectToGoogle } = useAuth();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [isSignIn, setIsSignIn] = useState<boolean>(tabParam !== 'register');
   const [loginData, setLoginData] = useState<LoginData>({ email: '', password: '' });
   const [signupData, setSignupData] = useState<SignupData>({
     name: '',
@@ -38,7 +41,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onLogoClic
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { login, signup, redirectToGoogle } = useAuth();
+
+  useEffect(() => {
+    const googleError = searchParams.get('google_error');
+    const authError = searchParams.get('auth_error');
+    
+    if (googleError === 'locked' || authError === 'locked') {
+      toast.error('Tài khoản của bạn đã bị khóa. Không thể đăng nhập.', { duration: 10000 });
+    } else if (googleError === '1') {
+      toast.error('Đăng nhập Google thất bại.', { duration: 5000 });
+    }
+  }, [searchParams]);
 
   const passwordStrength = useMemo(
     () => calculatePasswordStrength(signupData.password),

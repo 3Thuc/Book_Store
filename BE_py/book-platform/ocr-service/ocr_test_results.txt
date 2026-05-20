@@ -1,0 +1,95 @@
+OCR TEST RUN - 2026-05-11 13:55:09
+Endpoint  : http://localhost:8004/api/chat/upload-image
+Book imgs : D:\craw_demo\scraped_images
+Hard imgs : D:\ocr_test_images
+[OK] Service healthy
+
+Running 30 tests...
+
+
+=================================================================
+  NHOM A - Anh bia sach ro net, co trong DB
+=================================================================
+  [TC_OCR_01] [PASS]      39ms  found=YES  btns=1  | Bia '1 Cm Giua Anh Va Em' - van hoc
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"1 Cm Giữa Anh Và Em"** từ ảnh bìa của bạn: |  | • **1 Cm Giữa Anh Và Em** – Đan
+  [TC_OCR_02] [PASS]      25ms  found=YES  btns=1  | Bia '1% No Luc' - tu phat trien ban than
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"1% Nỗ Lực"** từ ảnh bìa của bạn: |  | • **1% Nỗ Lực** – Đang cập nhật – **71,00
+  [TC_OCR_03] [PASS]      12ms  found=YES  btns=1  | Bia '10% Hanh Phuc Hon' - tam ly hoc
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"10% Hạnh Phúc Hơn - 10% Happier"** từ ảnh bìa của bạn: |  | • **10% Hạnh Phúc H
+  [TC_OCR_04] [PASS]      16ms  found=YES  btns=1  | Bia '1 Phut Noi Tieng Anh Nhu Gio'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"Speaking Matrix - 1 Phút Nói Tiếng Anh Như Gió"** từ ảnh bìa của bạn: |  | • **
+  [TC_OCR_05] [PASS]      35ms  found=YES  btns=1  | Bia '1 Nhan Luc Tao Ra 99 Doanh So AI'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"1% Nhân Lực Tạo Ra 99% Doanh Số - Bán Hàng Thông Minh Trong Thời Đại AI"** từ ả
+  [TC_OCR_06] [PASS]      29ms  found=YES  btns=1  | Bia '10 Chi So Vang Quyet Dinh Tuong Lai'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"10 Chỉ Số Vàng Quyết Định Tương Lai Của Trẻ - Bồi Dưỡng Chỉ Số Can Đảm - Daring
+  [TC_OCR_07] [PASS]      32ms  found=YES  btns=1  | Bia '10 Phut Tu Hoc Tieng Trung 2025'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"10 Phút Tự Học Tiếng Trung Mỗi Ngày (Tái Bản 2025)"** từ ảnh bìa của bạn: |  | 
+  [TC_OCR_08] [PASS]      12ms  found=YES  btns=1  | Bia '10 Buoc Den Thanh Cong'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"10 Bước Đến Thành Công - The Success Factor"** từ ảnh bìa của bạn: |  | • **10 
+  [TC_OCR_09] [PASS]      21ms  found=YES  btns=1  | Bia '1 Ngay Bang 48 Gio'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"1 Ngày Bằng 48 Giờ"** từ ảnh bìa của bạn: |  | • **1 Ngày Bằng 48 Giờ** – Đang 
+  [TC_OCR_10] [PASS]      12ms  found=YES  btns=1  | Bia '10 Dieu Ran Lanh Dao Toi Uu'
+           BOT: 📚 Tôi đã tìm thấy cuốn sách **"10 Điều Răn Lãnh Đạo Tối Ưu Nhất Thế Giới"** từ ảnh bìa của bạn: |  | • **10 Đi
+
+=================================================================
+  NHOM B - Anh bia sach kho nhan dien (thuc te + bien the)
+=================================================================
+  [TC_OCR_11] [PASS]      11ms  found=YES  btns=4  | Bia sach thuc te (unnamed1) - anh chup tu internet
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_12] [PASS]      17ms  found=YES  btns=4  | Bia sach (unnamed2) - chat luong khac nhau
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_13] [PASS]      19ms  found=YES  btns=4  | Bia sach (unnamed3) - co the bi cat/crop
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_14] [PASS]      15ms  found=YES  btns=4  | Bia sach (unnamed4) - kich thuoc khac nhau
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_15] [PASS]      34ms  found=YES  btns=4  | Bia sach (unnamed5) - co the khac the loai
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_16] [PASS]      19ms  found=YES  btns=4  | Bia sach (unnamed6)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_17] [PASS]      14ms  found=YES  btns=4  | Bia sach xoay 45 do (sinh tong hop)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_18] [PASS]      12ms  found=YES  btns=4  | Bia sach lam mo GaussianBlur (sinh tong hop)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_19] [PASS]      14ms  found=YES  btns=4  | Bia sach bia-sach2 (anh thuc te tu Downloads)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_20] [PASS]      11ms  found=YES  btns=4  | Thumbnail nho 50x70px (sinh tong hop)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+
+=================================================================
+  NHOM C - Anh khong phai bia sach (logo, icon, diagram)
+=================================================================
+  [TC_OCR_21] [PASS]      35ms  found=YES  btns=4  | Logo MySQL (anh icon phan mem)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_22] [PASS]      34ms  found=YES  btns=4  | Icon chatbot (chat-bot.png)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_23] [PASS]      24ms  found=YES  btns=4  | Icon bot he thong (bot.png)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_24] [PASS]      35ms  found=YES  btns=4  | So do kien truc 3D modeling (PNG)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_25] [PASS]      11ms  found=YES  btns=4  | Icon data-server / database
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_26] [PASS]      22ms  found=YES  btns=4  | So do embedded system (PNG)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_27] [PASS]      32ms  found=YES  btns=4  | Anh trang trang hoan toan (blank white)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_28] [PASS]      12ms  found=YES  btns=4  | Bieu do cot doanh thu (bar chart)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_29] [PASS]      11ms  found=YES  btns=4  | Anh hoa don mua hang (invoice text)
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+  [TC_OCR_30] [PASS]      11ms  found=YES  btns=4  | Screenshot man hinh dashboard
+           BOT: 📚 Tôi chưa nhận dạng rõ tên sách từ ảnh, nhưng đây là một số sách nổi bật bạn có thể tham khảo: |  | • **Kỹ Nă
+
+=================================================================
+  SUMMARY
+=================================================================
+  Nhom    Pass  Total  Found       %  Bar
+  -------------------------------------------------------
+  A         10     10     10  100.0%  ##########
+  B         10     10     10  100.0%  ##########
+  C         10     10     10  100.0%  ##########
+
+  TOTAL: 30/30 (100.0%)  [2.5s]
+  -> RESULT: PASS
+
+  Saved: D:\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\ocr-service\ocr_test_results.txt
+         D:\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\ocr-service\ocr_test_results.json

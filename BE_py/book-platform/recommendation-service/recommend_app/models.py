@@ -16,8 +16,10 @@ class BookRecommendation(BaseModel):
     # Lý do / kiểu gợi ý
     reason: Optional[str] = None
 
-    # Các field điểm / thống kê (tùy proc có hay không)
+    # Cac field diem / thong ke (tuy proc co hay khong)
     total_sold: Optional[int] = None
     final_score: Optional[float] = None
     co_purchase_count: Optional[int] = None
     view_count: Optional[int] = None
+    # P2.3: category de MMR diversity grouping
+    category_name: Optional[str] = None

@@ -6,7 +6,8 @@ import com.be.book.BookStorage.service.OrderService;
 import com.be.book.BookStorage.service.PayOSService;
 import com.be.book.BookStorage.service.PaymentService;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +16,22 @@ import java.io.IOException;
 import java.util.Map;
 
 
+
 @RestController
 @RequestMapping("/api/payment")
-@RequiredArgsConstructor
 public class PaymentController {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
 
     private final OrderService orderService;
     private final PayOSService payOSService;
     private final PaymentService paymentService;
+
+    public PaymentController(OrderService orderService, PayOSService payOSService, PaymentService paymentService) {
+        this.orderService = orderService;
+        this.payOSService = payOSService;
+        this.paymentService = paymentService;
+    }
     /**
      * PayOS redirect về đây sau khi thanh toán THÀNH CÔNG
      * URL: http://localhost:8080/api/payment/return?orderCode=123&status=PAID&signature=xxx
@@ -61,23 +70,30 @@ public class PaymentController {
     public void handlePaymentCancel(@RequestParam String orderCode,
                                     HttpServletResponse response) throws IOException {
         try {
-            // Cập nhật trạng thái order thành CANCELLED
-            orderService.updateOrderStatus(orderCode, "cancelled");
+            // Cập nhật trạng thái order thành CANCELLED khi user hủy thanh toán PayOS
+            // Đơn hàng sẽ chuyển từ "pending" → "cancelled", paymentStatus → "unpaid"
+            log.info("Payment CANCELLED by user for orderCode={}", orderCode);
+            orderService.updateOrderStatus(orderCode, "CANCELLED");
+            log.info("Order {} status updated to CANCELLED successfully", orderCode);
 
             // Redirect về frontend cancel page
             response.sendRedirect("http://localhost:3000/payment/cancel?orderId=" + orderCode);
 
         } catch (Exception e) {
+            log.error("Error handling payment cancel for orderCode={}: {}", orderCode, e.getMessage());
             e.printStackTrace();
             response.sendRedirect("http://localhost:3000/payment/error");
         }
     }
 
+
     /**
      * Webhook từ PayOS (optional - để cập nhật real-time)
      * PayOS sẽ POST về endpoint này khi có thay đổi trạng thái thanh toán
      */
-    @PostMapping("/webhook")
+    @PostMapping(value = "/webhook",
+                 produces = "application/json",
+                 consumes = "*/*")
     public ResponseEntity<Map<String, Object>> handleWebhook(@RequestBody Map<String, Object> payload) {
         try {
             // Verify webhook signature

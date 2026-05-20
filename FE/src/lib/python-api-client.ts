@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
-// Python Backend URL - running on port 8000
-export const PYTHON_API_BASE_URL = 'http://127.0.0.1:8000';
+// Python Backend – đi qua Vite proxy /pyapi → http://localhost:8000
+// (giống /bookdb đi qua proxy → localhost:8443)
+export const PYTHON_API_BASE_URL = '/pyapi';
 
 const API_TIMEOUT = 30000;
 

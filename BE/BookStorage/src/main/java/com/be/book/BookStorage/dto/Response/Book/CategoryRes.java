@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Builder
 @Data
 @NoArgsConstructor
@@ -16,4 +14,5 @@ public class CategoryRes {
     private Integer categoryId;
     private String categoryName;
     private Status status;
+    private long bookCount;
 }

@@ -19,11 +19,15 @@ import com.be.book.BookStorage.dto.Response.User.UserRes;
 import com.be.book.BookStorage.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -39,6 +43,35 @@ public class AdminController {
     private final PromotionService promotionService;
     private final InventoryService inventoryService;
     private final OrderService orderService;
+    private final CacheManager cacheManager;
+
+    @Value("${ADMIN_API_KEY:}")
+    private String adminApiKey;
+
+    /**
+     * Internal cache-eviction endpoint dùng bởi Python chatbot service.
+     * Xác thực bằng X-Admin-Key header — không cần JWT.
+     * Gọi sau khi chatbot UPDATE MySQL trực tiếp để đảm bảo Spring Cache bị reset.
+     */
+    @PostMapping("/cache/evict")
+    public ResponseEntity<?> evictCaches(
+            @RequestHeader(value = "X-Admin-Key", required = false) String key
+    ) {
+        // Fallback key if application.properties doesn't have it
+        String expectedKey = (adminApiKey != null && !adminApiKey.isBlank()) 
+                             ? adminApiKey : "bookstore-internal-key";
+
+        if (!expectedKey.equals(key)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized cache eviction"));
+        }
+
+        // Clear all caches
+        cacheManager.getCacheNames().forEach(cacheName -> {
+            var cache = cacheManager.getCache(cacheName);
+            if (cache != null) cache.clear();
+        });
+        return ResponseEntity.ok(Map.of("evicted", cacheManager.getCacheNames(), "status", "ok"));
+    }
 
     @GetMapping("/books")
     public ApiResponse<PageRes<BookRes>> getBooks(
@@ -130,7 +163,23 @@ public class AdminController {
         categoryService.deleteCategory(email, id);
 
         ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
-                .message("Xóa thể loại thành công")
+                .message("Vô hiệu hóa danh mục thành công")
+                .build();
+
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /** Xóa vĩnh viễn — chỉ khi danh mục không có sách nào */
+    @DeleteMapping("/categories/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteCategory(
+            Authentication authentication,
+            @PathVariable Integer id
+    ){
+        String email = authentication.getName();
+        categoryService.hardDeleteCategory(email, id);
+
+        ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn danh mục thành công")
                 .build();
 
         return ResponseEntity.ok(responseBody);
@@ -225,7 +274,23 @@ public class AdminController {
         publishersService.deletePublishers(email, id);
 
         ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
-                .message("Xóa nhà xuất bản thành công")
+                .message("Vô hiệu hóa nhà xuất bản thành công")
+                .build();
+
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /** Xóa vĩnh viễn NXB — chỉ khi không có sách nào */
+    @DeleteMapping("/publishers/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> hardDeletePublisher(
+            Authentication authentication,
+            @PathVariable Integer id) {
+
+        String email = authentication.getName();
+        publishersService.hardDeletePublisher(email, id);
+
+        ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn nhà xuất bản thành công")
                 .build();
 
         return ResponseEntity.ok(responseBody);
@@ -281,7 +346,23 @@ public class AdminController {
         authorService.deleteAuthor(email, id);
 
         ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
-                .message("Xóa tác giả thành công")
+                .message("Vô hiệu hóa tác giả thành công")
+                .build();
+
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /** Xóa vĩnh viễn tác giả — chỉ khi không có sách nào */
+    @DeleteMapping("/authors/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> hardDeleteAuthor(
+            Authentication authentication,
+            @PathVariable Integer id) {
+
+        String email = authentication.getName();
+        authorService.hardDeleteAuthor(email, id);
+
+        ApiResponse<Void> responseBody = ApiResponse.<Void>builder()
+                .message("Xóa vĩnh viễn tác giả thành công")
                 .build();
 
         return ResponseEntity.ok(responseBody);
@@ -343,7 +424,7 @@ public class AdminController {
             Authentication authentication) {
 
         String email = authentication.getName();
-        List<PromotionsRes> promotions = promotionService.getListPromotions(email, true);
+        List<PromotionsRes> promotions = promotionService.getListPromotions(email, false);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<PromotionsRes>>builder()
@@ -395,6 +476,22 @@ public class AdminController {
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
+                        .build()
+        );
+    }
+
+    /** Xóa vĩnh viễn khuyến mãi đã bị vô hiệu hóa khỏi CSDL */
+    @DeleteMapping("/promotions/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> permanentDeletePromotion(
+            Authentication authentication,
+            @PathVariable Integer id) {
+
+        String email = authentication.getName();
+        promotionService.permanentDeletePromotion(email, id);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .message("Xóa vĩnh viễn khuyến mãi thành công")
                         .build()
         );
     }
@@ -471,32 +568,89 @@ public class AdminController {
 
     /**
      * Dedicated dashboard endpoint that returns all data needed for the statistics dashboard
-     * This includes: books, categories, orders, order statistics, inventory, publishers, authors, promotions
+     * Mỗi service call chạy SONG SONG bằng CompletableFuture → tổng thời gian = slowest query,
+     * không phải tổng cộng tất cả query. Một lỗi không làm crash toàn bộ endpoint.
      */
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<com.be.book.BookStorage.dto.Response.Admin.DashboardRes>> getDashboard(
             Authentication authentication) {
         String email = authentication.getName();
 
-        // Fetch all data in parallel streams for better performance
-        var books = bookService.getAdminBooks(1, 5000, null, null).getBooks();
-        var categories = categoryService.getAllCategories(email);
-        var orders = orderService.getAllOrders(1, 10000, null, null).getBooks(); // reuse for all items
-        var orderStats = orderService.getOrderStatistics();
-        var inventory = inventoryService.getInventoryList();
-        var publishers = publishersService.getAllPublishers(email);
-        var authors = authorService.getAllAuthors(email);
-        var promotions = promotionService.getListPromotions(email, false); // get all, not just active
+        // ── Truyền SecurityContext sang ForkJoinPool threads ──────────────────────
+        // CompletableFuture.supplyAsync() dùng ForkJoinPool – thread đó KHÔNG có
+        // SecurityContext nên @PreAuthorize sẽ throw Access Denied.
+        // DelegatingSecurityContextExecutor tự copy SecurityContext vào mỗi task.
+        java.util.concurrent.Executor secureExec =
+            new org.springframework.security.concurrent.DelegatingSecurityContextExecutor(
+                java.util.concurrent.ForkJoinPool.commonPool()
+            );
+
+        // ── Chạy song song toàn bộ queries ──────────────────────────────────────
+        var booksFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            // getAdminBooksSlim: không sinh presigned URL → 0 MinIO calls → nhanh 20-50x
+            try { return bookService.getAdminBooksSlim(1, Integer.MAX_VALUE, null, null).getBooks(); }
+            catch (Exception e) { return java.util.Collections.<BookRes>emptyList(); }
+        }, secureExec);
+
+        var catFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return categoryService.getAllCategories(email); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.Book.CategoryRes>emptyList(); }
+        }, secureExec);
+
+        var ordersFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            // getAllOrdersSlim: không sinh presigned URL cho item images → nhanh 10-30x
+            try { return orderService.getAllOrdersSlim(1, Integer.MAX_VALUE).getBooks(); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.Order.OrderRes>emptyList(); }
+        }, secureExec);
+
+        var statsFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return orderService.getOrderStatistics(); }
+            catch (Exception e) { return (com.be.book.BookStorage.dto.Response.Order.OrderStatisticsRes) null; }
+        }, secureExec);
+
+        var pubFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return publishersService.getAllPublishers(email); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.Admin.PublishersRes>emptyList(); }
+        }, secureExec);
+
+        var authorFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return authorService.getAllAuthors(email); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.Admin.AuthorRes>emptyList(); }
+        }, secureExec);
+
+        var promoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return promotionService.getListPromotions(email, false); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.Admin.PromotionsRes>emptyList(); }
+        }, secureExec);
+
+        var usersFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try { return userService.getAllUsers(email); }
+            catch (Exception e) { return java.util.Collections.<com.be.book.BookStorage.dto.Response.User.UserRes>emptyList(); }
+        }, secureExec);
+
+        // Inventory ĐƯỢC TÁCH RA khỏi dashboard – nó chạy 4 correlated subqueries × N sách.
+        // FE sẽ lazy-load inventory chỉ khi mở tab Quản lý kho.
+
+        // ── Chờ tất cả hoàn thành (tối đa 55 giây) ──
+        try {
+            java.util.concurrent.CompletableFuture.allOf(
+                booksFuture, catFuture, ordersFuture, statsFuture,
+                pubFuture, authorFuture, promoFuture, usersFuture
+            ).get(55, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception ignored) {
+            // Nếu timeout: lấy kết quả đã xong, còn lại là emptyList
+        }
 
         var dashboard = com.be.book.BookStorage.dto.Response.Admin.DashboardRes.builder()
-                .books(books)
-                .categories(categories)
-                .orders(orders)
-                .orderStatistics(orderStats)
-                .inventory(inventory)
-                .publishers(publishers)
-                .authors(authors)
-                .promotions(promotions)
+                .books(safeDone(booksFuture))
+                .categories(safeDone(catFuture))
+                .orders(safeDone(ordersFuture))
+                .orderStatistics(statsFuture.getNow(null))
+                .inventory(java.util.Collections.emptyList()) // lazy-loaded từ FE khi mở tab kho
+                .publishers(safeDone(pubFuture))
+                .authors(safeDone(authorFuture))
+                .promotions(safeDone(promoFuture))
+                .users(safeDone(usersFuture))
                 .build();
 
         return ResponseEntity.ok(
@@ -504,6 +658,12 @@ public class AdminController {
                         .result(dashboard)
                         .build()
         );
+    }
+
+    /** Trả về kết quả nếu Future đã done, không thì emptyList. */
+    @SuppressWarnings("unchecked")
+    private <T> List<T> safeDone(java.util.concurrent.CompletableFuture<List<T>> future) {
+        return future.getNow(java.util.Collections.emptyList());
     }
 
 }

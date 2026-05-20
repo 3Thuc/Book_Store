@@ -14,3 +14,7 @@ export { default as cartService } from './cartService';
 
 // Python Backend Services (Port 8000)
 export { PythonRecommendService, PythonSearchService } from './pythonService';
+
+// OCR Service (Port 8005)
+export { OcrService } from './ocrService';
+export type { OcrResponse, OcrReceiptResponse, OcrBookInfo, OcrBookResult, OcrHealthResponse } from './ocrService';

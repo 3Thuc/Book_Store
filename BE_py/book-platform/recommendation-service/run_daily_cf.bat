@@ -3,8 +3,8 @@ chcp 65001 >nul 2>&1
 SET PYTHONIOENCODING=utf-8
 SET PYTHONUTF8=1
 
-SET PROJECT_DIR=E:\KLTN\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service
-SET VENV=E:\KLTN\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\.venv\Scripts\activate.bat
+SET PROJECT_DIR=D:\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service
+SET VENV=D:\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\.venv\Scripts\activate.bat
 SET LOG=%PROJECT_DIR%\logs\daily_cf_latest.log
 
 cd /d %PROJECT_DIR%

@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import java.text.ParseException;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthenticationService authenticationService;
@@ -74,6 +76,54 @@ public class AuthController {
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, res.getRefreshCookie().toString())
                 .body(responseBody);
+    }
+
+    /**
+     * Google OAuth callback (GET) – Google luôn redirect về bằng GET.
+     * Handler này: exchange code → tạo token → set cookie → redirect FE.
+     */
+    @GetMapping("/login/google")
+    public void handleGoogleOAuthCallback(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String error,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+
+        try {
+            if (error != null || code == null) {
+                log.warn("Google OAuth callback lỗi: {}", error != null ? error : "missing_code");
+                response.sendRedirect(frontendUrl + "/login?google_error=1");
+                return;
+            }
+
+            try {
+                LoginRes res = authenticationService.loginWithGoogle(code);
+
+                // httpOnly refresh token cookie (dùng để refresh access token sau này)
+                response.addHeader(HttpHeaders.SET_COOKIE, res.getRefreshCookie().toString());
+
+                // Truyền access token qua URL hash fragment (#_token=...)
+                // Hash fragment KHÔNG được gửi lên server, chỉ FE đọc được bằng JS
+                // → Tránh hoàn toàn vấn đề SameSite/Secure cookie giữa https:8443 và http:3000
+                String encodedToken = java.net.URLEncoder.encode(res.getToken(), java.nio.charset.StandardCharsets.UTF_8);
+                response.sendRedirect(frontendUrl + "/?google_login=1#_token=" + encodedToken);
+
+            } catch (AppException e) {
+                log.warn("Google OAuth GET callback AppException: {}", e.getMessage());
+                if (e.getErrorCode() == com.be.book.BookStorage.exception.ErrorCode.USER_LOCKED) {
+                    response.sendRedirect(frontendUrl + "/login?google_error=locked");
+                } else {
+                    response.sendRedirect(frontendUrl + "/login?google_error=1");
+                }
+            } catch (Exception e) {
+                log.warn("Google OAuth GET callback thất bại: {}", e.getMessage());
+                response.sendRedirect(frontendUrl + "/login?google_error=1");
+            }
+        } catch (Throwable t) {
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("DEBUG EXCEPTION:\n");
+            t.printStackTrace(response.getWriter());
+            response.getWriter().flush();
+        }
     }
 
     @PostMapping("/register")
@@ -193,6 +243,13 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserRes>> infoUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.<UserRes>builder()
+                            .message("Người dùng chưa đăng nhập")
+                            .build());
+        }
+
         String email = authentication.getName();
 
         UserRes userInfo = authenticationService.getUserInfo(email);

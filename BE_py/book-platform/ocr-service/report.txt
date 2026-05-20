@@ -1,0 +1,23 @@
+============================================================
+KIEM TRA DOI CHIEU DU LIEU TU MINIO VA MYSQL
+============================================================
+
+1. Dang tai danh sach anh tu MinIO...
+   => Tong so file vat ly trong thu muc MinIO: 20344
+   => So luong sach co anh tren MinIO: 20232
+
+2. Dang quet MySQL Database...
+   => Tong so sach trong Database: 20215
+   => Sach dung anh ngoai CDN: 6
+   => Sach dung anh luu tren MinIO: 20204
+
+============================================================
+KET QUA DOI CHIEU
+============================================================
+⚠️  Sach khai bao co anh nhung FILE KHONG TON TAI: 0
+
+🗑️  File anh rác (khong co trong db): 27
+     => book_id anh rac: [1409, 1410, 1411, 772, 395, 1177, 2971, 2976, 2085, 1064, 2864, 2353, 3002, 3004, 1345, 1091, 452, 2373, 2514, 609, 2281, 1136, 2160, 114, 2678, 2554, 1404] ...
+
+=> TONG KET:
+   => Tong so sach hop le co anh: 20210 cuon.

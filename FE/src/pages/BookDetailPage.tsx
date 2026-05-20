@@ -58,10 +58,10 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
   });
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState<boolean>(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
-  const [similarBooks, setSimilarBooks] = useState<any[]>([]);
-  const [popularBooks, setPopularBooks] = useState<any[]>([]);
+  const [similarBooks, setSimilarBooks] = useState<any[]>([]);   // SBERT AI – cb-fallback
+  const [alsoBoughtBooks, setAlsoBoughtBooks] = useState<any[]>([]); // co-purchase – /also
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
-  
+
   
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
@@ -73,41 +73,37 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
 
   useEffect(() => {
     if (!book?.bookId) return;
-
     const fetchRecommendations = async () => {
       setIsLoadingRecommendations(true);
       try {
-        const similarResponse = await PythonRecommendService.getAlsoBought(book.bookId, 30);
-        const similarData = (similarResponse && typeof similarResponse === 'object' && 'items' in similarResponse && Array.isArray((similarResponse as any).items))
-          ? (similarResponse as any).items
-          : (Array.isArray(similarResponse) ? similarResponse : []);
+        // Run both recommendations queries simultaneously to cut request time in half, up to 20 books each
+        const [cbResponse, alsoResponse] = await Promise.all([
+          PythonRecommendService.getSimilarBooksCB(book.bookId, 20),
+          PythonRecommendService.getAlsoBought(book.bookId, 20)
+        ]);
 
-        const popularData = await PythonRecommendService.getTrending(7, 10);
+        const cbData   = Array.isArray(cbResponse) ? cbResponse : [];
+        const alsoData = Array.isArray(alsoResponse) ? alsoResponse : [];
 
-        const mappedSimilar = (Array.isArray(similarData) ? similarData : []).map((item: any) => ({
-          bookId: item.book_id,
-          title: item.title,
-          author: item.author_name,
-          price: item.price,
-          avgRating: item.avg_rating,
-          ratingCount: item.rating_count,
-          stockQuantity: item.stock_quantity,
-          imageUrl: item.main_image || item.image_url,
-          categories: item.categories || []
-        }));
-        const mappedPopular = (Array.isArray(popularData) ? popularData : []).map((item: any) => ({
-          bookId: item.book_id,
-          title: item.title,
-          author: item.author_name,
-          price: item.price,
-          avgRating: item.avg_rating,
-          ratingCount: item.rating_count,
-          stockQuantity: item.stock_quantity,
-          imageUrl: item.main_image || item.image_url,
-          categories: item.categories || []
-        }));
+        // Helper: map BookRecommendation → Book shape
+        const mapItem = (item: any) => ({
+          bookId:        item.book_id,
+          title:         item.title,
+          author:        item.author_name,
+          price:         item.price,
+          avgRating:     item.avg_rating,
+          ratingCount:   item.rating_count,
+          stockQuantity: item.stock_quantity ?? 1,
+          imageUrl:      item.main_image || item.image_url || item.imageUrl || '',
+          categories:    item.categories || [],
+          reason:        item.reason,
+        });
 
-        const allBooks = [...mappedSimilar, ...mappedPopular];
+        const mappedSimilar     = cbData.map(mapItem);
+        const mappedAlsoBought  = alsoData.map(mapItem);
+
+        // Lấy presigned URL cho ảnh MinIO
+        const allBooks   = [...mappedSimilar, ...mappedAlsoBought];
         const imagePaths = allBooks
           .map(b => b.imageUrl)
           .filter((path): path is string => !!path && !path.startsWith('http'));
@@ -115,12 +111,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
         if (imagePaths.length > 0) {
           try {
             const presignedUrls = await ImageService.getPresignedUrls(imagePaths);
-            mappedSimilar.forEach(book => {
-              if (book.imageUrl && !book.imageUrl.startsWith('http')) {
-                book.imageUrl = presignedUrls[book.imageUrl] || book.imageUrl;
-              }
-            });
-            mappedPopular.forEach(book => {
+            [...mappedSimilar, ...mappedAlsoBought].forEach(book => {
               if (book.imageUrl && !book.imageUrl.startsWith('http')) {
                 book.imageUrl = presignedUrls[book.imageUrl] || book.imageUrl;
               }
@@ -131,10 +122,10 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
         }
 
         setSimilarBooks(mappedSimilar);
-        setPopularBooks(mappedPopular);
+        setAlsoBoughtBooks(mappedAlsoBought);
       } catch (error) {
         setSimilarBooks([]);
-        setPopularBooks([]);
+        setAlsoBoughtBooks([]);
       } finally {
         setIsLoadingRecommendations(false);
       }
@@ -232,13 +223,21 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
       onLoginClick();
       return;
     }
-    
+
+    // Guard: kiểm tra tồn kho trước khi gọi API
+    const available = book.availableQuantity ?? book.stockQuantity ?? 0;
+    if (available <= 0) {
+      toast.error('Sản phẩm hiện đã hết hàng');
+      return;
+    }
+
     console.log('Book data:', { 
       stockQuantity: book?.stockQuantity, 
       availableQuantity: book?.availableQuantity 
     });
     addToCart(book, quantity);
   };
+
 
   const handleSubmitReview = async () => {
     if (!isLoggedIn) {
@@ -434,30 +433,38 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
 
         <ReviewsSection bookId={String(book.bookId)} className="mb-16" />
 
-        {!isLoadingRecommendations && popularBooks.length > 0 && (
-          <div className="mb-16">
-            <BookRecommendations
-              title="Sách được yêu thích"
-              books={popularBooks}
-              onBookClick={onBookClick}
-            />
-          </div>
-        )}
-
-        {!isLoadingRecommendations && similarBooks.length > 0 && (
-          <div className="mb-16">
-            <BookRecommendations
-              title="Sách cùng thể loại & tác giả"
-              books={similarBooks}
-              onBookClick={onBookClick}
-            />          
-          </div>
-        )}
-
         {/* Loading state */}
         {isLoadingRecommendations && (
           <div className="text-center py-8">
             <p className="text-muted-foreground">Đang tải gợi ý sách...</p>
+          </div>
+        )}
+
+        {/* Sách tương tự ngữ nghĩa AI (SBERT cb-fallback) */}
+        {!isLoadingRecommendations && similarBooks.length > 0 && (
+          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+            <BookRecommendations
+              title="Sách tương tự"
+              subtitle="Những cuốn sách có nội dung tương đồng"
+              books={similarBooks}
+              onBookClick={onBookClick}
+              icon="none"
+              bgVariant="muted"
+            />
+          </div>
+        )}
+
+        {/* Khách hàng cũng mua (co-purchase từ đơn hàng thực tế) */}
+        {!isLoadingRecommendations && alsoBoughtBooks.length > 0 && (
+          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+            <BookRecommendations
+              title="Khách hàng cũng mua"
+              subtitle="Những cuốn sách thường được mua kèm cùng cuốn sách này"
+              books={alsoBoughtBooks}
+              onBookClick={onBookClick}
+              icon="none"
+              bgVariant="default"
+            />
           </div>
         )}
       </div>

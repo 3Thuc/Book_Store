@@ -18,6 +18,8 @@ import com.be.book.BookStorage.exception.ErrorCode;
 import com.be.book.BookStorage.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +27,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -43,6 +47,7 @@ public class OrderService {
     private final RatingRepository ratingRepository;
     private final NotificationService notificationService;
     private final UserActionService userActionService;
+    private final OrderEmailService orderEmailService;
 
     private UserEntity getCurrentUser(String email) {
         return userRepository.findByEmail(email)
@@ -50,6 +55,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public PaymentRes createOrder(String email, CreateOrderReq request) {
         UserEntity user = getCurrentUser(email);
 
@@ -131,7 +137,12 @@ public class OrderService {
         order.setPromo(promo);
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.pending);
-        order.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
+        try {
+            order.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid paymentMethod value received: '{}'", request.getPaymentMethod());
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
         order.setPaymentStatus(PaymentStatus.unpaid);
         order.setNote(request.getNote());
         order.setCreatedAt(LocalDateTime.now());
@@ -187,17 +198,19 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public void updateOrderStatus(String orderCode, String status) {
         OrderEntity order = orderRepository.findById(Integer.parseInt(orderCode))
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderCode));
 
-        if ("PAID".equals(status)) {
+        // Dùng equalsIgnoreCase để tránh bug case mismatch ("cancelled" vs "CANCELLED")
+        if ("PAID".equalsIgnoreCase(status)) {
             order.setPaymentStatus(PaymentStatus.paid);
             order.setStatus(OrderStatus.processing);
-        } else if ("CANCELLED".equals(status)) {
+        } else if ("CANCELLED".equalsIgnoreCase(status)) {
             order.setPaymentStatus(PaymentStatus.unpaid);
             order.setStatus(OrderStatus.cancelled);
-        } else if ("FAILED".equals(status)) {
+        } else if ("FAILED".equalsIgnoreCase(status)) {
             order.setPaymentStatus(PaymentStatus.unpaid);
             order.setStatus(OrderStatus.failed);
         }
@@ -207,12 +220,77 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "adminOrders", key = "#page + '-' + #size + '-' + #status + '-' + #search")
     public PageRes<OrderRes> getAllOrders(int page, int size, String status, String search) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("orderDate").descending());
-        Page<OrderEntity> orderPage = orderRepository.findAllWithDetailsFiltered(status, search, pageable);
+        Pageable pageable = PageRequest.of(page - 1, size); // ORDER BY \u0111\u00e3 trong query
 
-        // CRITICAL FIX: Fetch reviewed book IDs for ALL users at once
+        // B\u01b0\u1edbc 1: Lay c\u00e1c order ID m\u00e0 kh\u00f4ng JOIN collection \u2014 DB-level LIMIT/OFFSET
+        org.springframework.data.domain.Page<Integer> idsPage =
+                orderRepository.findOrderIdsPaged(
+                        (status != null && !status.isBlank()) ? status : null,
+                        (search != null && !search.isBlank()) ? search : null,
+                        pageable
+                );
+
+        if (idsPage.isEmpty()) {
+            return new PageRes<>(List.of(), page, size, 0L, 0);
+        }
+
+        // B\u01b0\u1edbc 2: Fetch \u0111\u1ea7y \u0111\u1ee7 chi ti\u1ebft ch\u1ec9 cho nh\u1eefng ID v\u1eeba l\u1ea5y
+        List<Integer> ids = idsPage.getContent();
+        List<OrderEntity> orderEntities = orderRepository.findByOrderIdsWithDetails(ids);
+
+        // Cache reviewed book IDs per user (kh\u00f4ng c\u00f2n N+1 gi\u1eefa c\u00e1c \u0111\u01a1n h\u00e0ng)
         Map<Integer, Set<Integer>> userReviewedBooks = new HashMap<>();
+
+        // Gi\u1eef \u0111\u00fang th\u1ee9 t\u1ef1 theo orderDate DESC (order c\u1ee7a ids t\u1eeb b\u01b0\u1edbc 1)
+        Map<Integer, OrderEntity> orderMap = orderEntities.stream()
+                .collect(Collectors.toMap(OrderEntity::getOrderId, e -> e));
+
+        List<OrderRes> orders = ids.stream()
+                .map(orderMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(order -> {
+                    List<OrderDetailEntity> orderDetails = order.getDetails();
+                    Double subtotal = orderDetails.stream()
+                            .mapToDouble(OrderDetailEntity::getTotalPrice).sum();
+                    Double discount = 0.0;
+                    if (order.getPromo() != null && order.getPromo().getDiscountPercent() != null) {
+                        discount = subtotal * (order.getPromo().getDiscountPercent() / 100.0);
+                    }
+                    Double total = subtotal - discount;
+
+                    Integer userId = order.getUser() != null ? order.getUser().getUserId() : null;
+                    Set<Integer> reviewedBookIds = userId != null
+                            ? userReviewedBooks.computeIfAbsent(
+                                    userId,
+                                    id -> new HashSet<>(ratingRepository.findReviewedBookIds(id))
+                            ) : new HashSet<>();
+
+                    return mapToFullOrderRes(order, orderDetails, subtotal, discount, total, reviewedBookIds);
+                })
+                .collect(Collectors.toList());
+
+        return new PageRes<>(
+                orders,
+                idsPage.getNumber() + 1,
+                idsPage.getSize(),
+                idsPage.getTotalElements(),
+                idsPage.getTotalPages()
+        );
+    }
+
+    /**
+     * Load toàn bộ orders cho dashboard — KHÔNG sinh presigned URL cho item images.
+     * Dashboard chỉ cần: totalAmount, status, orderDate, items.bookId, items.quantity.
+     * Nhanh hơn getAllOrders ~10-30x với dataset lớn (tránh O(N*M) MinIO calls).
+     * @Cacheable: lần 2 trở đi trả tức thì từ RAM (~50ms).
+     */
+    @Cacheable(value = "adminDashboard", key = "'ordersSlim'")
+    @Transactional(readOnly = true)
+    public PageRes<OrderRes> getAllOrdersSlim(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("orderDate").descending());
+        Page<OrderEntity> orderPage = orderRepository.findAllWithDetailsFiltered(null, null, pageable);
 
         List<OrderRes> orders = orderPage.getContent().stream()
                 .map(order -> {
@@ -221,24 +299,44 @@ public class OrderService {
                     Double subtotal = orderDetails.stream()
                             .mapToDouble(OrderDetailEntity::getTotalPrice)
                             .sum();
-
                     Double discount = 0.0;
                     if (order.getPromo() != null && order.getPromo().getDiscountPercent() != null) {
                         discount = subtotal * (order.getPromo().getDiscountPercent() / 100.0);
                     }
-
                     Double total = subtotal - discount;
 
-                    // Cache reviewed books per user - handle null user
-                    Integer userId = order.getUser() != null ? order.getUser().getUserId() : null;
-                    Set<Integer> reviewedBookIds = userId != null
-                            ? userReviewedBooks.computeIfAbsent(
-                                    userId,
-                                    id -> new HashSet<>(ratingRepository.findReviewedBookIds(id))
-                            )
-                            : new HashSet<>();
+                    // Slim items: chỉ cần bookId + quantity cho stats, KHÔNG cần imageUrl
+                    List<com.be.book.BookStorage.dto.Response.Order.OrderItemRes> items = orderDetails.stream()
+                            .map(detail -> com.be.book.BookStorage.dto.Response.Order.OrderItemRes.builder()
+                                    .id(detail.getId().getOrderId() + "-" + detail.getId().getBookId())
+                                    .bookId(String.valueOf(detail.getBook().getBookId()))
+                                    .title(detail.getBook() != null ? detail.getBook().getTitle() : "")
+                                    .quantity(detail.getQuantity())
+                                    .price(detail.getTotalPrice())
+                                    .imageUrl(null) // intentionally omitted for speed
+                                    .isReviewed(false)
+                                    .build())
+                            .collect(Collectors.toList());
 
-                    return mapToFullOrderRes(order, orderDetails, subtotal, discount, total, reviewedBookIds);
+                    AddressEntity address = order.getAddress();
+                    return OrderRes.builder()
+                            .id(String.valueOf(order.getOrderId()))
+                            .userId(order.getUser() != null ? String.valueOf(order.getUser().getUserId()) : null)
+                            .items(items)
+                            .totalAmount(total)
+                            .orderDate(order.getOrderDate())
+                            .status(order.getStatus())
+                            .deliveryDate(order.getStatus() == OrderStatus.delivered ? order.getUpdatedAt() : (order.getOrderDate() != null ? order.getOrderDate().plusDays(3) : LocalDateTime.now().plusDays(3)))
+                            .paymentMethod(order.getPaymentMethod())
+                            .shippingAddress(address != null ? address.getAddressText() : null)
+                            .customerName((address != null && address.getRecipientName() != null)
+                                    ? address.getRecipientName()
+                                    : (order.getUser() != null ? order.getUser().getFullName() : null))
+                            .customerPhone((address != null && address.getRecipientPhone() != null)
+                                    ? address.getRecipientPhone()
+                                    : (order.getUser() != null ? order.getUser().getPhone() : null))
+                            .isPaid(order.getPaymentStatus() == com.be.book.BookStorage.enums.Oder.PaymentStatus.paid)
+                            .build();
                 })
                 .collect(Collectors.toList());
 
@@ -251,6 +349,7 @@ public class OrderService {
         );
     }
 
+
     @Transactional(readOnly = true)
     public com.be.book.BookStorage.dto.Response.Order.OrderStatisticsRes getOrderStatistics() {
         return com.be.book.BookStorage.dto.Response.Order.OrderStatisticsRes.builder()
@@ -259,6 +358,7 @@ public class OrderService {
                 .processingOrders(orderRepository.countProcessingOrders())
                 .shippedOrders(orderRepository.countShippedOrders())
                 .deliveredOrders(orderRepository.countDeliveredOrders())
+                .cancelRequestedOrders(orderRepository.countCancelRequestedOrders())
                 .cancelledOrders(orderRepository.countCancelledOrders())
                 .returnRequestedOrders(orderRepository.countReturnRequestedOrders())
                 .returnedOrders(orderRepository.countReturnedOrders())
@@ -275,8 +375,6 @@ public class OrderService {
             Double total,
             Set<Integer> reviewedBookIds
     ) {
-        Map<String, String> presignCache = new HashMap<>();
-
         List<OrderItemRes> items = orderDetails.stream()
                 .map(detail -> {
                     boolean isReviewed = reviewedBookIds.contains(detail.getBook().getBookId());
@@ -285,23 +383,11 @@ public class OrderService {
                             ? detail.getBook().getImage().getImageUrl()
                             : null;
 
-                    String imageUrl = (rawImage != null && !rawImage.isEmpty())
-                            ? rawImage.split(",")[0].trim()
+                    // D\u00f9ng proxy path thay v\u00ec presigned URL \u2192 0 MinIO SDK calls
+                    // FE proxy /minio/bookstore/{path} serve tr\u1ef1c ti\u1ebfp t\u1eeb MinIO public bucket
+                    String imageUrlFinal = rawImage != null && !rawImage.isEmpty()
+                            ? "/minio/bookstore/" + rawImage.split(",")[0].trim()
                             : null;
-
-                    String imageUrlPresign = null;
-                    if (imageUrl != null) {
-                        imageUrlPresign = presignCache.computeIfAbsent(
-                                imageUrl,
-                                url -> {
-                                    try {
-                                        return minioService.getPresignedUrl(url);
-                                    } catch (Exception e) {
-                                        return null;
-                                    }
-                                }
-                        );
-                    }
 
                     String authorName = detail.getBook().getAuthor() != null
                             ? detail.getBook().getAuthor().getAuthorName()
@@ -314,7 +400,7 @@ public class OrderService {
                             .author(authorName)
                             .price(detail.getTotalPrice())
                             .quantity(detail.getQuantity())
-                            .imageUrl(imageUrlPresign)
+                            .imageUrl(imageUrlFinal)
                             .isReviewed(isReviewed)
                             .build();
                 })
@@ -323,8 +409,13 @@ public class OrderService {
         AddressEntity address = order.getAddress();
         String shippingAddress = formatAddress(address);
 
-        String customerName = address != null ? address.getRecipientName() : null;
-        String customerPhone = address != null ? address.getRecipientPhone() : null;
+        // ưu tiên recipientName của địa chỉ; fallback về tên user nếu address không có
+        String customerName = (address != null && address.getRecipientName() != null)
+                ? address.getRecipientName()
+                : (order.getUser() != null ? order.getUser().getFullName() : null);
+        String customerPhone = (address != null && address.getRecipientPhone() != null)
+                ? address.getRecipientPhone()
+                : (order.getUser() != null ? order.getUser().getPhone() : null);
 
         boolean isPaid = order.getPaymentStatus() == PaymentStatus.paid;
 
@@ -335,7 +426,7 @@ public class OrderService {
                 .totalAmount(total)
                 .orderDate(order.getOrderDate())
                 .status(order.getStatus())
-                .deliveryDate(order.getUpdatedAt())
+                .deliveryDate(order.getStatus() == OrderStatus.delivered ? order.getUpdatedAt() : (order.getOrderDate() != null ? order.getOrderDate().plusDays(3) : LocalDateTime.now().plusDays(3)))
                 .paymentMethod(order.getPaymentMethod())
                 .shippingAddress(shippingAddress)
                 .customerName(customerName)
@@ -369,6 +460,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public OrderRes cancelOrder(String email, Integer orderId) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -395,6 +487,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public OrderRes returnOrder(String email, Integer orderId, String reason) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -427,6 +520,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public OrderRes confirmDelivery(String email, Integer orderId) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -477,6 +571,7 @@ public class OrderService {
 
     // OPTIMIZED: Return PaymentRes thay vì OrderRes khi không cần full details
     @Transactional
+    @CacheEvict(value = {"adminDashboard", "adminOrders"}, allEntries = true)
     public PaymentRes updateAdminOrderStatus(String email, Integer orderId, UpdateOrderStatusReq request) {
         userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -504,6 +599,20 @@ public class OrderService {
 
         orderRepository.save(order);
 
+        // Gửi email thông báo cho khách hàng (async — không block response)
+        try {
+            String customerEmail = order.getUser() != null ? order.getUser().getEmail() : null;
+            String customerName  = order.getUser() != null ? order.getUser().getFullName() : null;
+            String formattedTotal = NumberFormat.getNumberInstance(new Locale("vi", "VN"))
+                    .format(order.getTotalAmount().longValue()) + " đ";
+            orderEmailService.sendOrderStatusUpdateEmail(
+                    customerEmail, customerName, orderId, newStatus, formattedTotal
+            );
+        } catch (Exception e) {
+            // Lỗi email không ảnh hưởng đến kết quả API
+            log.error("Không thể gửi email cập nhật trạng thái cho đơn #{}: {}", orderId, e.getMessage());
+        }
+
         PaymentRes response = new PaymentRes();
         response.setId(order.getOrderId());
         response.setStatus(order.getStatus().name());
@@ -524,11 +633,19 @@ public class OrderService {
 
             int newStock = book.getStockQuantity() - d.getQuantity();
             if (newStock < 0) {
-                throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+                log.warn("Stock for book ID {} went below 0 during confirmDelivery. Setting to 0.", book.getBookId());
+                newStock = 0;
             }
 
             book.setStockQuantity(newStock);
             book.setUpdatedAt(LocalDateTime.now());
+
+            // AUTO-DEACTIVATE: Nếu hết hàng thì ẩn khỏi catalog (status → inactive)
+            if (newStock == 0 && book.getStatus() == com.be.book.BookStorage.enums.Status.active) {
+                book.setStatus(com.be.book.BookStorage.enums.Status.inactive);
+                log.info("Book ID {} is now out of stock → status set to inactive.", book.getBookId());
+            }
+
             bookRepository.save(book);
         }
     }
@@ -539,8 +656,16 @@ public class OrderService {
             BookEntity book = bookRepository.findById(d.getBook().getBookId())
                     .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_FOUND));
 
-            book.setStockQuantity(book.getStockQuantity() + d.getQuantity());
+            int restoredStock = book.getStockQuantity() + d.getQuantity();
+            book.setStockQuantity(restoredStock);
             book.setUpdatedAt(LocalDateTime.now());
+
+            // AUTO-REACTIVATE: Nếu trước đó bị inactive do hết hàng → tự bật lại
+            if (restoredStock > 0 && book.getStatus() == com.be.book.BookStorage.enums.Status.inactive) {
+                book.setStatus(com.be.book.BookStorage.enums.Status.active);
+                log.info("Book ID {} stock restored to {} → status set back to active.", book.getBookId(), restoredStock);
+            }
+
             bookRepository.save(book);
         }
     }

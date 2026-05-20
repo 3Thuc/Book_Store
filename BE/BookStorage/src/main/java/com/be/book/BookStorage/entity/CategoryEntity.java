@@ -1,6 +1,7 @@
 package com.be.book.BookStorage.entity;
 
 import com.be.book.BookStorage.enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class CategoryEntity {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
     private Set<BookEntity> books;
 

@@ -18,7 +18,7 @@ import com.be.book.BookStorage.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -79,13 +79,10 @@ public class AuthenticationService {
     @Value("${google.redirect-uri}")
     private String googleRedirectUri;
 
-
-
     public LoginRes login(LoginReq request) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         } catch (BadCredentialsException ex) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
@@ -96,13 +93,15 @@ public class AuthenticationService {
         if (user.getStatus() == Status.unverified) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
+        if (user.getStatus() == Status.locked) {
+            throw new AppException(ErrorCode.USER_LOCKED);
+        }
         if (user.getStatus() == Status.deleted) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         return buildLoginResponse(user);
     }
-
 
     public LoginRes loginWithGoogle(String code) throws ParseException, JOSEException {
 
@@ -119,13 +118,14 @@ public class AuthenticationService {
             user = optionalUser.get();
         } else {
             String randomPassword = UUID.randomUUID().toString().substring(0, 10);
+            String uniqueUsername = email.split("@")[0] + "_" + UUID.randomUUID().toString().substring(0, 5);
             user = UserEntity.builder()
                     .email(email)
                     .fullName(fullName)
                     .passwordHash(passwordEncoder.encode(randomPassword))
                     .role(Role.customer)
                     .status(Status.active)
-                    .username(fullName)
+                    .username(uniqueUsername)
                     .build();
 
             userRepository.save(user);
@@ -136,13 +136,15 @@ public class AuthenticationService {
             user.setStatus(Status.active);
             userRepository.save(user);
         }
+        if (user.getStatus() == Status.locked) {
+            throw new AppException(ErrorCode.USER_LOCKED);
+        }
         if (user.getStatus() == Status.deleted) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         return buildLoginResponse(user);
     }
-
 
     private LoginRes buildLoginResponse(UserEntity user) {
         String accessToken = generateAccessToken(user);
@@ -177,9 +179,9 @@ public class AuthenticationService {
             Date expiry = isRefresh
                     ? Date.from(now.plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS))
                     : Date.from(now.plus(VALID_DURATION, ChronoUnit.SECONDS));
-//            Date expiry = isRefresh
-//                    ? Date.from(now.plus(1, ChronoUnit.HOURS))
-//                    : Date.from(now.plusSeconds(3));
+            // Date expiry = isRefresh
+            // ? Date.from(now.plus(1, ChronoUnit.HOURS))
+            // : Date.from(now.plusSeconds(3));
             JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                     .subject(user.getEmail())
                     .issuer("OmoonO")
@@ -203,7 +205,8 @@ public class AuthenticationService {
 
     public GoogleIdToken.Payload verifyGoogleToken(String token) throws ParseException, JOSEException {
         try {
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance())
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
+                    GsonFactory.getDefaultInstance())
                     .setAudience(Collections.singletonList(googleClientId))
                     .build();
 
@@ -236,11 +239,11 @@ public class AuthenticationService {
         try {
             log.info("Đang đổi code lấy token từ Google...");
 
-            ResponseEntity<com.be.book.BookStorage.dto.Response.Auth.GoogleTokenResponse> response = restTemplate.postForEntity(
-                    tokenUri,
-                    requestEntity,
-                    com.be.book.BookStorage.dto.Response.Auth.GoogleTokenResponse.class
-            );
+            ResponseEntity<com.be.book.BookStorage.dto.Response.Auth.GoogleTokenResponse> response = restTemplate
+                    .postForEntity(
+                            tokenUri,
+                            requestEntity,
+                            com.be.book.BookStorage.dto.Response.Auth.GoogleTokenResponse.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 log.info("Đổi code thành công, nhận được id_token.");
@@ -258,17 +261,18 @@ public class AuthenticationService {
 
     @Transactional
     public void register(RegisterReq req) {
-        String username = (req.getFullName() != null && !req.getFullName().trim().isEmpty()) 
-                ? req.getFullName() 
+        String baseUsername = (req.getFullName() != null && !req.getFullName().trim().isEmpty())
+                ? req.getFullName().replaceAll("\\s+", "").toLowerCase()
                 : req.getEmail().split("@")[0];
-        
+        String uniqueUsername = baseUsername + "_" + UUID.randomUUID().toString().substring(0, 5);
+
         UserEntity user = userRepository.findByEmail(req.getEmail())
                 .map(u -> {
                     if (u.getStatus() == Status.active) {
                         throw new AppException(ErrorCode.USER_EXISTED);
                     }
                     u.setFullName(req.getFullName());
-                    u.setUsername(username);
+                    u.setUsername(uniqueUsername);
                     u.setPasswordHash(passwordEncoder.encode(req.getPassword()));
                     u.setStatus(Status.unverified);
                     u.setRole(Role.customer);
@@ -278,14 +282,13 @@ public class AuthenticationService {
                 .orElseGet(() -> UserEntity.builder()
                         .email(req.getEmail())
                         .fullName(req.getFullName())
-                        .username(username)
+                        .username(uniqueUsername)
                         .passwordHash(passwordEncoder.encode(req.getPassword()))
                         .status(Status.unverified)
                         .role(Role.customer)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
-                        .build()
-                );
+                        .build());
 
         userRepository.save(user);
 
@@ -394,7 +397,6 @@ public class AuthenticationService {
         return clearRefreshTokenCookie();
     }
 
-
     public UserRes getUserInfo(String email) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -443,14 +445,16 @@ public class AuthenticationService {
         return signedJWT;
     }
 
-
-
     public AuthenticationResponse refreshToken(String refreshToken) throws ParseException, JOSEException {
         var signToken = verifyToken(refreshToken, true);
 
         var username = signToken.getJWTClaimsSet().getSubject();
         var user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getStatus() == Status.locked) {
+            throw new AppException(ErrorCode.USER_LOCKED);
+        }
 
         var newAccessToken = generateToken(user, false);
         var newRefreshToken = generateToken(user, true);
@@ -463,8 +467,7 @@ public class AuthenticationService {
                     InvalidatedToken.builder()
                             .id(jwtId)
                             .expiryTime(expiryTime)
-                            .build()
-            );
+                            .build());
         }
 
         return AuthenticationResponse.builder()
@@ -496,10 +499,8 @@ public class AuthenticationService {
             String requestTime = LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
             eventPublisher.publishEvent(
-                    new GoogleUserForgotPasswordEvent(this, user, newPassword, requestTime)
-            );
+                    new GoogleUserForgotPasswordEvent(this, user, newPassword, requestTime));
         }
     }
-
 
 }

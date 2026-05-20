@@ -1,0 +1,165 @@
+.page-loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 24px;
+}
+
+/* 3D Book Animation */
+.book-loader {
+  width: 64px;
+  height: 44px;
+  position: relative;
+  perspective: 400px;
+}
+
+.book-loader::before {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 4px;
+  background: rgba(99, 102, 241, 0.2);
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.book-page {
+  position: absolute;
+  width: 32px;
+  height: 44px;
+  right: 0;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 2px 6px 6px 2px;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  box-shadow: inset 2px 0 8px rgba(0, 0, 0, 0.05);
+  animation: flipPage 2.5s infinite ease-in-out;
+}
+
+.dark .book-page {
+  background-color: #1e293b;
+  border-color: #334155;
+  box-shadow: inset 2px 0 8px rgba(0, 0, 0, 0.4);
+  animation: flipPageDark 2.5s infinite ease-in-out;
+}
+
+/* Spine Cover */
+.book-loader::after {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 0;
+  width: 2px;
+  height: 44px;
+  background: #4f46e5;
+  border-radius: 2px;
+  z-index: 10;
+}
+
+/* Page Delays */
+.book-page:nth-child(1) { animation-delay: 0.0s; }
+.book-page:nth-child(2) { animation-delay: 0.3s; }
+.book-page:nth-child(3) { animation-delay: 0.6s; }
+.book-page:nth-child(4) { animation-delay: 0.9s; }
+.book-page:nth-child(5) { animation-delay: 1.2s; }
+
+@keyframes flipPage {
+  0% {
+    transform: rotateY(0deg) skewY(0deg);
+    background-color: #f1f5f9;
+  }
+  30% {
+    background-color: #4f46e5;
+  }
+  50% {
+    transform: rotateY(-90deg) skewY(-15deg);
+    background-color: #818cf8;
+  }
+  70% {
+    background-color: #4f46e5;
+    z-index: 5;
+  }
+  100% {
+    transform: rotateY(-180deg) skewY(0deg);
+    background-color: #f1f5f9;
+    z-index: 0;
+  }
+}
+
+@keyframes flipPageDark {
+  0% {
+    background-color: #0f172a;
+    transform: rotateY(0deg) skewY(0deg);
+  }
+  30% {
+    background-color: #3730a3;
+  }
+  50% {
+    background-color: #4f46e5;
+    transform: rotateY(-90deg) skewY(-15deg);
+  }
+  70% {
+    background-color: #3730a3;
+    z-index: 5;
+  }
+  100% {
+    background-color: #0f172a;
+    transform: rotateY(-180deg) skewY(0deg);
+    z-index: 0;
+  }
+}
+
+/* Animated Text */
+.loader-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.dark .loader-text {
+  color: #94a3b8;
+}
+
+.loader-dots {
+  display: inline-block;
+  width: 16px;
+  text-align: left;
+  animation: dots 1.5s infinite steps(4, end);
+}
+
+@keyframes dots {
+  0%, 20% { content: ""; }
+  40% { content: "."; }
+  60% { content: ".."; }
+  80%, 100% { content: "..."; }
+}
+
+/* Progress Bar Container */
+.loader-progress-wrap {
+  width: 200px;
+  height: 4px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.dark .loader-progress-wrap {
+  background-color: #334155;
+}
+
+.loader-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  transition: width 0.15s ease-out;
+  border-radius: 4px;
+}

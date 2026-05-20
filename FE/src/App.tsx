@@ -1,9 +1,11 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OrderProvider, useOrder } from './context/OrderContext';
+import { AdminProvider, useAdmin } from './features/admin/AdminContext';
+import { DashboardFilterProvider } from './features/admin/DashboardFilterContext';
 import { Toaster } from './components/ui/sonner';
 import { Header, Footer } from './layouts';
 import { Hero } from './features/home';
@@ -12,6 +14,7 @@ import {
   BookFilters,
   PersonalizedRecommendations
 } from './features/book';
+import { BookRecommendations } from './features/book/BookRecommendations';
 import { Cart } from './features/cart';
 import {
   Pagination,
@@ -26,6 +29,24 @@ import { ImageService } from './services/imageService';
 import { Book } from './types/book';
 import { migrateOrderStatus } from './utils/migrateOrderStatus';
 import { OrderWorkflowService } from './utils/orderWorkflowService';
+import ChatWidget from './components/chat/ChatWidget';
+
+// Rewrite http://localhost:9000/bookstore/... → /minio/bookstore/...
+// so all MinIO images go through the Vite proxy (avoids cross-origin issues)
+function rewriteToProxy(url: string | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('/minio')) return url; // already proxied
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'localhost' && parsed.port === '9000') {
+      return `/minio${parsed.pathname}${parsed.search}`;
+    }
+  } catch {
+    // relative path – serve directly via MinIO proxy
+    if (!url.startsWith('http')) return `/minio/bookstore/${url}`;
+  }
+  return url;
+}
 
 // Lazy load pages for code splitting
 const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
@@ -41,58 +62,7 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(
 const ResetPasswordSuccessPage = lazy(() => import('./pages/ResetPasswordSuccessPage').then(m => ({ default: m.ResetPasswordSuccessPage })));
 const GoogleCallbackPage = lazy(() => import('./pages/GoogleCallbackPage').then(m => ({ default: m.GoogleCallbackPage })));
 
-const LoadingScreen = () => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const duration = 1500; 
-    const steps = 60; 
-    const increment = 100 / steps;
-    const intervalTime = duration / steps;
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + increment;
-        if (next >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return next;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="loading-screen">
-      <div className="loading-icon">
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-foreground"
-        >
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-        </svg>
-      </div>
-      <div className="loading-progress-container">
-        <div
-          className="loading-progress-bar"
-          style={{ width: `${progress}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
-
-// Loading component
-const PageLoader = () => <LoadingScreen />;
+import PageLoader from './components/PageLoader';
 
 // Home Page Component
 function HomePage() {
@@ -106,10 +76,54 @@ function HomePage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [books, setBooks] = useState<Book[]>([]);
   const [forYouBooks, setForYouBooks] = useState<Book[] | undefined>(undefined);
+  const [topRatedBooks, setTopRatedBooks] = useState<Book[]>([]);
+  const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
   const [totalPages, setTotalPages] = useState<number>(1);
   const booksPerPage = 30;
+
+  // Helper: map item từ Recommendation API → Book shape
+  const mapRecommendItem = async (items: any[]): Promise<Book[]> => {
+    const mapped = items.map((item: any) => ({
+      bookId:        item.book_id,
+      id:            item.book_id,
+      title:         item.title || '',
+      authorName:    item.author_name || 'Unknown',
+      author:        item.author_name || 'Unknown',
+      price:         item.price || 0,
+      avgRating:     item.avg_rating || 0,
+      rating:        item.avg_rating || 0,
+      ratingCount:   item.rating_count || 0,
+      stockQuantity: item.stock_quantity ?? 1,
+      imageUrl:      item.main_image || item.image_url || item.imageUrl || '',
+      categories:    item.categories || [],
+      reason:        item.reason,
+    } as any));
+
+    // Separate: paths that need presigning vs URLs already from MinIO
+    const rawPaths = mapped
+      .map((b: any) => b.imageUrl)
+      .filter((url: string) => url && !url.startsWith('http') && !url.startsWith('/minio'));
+
+    if (rawPaths.length > 0) {
+      try {
+        const urls = await ImageService.getPresignedUrls(rawPaths);
+        mapped.forEach((b: any) => {
+          if (b.imageUrl && !b.imageUrl.startsWith('http') && !b.imageUrl.startsWith('/minio')) {
+            b.imageUrl = urls[b.imageUrl] || rewriteToProxy(b.imageUrl);
+          }
+        });
+      } catch {/* silent */}
+    }
+
+    // Rewrite any http://localhost:9000 URLs (presigned from Java) through proxy
+    mapped.forEach((b: any) => {
+      b.imageUrl = rewriteToProxy(b.imageUrl);
+    });
+
+    return mapped as Book[];
+  };
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -131,10 +145,12 @@ function HomePage() {
         const result = response && (response.result as any);
         const pageBooks = (result && result.books) || [];
         // Normalize rating fields from various backend shapes
+        // Also rewrite MinIO presigned URLs through the Vite proxy
         const normalized = pageBooks.map((b: any) => ({
           ...b,
           avgRating: b.avgRating ?? b.avg_rating ?? b.rating ?? 0,
           ratingCount: b.ratingCount ?? b.reviewCount ?? b.rating_count ?? 0,
+          imageUrl: rewriteToProxy(b.imageUrl),
         }));
         setBooks(normalized);
         const tp = (result && (result.totalPages ?? result.total_pages)) ?? 1;
@@ -180,24 +196,25 @@ function HomePage() {
                     rating: item.avg_rating || 0,
                     ratingCount: item.rating_count || 0,
                     stockQuantity: item.stock_quantity || 1,
-                    imageUrl: item.main_image || item.image_url || '',
+                    imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
                     categories: item.categories || [],
                     score: item.score
                   }));
-                  
-                  const imagePaths = mappedBooks
+
+                  // Presign any remaining raw paths (not yet http or /minio)
+                  const rawPaths = mappedBooks
                     .map((book: any) => book.imageUrl)
-                    .filter((url: string) => url && !url.startsWith('http'));
-                  
-                  if (imagePaths.length > 0) {
-                    const presignedUrls = await ImageService.getPresignedUrls(imagePaths);
+                    .filter((url: string) => url && !url.startsWith('http') && !url.startsWith('/minio'));
+
+                  if (rawPaths.length > 0) {
+                    const presignedUrls = await ImageService.getPresignedUrls(rawPaths);
                     mappedBooks.forEach((book: any) => {
-                      if (book.imageUrl && !book.imageUrl.startsWith('http')) {
-                        book.imageUrl = presignedUrls[book.imageUrl] || book.imageUrl;
+                      if (book.imageUrl && !book.imageUrl.startsWith('http') && !book.imageUrl.startsWith('/minio')) {
+                        book.imageUrl = presignedUrls[book.imageUrl] || rewriteToProxy(book.imageUrl);
                       }
                     });
                   }
-                  
+
                   if (mounted) setForYouBooks(mappedBooks as any);
                   return;
                 }
@@ -223,53 +240,74 @@ function HomePage() {
           rating: item.avg_rating || 0,
           ratingCount: item.rating_count || 0,
           stockQuantity: item.stock_quantity || 1,
-          imageUrl: item.main_image || item.image_url || '',
+          imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
           categories: item.categories || [],
           score: item.score
         }));
-        
-        
-        // Get presigned URLs for images
-        const imagePaths = mappedBooks
+
+        // Presign any remaining raw paths
+        const rawPaths = mappedBooks
           .map((book: any) => book.imageUrl)
-          .filter((url: string) => url && !url.startsWith('http'));
-        
-        if (imagePaths.length > 0) {
-          const presignedUrls = await ImageService.getPresignedUrls(imagePaths);
+          .filter((url: string) => url && !url.startsWith('http') && !url.startsWith('/minio'));
+
+        if (rawPaths.length > 0) {
+          const presignedUrls = await ImageService.getPresignedUrls(rawPaths);
           mappedBooks.forEach((book: any) => {
-            if (book.imageUrl && !book.imageUrl.startsWith('http')) {
-              book.imageUrl = presignedUrls[book.imageUrl] || book.imageUrl;
+            if (book.imageUrl && !book.imageUrl.startsWith('http') && !book.imageUrl.startsWith('/minio')) {
+              book.imageUrl = presignedUrls[book.imageUrl] || rewriteToProxy(book.imageUrl);
             }
           });
         }
-        
-        
+
         if (mounted) setForYouBooks(mappedBooks as any);
       } catch (e) {
         console.error('Failed to fetch recommendations:', e);
       }
     };
-    
+
     const checkIfNewUser = (user: any): boolean => {
       if (user.orderCount !== undefined && user.orderCount === 0) {
         return true;
       }
-      
       return false;
     };
-    
+
     fetchPersonalized();
     return () => { mounted = false; };
-  }, [user]); 
+  }, [user]);
+
+  // Fetch top-rated + trending một lần khi mount
+  useEffect(() => {
+    let mounted = true;
+    const fetchHomeRecs = async () => {
+      try {
+        const [topRatedResp, trendingResp] = await Promise.all([
+          PythonRecommendService.getTopRated(20),
+          PythonRecommendService.getTrending(7, 20),
+        ]);
+        const topRatedArr = Array.isArray(topRatedResp) ? topRatedResp : [];
+        const trendingArr = Array.isArray(trendingResp) ? trendingResp : [];
+        if (mounted) {
+          setTopRatedBooks(await mapRecommendItem(topRatedArr));
+          setTrendingBooks(await mapRecommendItem(trendingArr));
+        }
+      } catch (e) {
+        console.warn('Failed to fetch home recommendations:', e);
+      }
+    };
+    fetchHomeRecs();
+    return () => { mounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const paginatedBooks = books;
 
   const handleSearch = (query: string) => {
-    if (query.trim()) {
-      navigate(`/search/${encodeURIComponent(query)}`);
+    const trimmed = query.trim();
+    if (trimmed) {
+      navigate(`/search/${encodeURIComponent(trimmed)}`);
     } else {
-      setSearchQuery(query);
-      setCurrentPage(1);
+      navigate('/search');
     }
   };
 
@@ -323,7 +361,7 @@ function HomePage() {
   // Show full-page loading only on initial load; for subsequent fetches
   // (pagination/filter changes) show a localized loader below.
   if (isLoading && initialLoad) {
-    return <LoadingScreen />;
+    return <PageLoader />;
   }
 
   return (
@@ -346,6 +384,30 @@ function HomePage() {
         onBookClick={handleBookClick}
         forYouBooks={forYouBooks}
       />
+
+      {/* Top-rated – Đánh giá cao nhất (nền trắng xen kẽ PersonalizedRecommendations nền mờ) */}
+      {topRatedBooks.length > 0 && (
+        <BookRecommendations
+          title="Đánh giá cao nhất"
+          subtitle="Những cuốn sách được cộng đồng độc giả yêu thích nhất"
+          books={topRatedBooks}
+          onBookClick={handleBookClick}
+          icon="star"
+          bgVariant="default"
+        />
+      )}
+
+      {/* Trending – Xu hướng (nền mờ như PersonalizedRecommendations) */}
+      {trendingBooks.length > 0 && (
+        <BookRecommendations
+          title="Đang xu hướng"
+          subtitle="Những cuốn sách được xem nhiều nhất trong 7 ngày qua"
+          books={trendingBooks}
+          onBookClick={handleBookClick}
+          icon="trending"
+          bgVariant="muted"
+        />
+      )}
 
       {/* Books Section */}
       <section id="books-section" className="py-16">
@@ -378,6 +440,7 @@ function HomePage() {
                 key={`main-books-${book.bookId}-${index}`}
                 book={book}
                 onClick={() => handleBookClick(book)}
+                priority={index < 5}
               />
             ))}
           </div>
@@ -524,7 +587,21 @@ function BookDetailPageWrapper() {
             availableQuantity: available !== undefined ? available : raw.availableQuantity,
             // unify author field
             author: raw.author ?? raw.authorName ?? raw.author_name,
+            imageUrl: raw.imageUrl ?? raw.image_url ?? raw.main_image ?? '',
           };
+
+          // Fallback to fetch presigned URL if Java backend failed to return one
+          if (normalized.imageUrl && !normalized.imageUrl.startsWith('http')) {
+            try {
+              const urlMap = await ImageService.getPresignedUrls([normalized.imageUrl]);
+              if (urlMap[normalized.imageUrl]) {
+                normalized.imageUrl = urlMap[normalized.imageUrl];
+              }
+            } catch (err) {
+              console.error('Failed to presign single book image:', err);
+            }
+          }
+
           setBook(normalized);
         } else {
           setBook(null);
@@ -541,7 +618,7 @@ function BookDetailPageWrapper() {
   }, [id]);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <PageLoader />;
   }
 
   const handleLogoClick = () => {
@@ -559,7 +636,7 @@ function BookDetailPageWrapper() {
         onBack={() => navigate('/')}
         onBookClick={(book) => navigate(`/book/${book.bookId}`)}
         onCartClick={() => setIsCartOpen(true)}
-        onSearch={(query) => navigate(`/search/${encodeURIComponent(query)}`)}
+        onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
         onLogoClick={handleLogoClick}
         onLoginClick={() => navigate('/login')}
         onAccountClick={() => navigate('/account')}
@@ -598,7 +675,7 @@ function SearchResultsPageWrapper() {
         onLoginClick={() => navigate('/login')}
         onAccountClick={() => navigate('/account')}
         onBookClick={(book) => navigate(`/book/${book.bookId}`)}
-        onSearch={(query) => navigate(`/search/${encodeURIComponent(query)}`)}
+        onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
       />
       <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </Suspense>
@@ -627,7 +704,7 @@ function AccountPageWrapper() {
       <AccountPage
         onBack={() => navigate('/')}
         onCartClick={() => setIsCartOpen(true)}
-        onSearch={(query) => navigate(`/search/${encodeURIComponent(query)}`)}
+        onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
         onLogoClick={handleLogoClick}
         onLoginClick={() => navigate('/login')}
         onBookClick={(book) => navigate(`/book/${book.bookId}`)}
@@ -713,13 +790,141 @@ function PaymentPageWrapper() {
   );
 }
 
-function AdminPageWrapper() {
+/**
+ * AdminNavOverlay — dùng ref + direct DOM manipulation để bypass React batching.
+ *
+ * Lý do dùng ref thay vì useState:
+ * - window.dispatchEvent() là ĐỒNG BỘ
+ * - Header gọi dispatchEvent('adminNavStart') TRƯỚC navigate()
+ * - Listener chạy ngay → overlayRef.current.style.opacity = '1' (DOM mutation)
+ * - Browser repaint NGAY (không cần chờ React commit)
+ * - navigate() sau đó mới bắt đầu lazy-load module
+ */
+function AdminNavOverlay() {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const startTimeRef = useRef<number>(0);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const MIN_DISPLAY_MS = 1400;
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const show = () => {
+      const el = overlayRef.current;
+      const bar = barRef.current;
+      if (!el || !bar) return;
+
+      // Dừng hide timer nếu có
+      if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = undefined; }
+
+      startTimeRef.current = Date.now();
+
+      // Reset CSS animation: set none → force reflow → restore
+      // (đây là cách chuẩn W3C để restart animation mà không thay đổi DOM structure)
+      bar.style.animation = 'none';
+      void bar.offsetHeight; // Bắt buộc browser flush style → animation reset về frame 0
+      bar.style.animation = 'plFill 15s cubic-bezier(0.1, 0.05, 0.01, 1) forwards, plShimmer 1.4s ease-in-out infinite';
+
+      // Hiện overlay NGAY (DOM mutation, không qua React state)
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      el.style.pointerEvents = 'auto';
+    };
+
+    const scheduleHide = () => {
+      if (hideTimerRef.current) return;
+      const elapsed = Date.now() - startTimeRef.current;
+      const delay = Math.max(0, MIN_DISPLAY_MS - elapsed) + 400;
+      hideTimerRef.current = setTimeout(() => {
+        const el = overlayRef.current;
+        if (el) {
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          // Ẩn hoàn toàn sau khi transition xong
+          setTimeout(() => { if (el) el.style.visibility = 'hidden'; }, 500);
+        }
+        hideTimerRef.current = undefined;
+      }, delay);
+    };
+
+    // Fallback: ẩn sau 20s nếu adminPageReady không được dispatch
+    const fallback = () => {
+      setTimeout(() => scheduleHide(), 20_000);
+    };
+
+    window.addEventListener('adminNavStart', show);
+    window.addEventListener('adminPageReady', scheduleHide);
+    window.addEventListener('adminNavStart', fallback);
+
+    return () => {
+      window.removeEventListener('adminNavStart', show);
+      window.removeEventListener('adminPageReady', scheduleHide);
+      window.removeEventListener('adminNavStart', fallback);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
   }, []);
 
+  // Overlay luôn mounted (display:none via opacity+visibility), điều khiển qua DOM ref
+  return (
+    <div
+      ref={overlayRef}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 20, background: 'var(--background, #fff)',
+        opacity: 0, visibility: 'hidden', pointerEvents: 'none',
+        transition: 'opacity 0.4s ease',
+      }}
+    >
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+        style={{ opacity: 0.55, color: '#94a3b8', animation: 'plPulse 2s ease-in-out infinite' }}>
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+      </svg>
+      <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+        Đang tải thư viện giao diện...
+      </div>
+      <div style={{ width: 220, height: 4, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+        <div
+          ref={barRef}
+          style={{
+            height: '100%', borderRadius: 4,
+            background: 'linear-gradient(90deg, #0f172a 0%, #475569 45%, #0f172a 100%)',
+            backgroundSize: '300% 100%',
+            animation: 'plFill 15s cubic-bezier(0.1, 0.05, 0.01, 1) forwards, plShimmer 1.4s ease-in-out infinite',
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes plFill {
+          0%   { width: 0%;  }
+          5%   { width: 15%; }
+          12%  { width: 30%; }
+          22%  { width: 44%; }
+          35%  { width: 56%; }
+          50%  { width: 65%; }
+          65%  { width: 73%; }
+          78%  { width: 80%; }
+          88%  { width: 85%; }
+          95%  { width: 88%; }
+          100% { width: 91%; }
+        }
+        @keyframes plShimmer {
+          0%  {background-position:150% center}
+          100%{background-position:-150% center}
+        }
+        @keyframes plPulse {
+          0%,100%{opacity:0.55;transform:scale(1)}
+          50%{opacity:0.25;transform:scale(1.06)}
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function AdminPageWrapper() {
   const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const { books } = useAdmin();
 
   useEffect(() => {
     if (!isLoggedIn || (user?.role !== 'admin' && user?.role !== 'staff')) {
@@ -727,10 +932,27 @@ function AdminPageWrapper() {
     }
   }, [isLoggedIn, user, navigate]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Thông báo AdminNavOverlay ẩn overlay khi books sẵn sàng
+  useEffect(() => {
+    if (books.length > 0) window.dispatchEvent(new Event('adminPageReady'));
+  }, [books.length]);
+
+  // Fallback: báo sau 15s nếu data không load được
+  useEffect(() => {
+    const t = setTimeout(() => window.dispatchEvent(new Event('adminPageReady')), 15_000);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <Suspense fallback={<PageLoader />}>
-      <AdminPage />
-    </Suspense>
+    <DashboardFilterProvider>
+      <Suspense fallback={<PageLoader />}>
+        <AdminPage />
+      </Suspense>
+    </DashboardFilterProvider>
   );
 }
 
@@ -768,6 +990,8 @@ function AppContent() {
 
   return (
     <CartProvider createOrder={createOrder}>
+      {/* Overlay hiển ngay khi navigate đến /admin, trước khi lazy module tải */}
+      <AdminNavOverlay />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/book/:id" element={<BookDetailPageWrapper />} />
@@ -786,7 +1010,10 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors visibleToasts={1} />
+
+      {/* ── Chat Widget (hiển thị toàn trang, role-aware) ── */}
+      <ChatWidget />
     </CartProvider>
   );
 }
@@ -797,11 +1024,16 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <OrderProvider>
-            <Suspense fallback={<PageLoader />}>
-              <AppContent />
-            </Suspense>
-          </OrderProvider>
+          {/* AdminProvider nằm bên trong AuthProvider để dùng useAuth */}
+          {/* Nằm bên ngoài Routes nên không bị unmount khi navigate */}
+          {/* Data được prefetch ngay khi login admin/staff, trước khi vo /admin */}
+          <AdminProvider>
+            <OrderProvider>
+              <Suspense fallback={<PageLoader />}>
+                <AppContent />
+              </Suspense>
+            </OrderProvider>
+          </AdminProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

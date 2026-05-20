@@ -1,0 +1,337 @@
+###############################################################################
+#  BookStore Platform – Docker Compose (Unified Cluster)
+#  Gom tất cả services vào 1 cụm duy nhất
+#
+#  Khởi động: docker compose up -d
+#  Dừng:      docker compose down
+#  Logs:      docker compose logs -f [service]
+###############################################################################
+
+services:
+
+  # ──────────────────────────────────────────────
+  # 0. Redis – In-memory Cache + Session Store
+  # ──────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: bookstore_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+
+
+  # ──────────────────────────────────────────────
+  # 1. MinIO – Object Storage (ảnh bìa sách, file)
+  # MySQL dùng trực tiếp trên máy local (localhost:3306)
+  # ──────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: bookstore_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123456789}
+    ports:
+      - "9000:9000"    # S3 API
+      - "9001:9001"    # Web Console → http://localhost:9001
+    volumes:
+      - minio_data:/data
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ──────────────────────────────────────────────
+  # 3. OpenSearch – Full-text search tiếng Việt
+  # ──────────────────────────────────────────────
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
+    container_name: bookstore_opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD:-VnBook$2025!Qx9}
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - plugins.security.disabled=false
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk -u admin:${OPENSEARCH_PASSWORD:-VnBook$2025!Qx9} https://localhost:9200/_cluster/health | grep -v '\"status\":\"red\"'"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  # ──────────────────────────────────────────────
+  # 4. OpenSearch Dashboards – UI quản lý index
+  # ──────────────────────────────────────────────
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.14.0
+    container_name: bookstore_opensearch_dashboards
+    restart: unless-stopped
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+      - OPENSEARCH_SSL_VERIFICATIONMODE=none
+      - OPENSEARCH_USERNAME=${OPENSEARCH_USER:-admin}
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD:-VnBook$2025!Qx9}
+    ports:
+      - "5601:5601"    # Web UI → http://localhost:5601
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - bookstore_net
+
+  # ──────────────────────────────────────────────
+  # 5. Ollama – LLM Server (chạy Qwen2.5 local)
+  # ──────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bookstore_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"  # Ollama REST API
+    volumes:
+      - ollama_models:/root/.ollama   # Lưu models đã pull (không mất khi restart)
+    networks:
+      - bookstore_net
+    # GPU support – NVIDIA RTX 3050 Laptop GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ──────────────────────────────────────────────
+  # 6. Platform API – BE_py (recommend + search + chatbot)
+  # ──────────────────────────────────────────────
+  platform_api:
+    build:
+      context: ./BE_py/book-platform
+      dockerfile: Dockerfile
+    container_name: bookstore_platform_api
+    restart: unless-stopped
+    environment:
+      # MySQL LOCAL (dùng host.docker.internal để trỏ ra máy host)
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_DB: ${MYSQL_DB:-bookstore}
+      # OpenSearch
+      OPENSEARCH_HOST: opensearch
+      OPENSEARCH_PORT: "9200"
+      OPENSEARCH_USER: ${OPENSEARCH_USER:-admin}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_PASSWORD:-VnBook$2025!Qx9}
+      OPENSEARCH_USE_SSL: "true"
+      OPENSEARCH_VERIFY_CERTS: "false"
+      OPENSEARCH_INDEX: ${OPENSEARCH_INDEX:-books_current}
+      # Ollama (chatbot)
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      # Google Books API
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+      # Redis Cache
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"    # FastAPI → http://localhost:8000/docs
+    volumes:
+      - ./BE_py/book-platform:/app   # Mount source code (hot reload)
+      - faiss_index:/app/chatbot-service/faiss_index
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - bookstore_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Cho phép container trỏ ra máy host
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+  # ──────────────────────────────────────────────
+  # 7. Chatbot Service – NLU + Ollama + OpenSearch (port 8004)
+  # ──────────────────────────────────────────────
+  chatbot:
+    build:
+      context: ./BE_py/book-platform/chatbot-service
+      dockerfile: Dockerfile
+    container_name: bookstore_chatbot
+    restart: unless-stopped
+    environment:
+      # MySQL LOCAL (dùng host.docker.internal để trỏ ra máy host)
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_DB: ${MYSQL_DB:-bookstore}
+      # OpenSearch
+      OPENSEARCH_HOST: opensearch
+      OPENSEARCH_PORT: "9200"
+      OPENSEARCH_USER: ${OPENSEARCH_USER:-admin}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_PASSWORD:-VnBook$2025!Qx9}
+      OPENSEARCH_USE_SSL: "true"
+      OPENSEARCH_VERIFY_CERTS: "false"
+      OPENSEARCH_INDEX: ${OPENSEARCH_INDEX:-books_current}
+      # Ollama (LLM)
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      # Google Books API
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+      # Redis Session Store
+      REDIS_URL: redis://redis:6379/1
+    ports:
+      - "8004:8004"    # Chatbot API → http://localhost:8004/docs
+    volumes:
+      - ./BE_py/book-platform/chatbot-service:/app   # Hot reload
+      - faiss_index:/app/faiss_index
+      - C:/Users/ADMIN/.cache/huggingface:/root/.cache/huggingface  # Bind mount HF cache từ host (1.2GB, không download lại)
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - bookstore_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api/chat/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+  # ──────────────────────────────────────────────
+  # 8. OCR Service – EasyOCR + Tesseract (port 8005)
+  #    Engine 1 (Primary):  EasyOCR (CRAFT + CRNN, CPU mode)
+  #    Engine 2 (Fallback): Tesseract 5 (vie + eng)
+  #    Không dùng GPU: RTX 3050 đang bị Ollama chiếm VRAM
+  # ──────────────────────────────────────────────
+  ocr:
+    build:
+      context: ./BE_py/book-platform/ocr-service
+      dockerfile: Dockerfile
+    container_name: bookstore_ocr
+    restart: unless-stopped
+    environment:
+      # Search Service nội bộ Docker network
+      SEARCH_SERVICE_URL: http://platform_api:8000
+      # MySQL DB (để lấy trọn 100% sách)
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_DB: ${MYSQL_DB:-bookstore}
+      # Google Books API (optional – để trống nếu không có key)
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
+      # Giới hạn ảnh upload
+      MAX_IMAGE_SIZE_MB: "10"
+      # Ngưỡng confidence EasyOCR (0.0-1.0)
+      OCR_CONFIDENCE_THRESHOLD: "0.3"
+      # MinIO – Object Storage (dùng tên service Docker, không phải localhost!)
+      MINIO_ENDPOINT: minio:9000
+      MINIO_BUCKET: ${MINIO_BUCKET:-bookstore}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-admin123456789}
+      MINIO_USE_HTTPS: "false"
+      # ── Security & Persistence (v2.0) ───────────────────────────────
+      # Key bảo vệ endpoint /rebuild-index (dùng chung với các service khác)
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      # Frontend origins được phép (CORS). Mặc định localhost:3000
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      # Đường dẫn lưu pHash index BÊN TRONG container (/app = bind mount từ host)
+      # → Nhìn thấy trên Windows tại: ocr-service/tmp/ocr_phash_index.pkl
+      PHASH_INDEX_PATH: /app/tmp/ocr_phash_index.pkl
+    ports:
+      - "8005:8005"    # OCR API → http://localhost:8005/docs
+    volumes:
+      # Bind mount source code (hot-reload khi dev)
+      - ./BE_py/book-platform/ocr-service:/app
+      # Cache EasyOCR models: tránh download lại khi rebuild image
+      - easyocr_models:/root/.EasyOCR
+      # ── pHash Index Persistence (v2.0) ─────────────────────────────
+      # Named Volume tự động OVERRIDE bind mount tại /app/tmp/
+      # → File .pkl được quản lý bởi Docker, tồn tại qua restart và rebuild image
+      # → Lưu tại: C:\ProgramData\docker\volumes\bookstore_ocr_phash_cache\_data\
+      # → Container restart: load < 1s thay vì rebuild 30-60s từ MinIO
+      - ocr_phash_cache:/app/tmp
+    depends_on:
+      # Cần platform_api (:8000) đang chạy để gọi Search Service
+      - platform_api
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/api/ocr/health"]
+      interval: 30s
+      timeout: 10s
+      # start_period: Cho 120s để EasyOCR model load vào RAM trước khi check health
+      start_period: 120s
+      retries: 3
+
+###############################################################################
+#  Networks & Volumes
+###############################################################################
+networks:
+  bookstore_net:
+    driver: bridge
+    name: bookstore_network
+
+volumes:
+  minio_data:
+    name: bookstore_minio_data
+  opensearch_data:
+    name: bookstore_opensearch_data
+  ollama_models:
+    name: bookstore_ollama_models
+  faiss_index:
+    name: bookstore_faiss_index
+  easyocr_models:
+    name: bookstore_easyocr_models
+    # Volume này lưu model EasyOCR (~200MB) – tránh download lại khi rebuild
+  redis_data:
+    name: bookstore_redis_data
+    # Redis AOF persistence – tránh mất session data khi restart
+  # hf_cache đã chuyển sang bind mount từ host (‘${USERPROFILE}/.cache/huggingface‘) – xem chatbot.volumes
+  ocr_phash_cache:
+    name: bookstore_ocr_phash_cache
+    # pHash visual hash index persistence (OCR Service v2.0)
+    # | Build tu: ~20,000 anh bia sach download tu MinIO (mat 30-60s)
+    # | Luu vao: /app/tmp/ocr_phash_index.pkl ben trong container (~3-5MB)
+    # | Lan restart tiep theo: load tu volume nay (< 1s) -> khong rebuild nua
+    # | TTL: 6h - neu file cu hon 6h se tu dong trigger rebuild de dam bao tuoi
+  # hf_cache da chuyen sang bind mount tu host

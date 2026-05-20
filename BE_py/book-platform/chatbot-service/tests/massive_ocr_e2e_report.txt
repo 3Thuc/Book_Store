@@ -1,0 +1,734 @@
+============================================================
+🚀 BẮT ĐẦU CHẠY LUỒNG: GUEST (Auth: None)
+============================================================
+
+--- BỘ TEST CASE 1/10 (ID: test_guest_30b08e) ---
+ [T1] [IMG] Tìm sách trong ảnh này: get-re -> ✅ PASS (image_search) | 14818ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] sách nào hay nhất về tâm lý họ -> ✅ PASS (recommend_category) | 1553ms
+      Bot: Bạn có thể quan tâm đến "Tâm Lý Học Cơ Bản" của Nguyễn Thị Hoanh Việt – một trong số sách đang được nhiều người đọc và đánh giá cao. Hãy xem thẻ sách bên dưới để biết thêm thông tin chi tiết.
+ [T3] có sách paulo coelho không     -> ✅ PASS (book_search) | 3041ms
+      Bot: Xin lỗi đã gây hiểu lầm trước đó. Tôi xem xét lại thông tin và thực tế hiện tại hệ thống KHÔNG CÓ sách của Paulo Coelho. Tuy nhiên, tôi có thể gợi ý cho bạn một số cuốn sách khác mà nhiều người cũng rất yêu thích như "Bên Bờ Sông Piedra Tôi Ngồi Khóc", "Cẩm Nang  Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+ [T4] [IMG] Tìm sách trong ảnh này: spy-ro -> ✅ PASS (image_search) | 2348ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] shop giao hàng toàn quốc không -> ✅ PASS (store_info) | 1387ms
+      Bot: Xin lỗi, hiện tại đơn vị vận chuyển của chúng tôi chỉ hỗ trợ Giao Hàng Nhanh (GHN), nên sản phẩm sẽ được giao trong khu vực Hà Nội và một số tỉnh thành phố lân cận.
+ [T6] cách thanh toán online ở đây   -> ❌ FAIL (Got: payment_info, Exp: store_info)
+      Bot: Bạn có thể thanh toán qua các phương thức như chuyển khoản ngân hàng hoặc ví điện tử VNPay. Để biết thêm chi tiết về việc mua sách trực tuyến tại BookStore, bạn có thể tham khảo chính sách thanh toán cụ thể trong mục "Thông tin liên hệ" của trang web. Nếu cần hỗ trợ, hãy cho tôi biết và tôi sẽ giúp bạn!
+ [T7] có chương trình khuyến mãi gì  -> ✅ PASS (promotion_current) | 4096ms
+      Bot: Hiện tại, BookStore chưa có các chương trình khuyến mãi cụ thể được liệt kê trong dữ liệu được cung cấp. Tuy nhiên, bạn vẫn có thể tận dụng ưu đãi miễn phí ship cho đơn hàng từ 200.000đ trở lên và mức phí ship tối đa là 35.000đ tùy khu vực.  Về sách, tôi muốn gợi ý hai cuốn sách đang được nhiều người quan tâm:  1. **Khuyến Học** của Fukuzawa Yukichi – Giá: 88,500đ | Còn hàng 2. **Khuyến học Việt Nam** – Tác giả hiện tại chưa được cập nhật | Giá: 122,  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T8] bye bạn nhé                    -> ✅ PASS (chitchat) | 4ms
+      Bot: Cảm ơn bạn đã sử dụng BookStore! Chúc bạn đọc sách vui vẻ. Hẹn gặp lại!
+
+--- BỘ TEST CASE 2/10 (ID: test_guest_c1580f) ---
+ [T1] [IMG] Tìm sách trong ảnh này: first- -> ✅ PASS (image_search) | 2443ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] có sách toán lớp 12 không      -> ✅ PASS (book_search) | 2167ms
+      Bot: Xin lỗi đã gây hiểu lầm trước đó, nhưng hiện tại chúng tôi chưa có cuốn sách Toán lớp 12 trong kho. Tuy nhiên, bạn có thể tham khảo các cuốn sách Toán phổ thông khác hoặc những cuốn sách nâng cao hơn như "Bài Tập Tiếng Anh Lớp 12 - Không Đáp Án", một trong  Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+ [T3] gợi ý sách học tiếng Anh cho n -> ❌ FAIL (Got: recommend_personal, Exp: recommend_category)
+      Bot: Dạo gần đây, nhiều độc giả tìm kiếm các cuốn sách học tiếng Anh dành cho người mới bắt đầu. Bạn có thể quan tâm đến "Sách Ngữ Pháp Tiếng Anh Cơ Bản" hoặc "Sách Từ Vựng Tiếng Anh Cơ Bản", cả hai đều được đánh giá cao và rất hữu ích. Hãy đăng nhập để xem thêm nhiều lựa chọn tuyệt vời khác nhé!  Bạn muốn gợi ý thêm hoặc lọc theo thể loại khác?
+ [T4] [IMG] Tìm sách trong ảnh này: huong- -> ✅ PASS (image_search) | 2121ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] thời gian giao hàng mất bao lâ -> ✅ PASS (store_info) | 1356ms
+      Bot: Thời gian giao hàng thường từ 1 đến 3 ngày làm việc sau khi đơn được xử lý. Bạn có thể tra cứu trạng thái đơn hàng trên trang web của GHN hoặc GHTK để biết chính xác hơn.
+ [T6] có được đổi trả không nếu sách -> ✅ PASS (return_policy) | 2217ms
+      Bot: Xin lỗi đã gây hiểu lầm trước đó. Theo chính sách của chúng tôi, bạn sẽ được hỗ trợ trong vòng 7 ngày kể từ khi nhận hàng nếu phát hiện sản phẩm có lỗi từ phía BookStore. Bạn cần làm gì tiếp theo? Gửi lại sản phẩm về địa chỉ kho của chúng tôi hoặc muốn biết thêm thông tin chi tiết về quy trình đổi trả?  Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+ [T7] ship về miền Tây được không    -> ✅ PASS (store_info) | 1299ms
+      Bot: Ship hàng đến miền Tây là có thể. Bạn chỉ cần sử dụng mã vận đơn trong email xác nhận để tra cứu trên website của Giao Hàng Nhanh (GHN).
+ [T8] cảm ơn shop nhiều nha          -> ✅ PASS (chitchat) | 4ms
+      Bot: Không có gì! Tôi luôn sẵn sàng hỗ trợ bạn. Còn điều gì tôi có thể giúp không?
+
+--- BỘ TEST CASE 3/10 (ID: test_guest_b08028) ---
+ [T1] [IMG] Tìm sách trong ảnh này: combo- -> ✅ PASS (image_search) | 2286ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] gợi sách trinh thám hấp dẫn    -> ✅ PASS (recommend_category) | 2075ms
+      Bot: Dưới đây là một số cuốn sách trinh thám hấp dẫn cho bạn tham khảo:  - Sách "Người Bạn Siêu Phàm" của nhà văn John Greenwood - Sách "Kẻ Trộm Của Đen" của tác giả Agatha Christie  Mời bạn xem thẻ sách bên dưới để biết thêm thông tin chi tiết.
+ [T3] Harry Potter bộ mấy cuốn       -> ✅ PASS (book_detail) | 1255ms
+      Bot: Harry Potter là một series gồm 8 cuốn sách. Bạn có thể muốn tìm hiểu thêm về các cuốn sách trong series này không? Tôi có thể gợi ý cho bạn những cuốn sách khác trong series Harry Potter hoặc những tác phẩm hấp dẫn khác.  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T4] [IMG] Tìm sách trong ảnh này: ky-uc- -> ✅ PASS (image_search) | 2078ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] sách Tư Duy Nhanh Và Chậm có k -> ✅ PASS (book_detail) | 7ms
+      Bot: Bạn muốn xem thông tin cuốn sách nào? Cho tôi biết **tên sách** nhé!
+ [T6] chính sách đổi trả hàng ra sao -> ✅ PASS (return_policy) | 4534ms
+      Bot: Xin lỗi, nhưng thông tin về cuốn sách "Tư Duy Nhanh Và Chậm" không được tìm thấy trong dữ liệu được cung cấp. Chúng tôi chỉ có thể cung cấp thông tin về cuốn "Ký Ức Nửa Đêm (Tái Bản 2016)" của tác giả Sidney Shedon.  Về chính sách đổi trả hàng, chúng tôi áp dụng chính sách đổi trả trong vòng 7 ngày kể từ khi nhận được sản phẩm. Để biết thêm chi tiết, bạn có thể liên hệ với bộ phận hỗ trợ khách hàng thông qua [hệ thống liên hệ] của chúng tôi.  Nếu bạn muốn tìm hiểu về các cuốn sách khác hoặc cần gợi ý sách phù hợp, vui lòng cho tôi biết!  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T7] hotline hỗ trợ là số mấy       -> ✅ PASS (store_info) | 1049ms
+      Bot: Để được hỗ trợ, bạn có thể gọi đến hotline của BookStore là 19001234.
+ [T8] hi, cho hỏi chút               -> ✅ PASS (chitchat) | 4ms
+      Bot: Xin chào! Tôi là trợ lý BookStore. Tôi có thể giúp bạn **tìm sách**, **tra cứu đơn hàng**, **kiểm tra khuyến mãi** và **tư vấn chính sách đổi trả**. Bạn cần hỗ trợ gì hôm nay?
+
+--- BỘ TEST CASE 4/10 (ID: test_guest_86b70f) ---
+ [T1] [IMG] Tìm sách trong ảnh này: trai-t -> ✅ PASS (image_search) | 2172ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] Nhà Giả Kim có bản tiếng Việt  -> ❌ FAIL (Got: out_of_scope, Exp: book_detail)
+      Bot: Nhà Giả Kim là một tác phẩm nổi tiếng và đã được dịch sang nhiều ngôn ngữ, trong đó có tiếng Việt. Bạn có quan tâm đến các sách khác của nhà văn cùng thể loại hay muốn tìm hiểu thêm về các cuốn sách đang hot hiện nay? Chúng tôi cũng có "Mẹ Kế Cáu Kỉnh Của Thiên Kim Giả" và "Thiên Kim Giả Dựa Vào Huyền Học Bạo Hồng", đây là những tác phẩm bán chạy gần đây.
+ [T3] sách Rich Dad Poor Dad giá bao -> ✅ PASS (book_detail) | 1849ms
+      Bot: Xin lỗi vì sự nhầm lẫn, nhưng tôi không tìm thấy thông tin về cuốn sách "Rich Dad Poor Dad" trong dữ liệu được cung cấp. Tuy nhiên, bạn có quan tâm đến các tác phẩm khác của tác giả Ông Phúc Dụ như "Đẩu số Chấp pháp" chưa? Đây là một cuốn sách rất nổi tiếng và đáng đọc.  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T4] [IMG] Tìm sách trong ảnh này: lich-s -> ✅ PASS (image_search) | 2183ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] có mã giảm giá không           -> ✅ PASS (promotion_current) | 2876ms
+      Bot: Xin lỗi vì sự hiểu lầm ban đầu. Trên cơ sở dữ liệu hiện tại của chúng tôi, không có thông tin về mã giảm giá. Tuy nhiên, bạn có thể quan tâm đến các cuốn sách khác trong danh mục khuyến học như "Khuyến Học Việt Nam" và "Khuyến Học (Tái Bản 2024)". Chúng đều là những tác phẩm hay từ Fukuzawa Yukichi.  Nếu bạn muốn tìm hiểu thêm về sách đang hot hoặc bestseller, tôi có thể gợi ý cho bạn. Bạn cần giúp đỡ với điều gì khác không?  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] cần tư vấn mua sách cho trẻ em -> ✅ PASS (recommend_category) | 67ms
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T7] địa chỉ cửa hàng ở đâu         -> ✅ PASS (store_info) | 1533ms
+      Bot: Địa chỉ cửa hàng của BookStore không được cung cấp trong dữ liệu hiện có. Bạn có thể truy cập website chính thức của chúng tôi để tìm hiểu thêm về địa chỉ cụ thể.
+ [T8] xin cảm ơn                     -> ✅ PASS (chitchat) | 4ms
+      Bot: Không có gì! Tôi luôn sẵn sàng hỗ trợ bạn. Còn điều gì tôi có thể giúp không?
+
+--- BỘ TEST CASE 5/10 (ID: test_guest_9765c5) ---
+ [T1] [IMG] Tìm sách trong ảnh này: bach-k -> ✅ PASS (image_search) | 2285ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] có sách clean code không       -> ❌ FAIL (Got: book_search, Exp: book_detail)
+      Bot: Chào bạn! Hệ thống của chúng tôi có cuốn sách "Bộ Sách Không Có Gì Là Không Thể (Bộ 3 Cuốn)" trong kho. Đây là một lựa chọn tốt về chủ đề lập trình mà bạn quan tâm.  Nếu bạn đang tìm kiếm những cuốn sách khác, tôi gợi ý bạn tham khảo các tác phẩm bestseller như "Tìm Hi  Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+ [T3] gợi ý sách machine learning ti -> ✅ PASS (recommend_category) | 67ms
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: hoc-to -> ✅ PASS (image_search) | 2307ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] sale sách IT có không          -> ✅ PASS (promotion_current) | 2981ms
+      Bot: Xin lỗi vì sự hiểu lầm trước đó, nhưng thông tin được cung cấp trong không chứa thông tin về sách IT. Chúng tôi chuyên về các cuốn sách về học tập và tri thức tổng hợp như "Khuyến Học" của Fukuzawa Yukichi.   Nếu bạn quan tâm đến sách về lĩnh vực công nghệ thông tin (IT), tôi khuyên bạn nên tìm kiếm trực tiếp trong danh mục sách đó trên trang web của chúng tôi.  Bạn có muốn gợi ý thêm các cuốn sách khác không? Hoặc nếu bạn cần hướng dẫn thêm về chính sách đổi trả, hãy cho tôi biết.  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] thêm sách vào wishlist được kh -> ✅ PASS (store_info) | 1505ms
+      Bot: Thêm sách vào wishlist là một ý tưởng tuyệt vời! Bạn chỉ cần truy cập trang cá nhân và chọn sách bạn muốn thêm vào danh sách yêu thích của mình. Nếu có bất kỳ thắc mắc nào, hãy cho tôi biết nhé!
+ [T7] policy hoàn tiền thế nào       -> ✅ PASS (return_policy) | 3053ms
+      Bot: Chính sách hoàn tiền của chúng tôi sẽ được thực hiện như sau:  1. Thời gian đổi trả là 7 ngày kể từ khi bạn nhận hàng. 2. Bạn cần gửi lại sản phẩm về địa chỉ kho của chúng tôi (phí vận chuyển do BookStore hỗ trợ nếu lỗi từ phía chúng tôi). 3. Sau khi chúng tôi kiểm tra và xác nhận, bạn sẽ được hoàn tiền trong vòng 3-5 ngày làm việc.  Nếu có thêm câu hỏi hay muốn tìm sách mới, hãy cho tôi biết nhé! Chúng tôi có nhiều cuốn sách bestseller và trending đang chờ bạn khám phá.  Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+ [T8] bạn tên gì vậy                 -> ✅ PASS (chitchat) | 63ms
+      Bot: Xin chào! Tôi là trợ lý BookStore. Tôi có thể giúp bạn **tìm sách**, **tra cứu đơn hàng**, **kiểm tra khuyến mãi** và **tư vấn chính sách đổi trả**. Bạn cần hỗ trợ gì hôm nay?
+
+--- BỘ TEST CASE 6/10 (ID: test_guest_64e60e) ---
+ [T1] [IMG] Tìm sách trong ảnh này: quoc-v -> ✅ PASS (image_search) | 2275ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] Zero to One có bán không       -> ✅ PASS (book_detail) | 3230ms
+      Bot: Tôi xin lỗi vì thông tin thiếu, nhưng từ tôi chỉ thấy thông tin về cuốn sách "Bút Chấm Đọc-Học Tiếng Anh - Đánh Thức Năng Lực Phi Thường Từ Trẻ Thơ - Bút Hình Hổ (Dành Cho Trẻ Từ 0 Đến 10 Tuổi)" của tác giả Tân Việt. Giá bán là 1,498,500đ và tình trạng còn hàng.  Về sách bạn hỏi "Zero to One", tôi chưa tìm thấy thông tin liên quan trong dữ liệu được cung cấp. Bạn có thể tham khảo các sách về quản trị doanh nghiệp hoặc học tiếng Anh phổ biến khác nhé!  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T3] sách đầu tư chứng khoán cho ng -> ✅ PASS (recommend_category) | 93ms
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: toan-n -> ✅ PASS (image_search) | 2443ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] voucher first order có không   -> ✅ PASS (promotion_current) | 3396ms
+      Bot: Xin lỗi vì sự hiểu lầm ban đầu. Từ dữ liệu được cung cấp, tôi chưa tìm thấy thông tin về voucher First Order. Bạn có thể liên hệ với bộ phận hỗ trợ của chúng tôi để được tư vấn thêm.  Trong danh mục sách đang được nhiều người quan tâm, tôi gợi ý bạn tham khảo:  - **Khuyến Học** (tác giả Fukuzawa Yukichi) – Giá: 88,500đ | Còn hàng - **Khuyến Học Việt Nam** – Giá: 122,000đ | Còn hàng - **Khuyến Học (Tái Bản 2024)** (tác giả Fukuzawa Yukichi)  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] book này có ebook không        -> ✅ PASS (store_info) | 1752ms
+      Bot: Xin lỗi, nhưng từ dữ liệu được cung cấp tôi chưa thể tìm thấy thông tin về sách cụ thể bạn muốn biết. Bạn có thể kiểm tra trực tiếp trong trang sản phẩm để xem sách đó có。
+ [T7] chính sách bảo hành sách ra sa -> ❌ FAIL (Got: book_review, Exp: return_policy)
+      Bot: Bạn đang muốn **xem đánh giá / rating sách** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T8] chào buổi sáng                 -> ✅ PASS (chitchat) | 62ms
+      Bot: Xin chào! Tôi là trợ lý BookStore. Tôi có thể giúp bạn **tìm sách**, **tra cứu đơn hàng**, **kiểm tra khuyến mãi** và **tư vấn chính sách đổi trả**. Bạn cần hỗ trợ gì hôm nay?
+
+--- BỘ TEST CASE 7/10 (ID: test_guest_eaeaa5) ---
+ [T1] [IMG] Tìm sách trong ảnh này: be-yeu -> ✅ PASS (image_search) | 2138ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] 1984 George Orwell bán bao nhi -> ✅ PASS (book_detail) | 2406ms
+      Bot: Xin lỗi vì thông tin không chính xác trước đó. Bạn có thể quan tâm đến các tác phẩm của nhà văn nổi tiếng như Nguyễn Quang Hưng với "Lịch sử Đảng bộ huyện Điện Bàn, 1930-1975" hay "Trận quyết chiến lịch sử xuân 1975". Đây đều là những sách bán chạy và có giá hợp lý. Bạn muốn tìm hiểu thêm về các tác phẩm này không?  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T3] gợi tiểu thuyết kinh điển châu -> ✅ PASS (recommend_category) | 62ms
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: thong- -> ✅ PASS (image_search) | 2373ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] flash sale cuối tuần có không  -> ✅ PASS (promotion_current) | 66ms
+      Bot: Bạn đang muốn **xem khuyến mãi hiện tại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T6] giao hàng nhanh nhất bao nhiêu -> ✅ PASS (store_info) | 1811ms
+      Bot: Giao hàng của BookStore với đơn vị vận chuyển Giao Hàng Nhanh (GHN) thường được thực hiện trong vòng 1-2 ngày làm việc từ khi nhận hàng hóa. Bạn có thể theo dõi trạng thái đơn hàng qua email xác nhận và mã vận đơn.
+ [T7] đổi sách bị rách được không    -> ✅ PASS (return_policy) | 2222ms
+      Bot: Xin lỗi đã gây hiểu lầm trước đó. Theo chính sách đổi trả của chúng tôi, sản phẩm cần phải còn nguyên vẹn và bao bì phải giữ nguyên như khi bạn nhận hàng. Nếu sách bị rách, xin hãy kiểm tra lại tình trạng của nó để đảm bảo chúng tôi có thể xử lý yêu cầu một cách phù hợp. Bạn có muốn gửi sách về kho để chúng tôi kiểm tra không?  Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+ [T8] bạn có thể giúp gì cho tôi     -> ✅ PASS (chitchat) | 71ms
+      Bot: Tôi có thể giúp bạn: • **Tìm sách** theo tên, tác giả, thể loại hoặc từ khóa • **Gợi ý sách** phù hợp với sở thích hoặc làm quà tặng • **Kiểm tra đơn hàng** và trạng thái giao hàng • **Tra cứu khuyến mãi** và cách áp mã giảm giá • **Giải đáp chính sách** đổi trả, hoàn tiền, thanh toán • **Hỗ trợ tài khoản**: mật khẩu, thông tin cá nhân
+
+--- BỘ TEST CASE 8/10 (ID: test_guest_011c2a) ---
+ [T1] [IMG] Tìm sách trong ảnh này: to-la- -> ✅ PASS (image_search) | 2197ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] The Power of Now giá bao nhiêu -> ✅ PASS (book_detail) | 69ms
+      Bot: Bạn đang muốn **xem thông tin chi tiết một cuốn sách** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T3] gợi sách giảm stress cho dân v -> ✅ PASS (recommend_category) | 63ms
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: song-l -> ✅ PASS (image_search) | 2457ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] có chương trình mua 2 tặng 1 k -> ✅ PASS (promotion_current) | 3370ms
+      Bot: Tất cả các đơn hàng tại BookStore hiện tại đều áp dụng chính sách miễn phí ship cho đơn từ 200.000đ trở lên. Chúng tôi chưa từng thực hiện chương trình mua 2 tặng 1 trong lịch sử hoạt động của chúng tôi.  Nếu bạn đang quan tâm đến sách khuyến học, tôi có thể gợi ý thêm một số cuốn sách khác như "Khuyến Học Việt Nam" và "Khuyến Học (Tái Bản 2024)" của Fukuzawa Yukichi. Đây đều là những tác phẩm hay và được nhiều độc giả yêu thích.  Bạn muốn tìm hiểu thêm về các cuốn sách này, hoặc có thể quan tâm đến chủ đề khác?  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] mình có thể mua làm quà tặng k -> ❌ FAIL (Got: recommend_gift, Exp: store_info)
+      Bot: Bạn đang muốn **gợi ý sách làm quà tặng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T7] nếu sách in sai lỗi có đổi khô -> ✅ PASS (return_policy) | 3153ms
+      Bot: Bạn hoàn toàn có thể **mua sách làm quà tặng**. Đây là một số cuốn sách đang rất được yêu thích và phù hợp để làm món quà ý nghĩa:  - "Treo Trên Đôi Mắt" của tác giả Nguyễn Ngọc Tư, một tác phẩm về tình yêu thương vô điều kiện. - "Những Bài Học Từ Cây Bàng" của tác giả Nguyễn Thượng Hiền, với thông điệp về sự kiên trì và hy vọng.  Chúc bạn tìm được món quà ưng ý!  Bạn muốn xem thêm lựa chọn hoặc điều chỉnh theo ngân sách?
+ [T8] shop mở cửa mấy giờ vậy        -> ✅ PASS (store_info) | 1798ms
+      Bot: Shop của chúng tôi mở cửa từ 8:00 AM đến 12:00 PM và từ 1:00 PM đến 5:00 PM hàng ngày. Bạn có thể liên hệ trực tiếp với đội ngũ hỗ trợ nếu cần thông tin thêm.
+
+--- BỘ TEST CASE 9/10 (ID: test_guest_830e92) ---
+ [T1] [IMG] Tìm sách trong ảnh này: phuong -> ✅ PASS (image_search) | 8911ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] giáo trình tiếng Hàn giá bao n -> ✅ PASS (book_detail) | 63ms
+      Bot: Bạn đang muốn **xem thông tin chi tiết một cuốn sách** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T3] gợi ý tài liệu TOEIC 900+      -> ✅ PASS (recommend_category) | 5ms
+      Bot: Bạn muốn khám phá sách về mảng nào? Chúng tôi có nhiều đầu sách hay thuộc các lĩnh vực như **Truyện tranh, Marketing, Tâm lý học, Lịch sử**...
+ [T4] [IMG] Tìm sách trong ảnh này: thien- -> ✅ PASS (image_search) | 2430ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] mã giảm giá cho sinh viên      -> ✅ PASS (promotion_current) | 2438ms
+      Bot: Xin lỗi, hiện tại chúng tôi chưa có thông tin về mã giảm giá dành riêng cho sinh viên. Bạn có thể liên hệ bộ phận hỗ trợ trực tuyến để được tư vấn chi tiết hơn.   Về sách, bạn có quan tâm đến các cuốn sách khuyến học không? Chúng tôi có nhiều lựa chọn hay từ tác giả Fukuzawa Yukichi, đặc biệt là cuốn "Khuyến Học (Tái Bản 2024)" đang còn hàng và rất được yêu thích.  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] có gói combo không             -> ✅ PASS (store_info) | 2394ms
+      Bot: Xin lỗi, hiện tại chúng tôi chưa cung cấp gói combo. Bạn có thể liên hệ bộ phận hỗ trợ để được tư vấn thêm về dịch vụ này.  Về giao hàng, đơn hàng của bạn sẽ được Giao Hàng Nhanh (GHN) vận chuyển. Sau khi đặt hàng, bạn sẽ nhận email xác nhận kèm mã vận đơn. Sử dụng mã vận đơn trên website của GHN hoặc GHTK để theo dõi đơn hàng của mình.
+ [T7] bị giao nhầm sách thì làm sao  -> ✅ PASS (return_policy) | 3054ms
+      Bot: Nếu bạn nhận được sách không đúng như mong đợi, đừng lo lắng. Hãy liên hệ ngay với bộ phận hỗ trợ của chúng tôi để giải quyết vấn đề này. Họ sẽ hướng dẫn bạn về cách gửi lại sách cũ và nhận sách mới hoặc hoàn tiền trong vòng 3-5 ngày làm việc.  Trong thời gian chờ xử lý đơn hàng, bạn có thể tham khảo các cuốn sách bestseller đang được nhiều người quan tâm như "Ngôn Ngữ Tình Yêu" của nhà văn Nguyễn Quang, hay "Điệp Ký Vàng" của tác giả Phan Thị Thúy.  Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+ [T8] thanks bạn nhé                 -> ✅ PASS (chitchat) | 4ms
+      Bot: Không có gì! Tôi luôn sẵn sàng hỗ trợ bạn. Còn điều gì tôi có thể giúp không?
+
+--- BỘ TEST CASE 10/10 (ID: test_guest_9643d1) ---
+ [T1] [IMG] Tìm sách trong ảnh này: van-ho -> ✅ PASS (image_search) | 2264ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] Eat Move Sleep giá mấy         -> ✅ PASS (book_detail) | 6ms
+      Bot: Bạn muốn xem thông tin cuốn sách nào? Cho tôi biết **tên sách** nhé!
+ [T3] gợi sách thể dục tại nhà       -> ✅ PASS (recommend_category) | 3935ms
+      Bot: Tôi hiểu bạn đang quan tâm đến cuốn sách "Tiến gói thơ ca" của tác giả Huyền Sâm Trần. Giá của cuốn sách này là 137,000đ và hiện tại nó có sẵn hàng.  Nếu bạn quan tâm đến sách về thể dục tại nhà, tôi gợi ý cuốn "Eat Move Sleep: 52 Bài Tập Thể Dục Tại Nhà" do tác giả David Zinczenko viết. Cuốn sách này cung cấp các bài tập đơn giản nhưng hiệu quả để bạn duy trì sức khỏe và tăng cường sức mạnh ngay trong căn phòng của mình.  Bạn có muốn tìm hiểu thêm về cuốn "Tiến gói thơ ca" không? Hay chúng tôi nên gợi ý một số cuốn sách khác cho bạn?  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T4] [IMG] Tìm sách trong ảnh này: boc-da -> ✅ PASS (image_search) | 2120ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] có khuyến mãi ngày lễ không    -> ✅ PASS (promotion_current) | 3397ms
+      Bot: Hiện tại, chúng tôi chưa nhận được thông tin về các chương trình khuyến mãi đặc biệt cho các dịp lễ. Tuy nhiên, bạn vẫn có thể tìm kiếm những cuốn sách hot bán chạy như "Khuyến Học" của Fukuzawa Yukichi với giá chỉ 88,500đ đang còn hàng, hoặc sách "Khuyến học Việt Nam" mới nhất từ tác giả Đang cập nhật.  Nếu bạn muốn tham khảo thêm các cuốn sách khác, tôi có thể gợi ý cuốn "Tư Duy Giàu Khôn: Bí Quyết Thành Công của Warren Buffett và Charlie Munger" do tác giả Tom Smith viết. Cuốn sách này rất được yêu thích và sẽ giúp bạn nâng  Bạn muốn tìm sách đang sale hoặc hỏi cách áp mã khuyến mãi?
+ [T6] đặt hàng online có an toàn khô -> ✅ PASS (store_info) | 60ms
+      Bot: Bạn đang muốn **hỏi thông tin cửa hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T7] trả hàng trong bao nhiêu ngày  -> ✅ PASS (return_policy) | 1721ms
+      Bot: Trả hàng của chúng tôi sẽ được xử lý trong vòng 3-5 ngày làm việc kể từ khi nhận sản phẩm. Bạn chỉ cần gửi lại sách về địa chỉ kho của chúng tôi và。  Bạn muốn thực hiện yêu cầu đổi/trả cụ thể không?
+ [T8] mình thích đọc sách lắm        -> ❌ FAIL (Got: recommend_personal, Exp: chitchat)
+      Bot: Mình thấy bạn rất yêu thích sách, có thể bạn sẽ thích cuốn "Sống Khỏe - Làm Đẹp Từ A Đến Z" của tác giả Nguyễn Thanh Hà. Đăng nhập để xem thêm nhiều sách hot và ưu đãi khác nhé!  Bạn muốn gợi ý thêm hoặc lọc theo thể loại khác?
+============================================================
+🚀 BẮT ĐẦU CHẠY LUỒNG: CUSTOMER (Auth: 105)
+============================================================
+
+--- BỘ TEST CASE 1/10 (ID: test_customer_797f12) ---
+ [T1] [IMG] Tìm sách trong ảnh này: luyen- -> ✅ PASS (image_search) | 2138ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] đơn hàng gần nhất của tôi trạn -> ✅ PASS (order_status) | 1528ms
+      Bot: Đơn hàng gần nhất của bạn đã được giao và hoàn tất. Bạn có thể nhận được nó vào ngày hôm qua với tổng hóa đơn là 485,550đ. Tôi hy vọng món quà này mang lại giá trị cảm xúc cho bạn!  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T3] điểm thưởng của tôi còn bao nh -> ✅ PASS (loyalty_points) | 2643ms
+      Bot: Chào bạn! Bạn đã tích lũy được **491 điểm** và có thể dùng để giảm giá cho các đơn hàng tiếp theo. Mỗi 100 điểm tương đương với 10,000đ mà bạn có thể sử dụng để giảm tổng hóa đơn của mình.  Điểm thưởng này rất hữu ích vì nó không chỉ giúp tiết kiệm chi phí mua sắm mà còn mang lại giá trị cảm xúc khi nhận được sự ưu đãi từ BookStore. Bạn có muốn biết thêm về cách dùng điểm thưởng hay không?
+ [T4] [IMG] Tìm sách trong ảnh này: 1000-c -> ✅ PASS (image_search) | 2132ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] có voucher nào đang dùng được  -> ✅ PASS (voucher_apply) | 17ms
+      Bot: Bạn muốn kiểm tra **mã giảm giá** nào? Hãy nhập mã vào đây!
+ [T6] hoá đơn đơn #5678 thế nào      -> ✅ PASS (order_status) | 2110ms
+      Bot: Đơn hàng #5678 của bạn đã được giao thành công và hóa đơn tổng cộng là **148,200đ**. Tôi hy vọng món quà này mang lại giá trị cảm xúc cho bạn! Bạn có muốn tôi giúp bạn tra cứu thêm thông tin về sách hay gợi ý những cuốn sách mới cập nhật khác không?  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T7] muốn đổi trả đơn hàng bị rách  -> ✅ PASS (return_request) | 14ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+ [T8] huỷ giúp tôi đơn mới đặt       -> ✅ PASS (order_cancel) | 167ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+
+--- BỘ TEST CASE 2/10 (ID: test_customer_ecaf26) ---
+ [T1] [IMG] Tìm sách trong ảnh này: huong- -> ✅ PASS (image_search) | 2238ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] mã SALE20 có dùng được không   -> ✅ PASS (voucher_apply) | 2698ms
+      Bot: Xin chào! Mã SALE20 hiện tại chỉ áp dụng cho đơn hàng từ 200.000đ trở lên và miễn phí vận chuyển. Nếu bạn đang có đơn hàng dưới mức đó, tôi khuyên bạn nên cân nhắc thêm để tận dụng ưu đãi này.  Nếu bạn vẫn muốn sử dụng mã SALE20, chúng tôi sẽ tính phí ship cho bạn. Bạn có thể liên hệ với đội ngũ hỗ trợ để biết giá cước vận chuyển cụ thể hoặc nếu có gói giao hàng nhanh hơn.   Chúc bạn một ngày tốt lành!
+ [T3] thanh toán bằng ví momo được k -> ✅ PASS (payment_method) | 2652ms
+      Bot: Chào bạn! Chúng tôi rất tiếc khi thông báo rằng hiện tại chúng tôi chỉ hỗ trợ thanh toán qua các phương thức như COD (thanh toán khi nhận hàng), chuyển khoản ngân hàng, và VNPay. Ví Momoney là một lựa chọn tốt khác để sử dụng trong tương lai.  Hy vọng bạn sẽ tìm thấy sách ưng ý! Nếu có bất kỳ câu hỏi nào khác hoặc cần thêm gợi ý, đừng ngần ngại liên hệ với chúng tôi. Chúc bạn có một ngày tuyệt vời!
+ [T4] [IMG] Tìm sách trong ảnh này: cuoc-s -> ✅ PASS (image_search) | 2121ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] điểm tích luỹ đổi thành tiền đ -> ✅ PASS (loyalty_points) | 2554ms
+      Bot: Chào bạn! Bạn đã tích lũy được **491 điểm** và mỗi 100 điểm sẽ tương đương với 10.000đ giảm giá cho đơn hàng tiếp theo của mình.  Điểm tích lũy chỉ dùng để giảm giá đơn hàng, không thể quy ra tiền mặt hoặc rút thành tiền. Điểm có hiệu lực trong vòng 12 tháng kể từ ngày tích lũy.  Bạn muốn biết thêm về cách sử dụng điểm hay có bất kỳ câu hỏi nào khác?
+ [T6] gợi ý sách kinh doanh cho mình -> ✅ PASS (recommend_category) | 2434ms
+      Bot: Chào bạn! Với tâm lý muốn khởi nghiệp và tìm hiểu về kinh doanh, tôi gợi ý cuốn "Kỹ Năng Kinh Doanh Cơ Bản" của tác giả Nguyễn Minh Hùng. Cuốn sách này sẽ mang lại giá trị lớn trong việc xây dựng nền tảng cho công việc tương lai.  Xin mời bạn xem thẻ sách bên dưới để có cái nhìn rõ hơn.
+ [T7] đơn #7890 đã giao chưa         -> ✅ PASS (order_status) | 2064ms
+      Bot: Đơn hàng #7890 của bạn đã được giao thành công rồi đó! Bạn sẽ nhận được sách ngay tại nhà. Hy vọng những cuốn sách này sẽ mang lại cho bạn nhiều giá trị và niềm vui trong cuộc sống. Nếu có bất kỳ câu hỏi nào khác, đừng ngần ngại liên hệ với chúng tôi. Chúc bạn một ngày tuyệt vời!  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] huỷ đơn hàng số 6543           -> ✅ PASS (order_cancel) | 22ms
+      Bot: Đơn hàng **#6543** không thể hủy vì đang ở trạng thái **delivered**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 3/10 (ID: test_customer_4defda) ---
+ [T1] [IMG] Tìm sách trong ảnh này: soi-gi -> ✅ PASS (image_search) | 2241ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] tôi muốn trả lại sách bị lỗi i -> ✅ PASS (return_request) | 19ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+ [T3] thời gian hoàn tiền mất bao lâ -> ✅ PASS (payment_issue) | 17ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+ [T4] [IMG] Tìm sách trong ảnh này: di-tim -> ✅ PASS (image_search) | 2313ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] tổng chi tiêu của tôi là bao n -> ✅ PASS (loyalty_points) | 95ms
+      Bot: Bạn đang muốn **hỏi về điểm tích lũy** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T6] thêm cuốn Nhà Giả Kim vào cart -> ✅ PASS (cart_help) | 82ms
+      Bot: Bạn đang muốn **hỗ trợ về giỏ hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T7] giao hàng có nhanh không       -> ✅ PASS (store_info) | 2374ms
+      Bot: Sách "Nhà Giả Kim" - món quà ý nghĩa dành cho những người yêu thích câu chuyện tinh tế và tình yêu mãnh liệt đã sẵn sàng. Bạn chỉ cần **nhấn nút 'Thêm vào giỏ'** trên trang sách để có ngay cuốn sách này trong giỏ hàng của mình.  Nếu bạn muốn xem lại các sản phẩm khác hoặc
+ [T8] tôi muốn hủy đơn 9999          -> ✅ PASS (order_cancel) | 22ms
+      Bot: Không tìm thấy thông tin đơn hàng #9999 trong hệ thống.
+
+--- BỘ TEST CASE 4/10 (ID: test_customer_c2865e) ---
+ [T1] [IMG] Tìm sách trong ảnh này: nguoi- -> ✅ PASS (image_search) | 1866ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] sách thể loại romance hay nhất -> ✅ PASS (recommend_category) | 91ms
+      Bot: Rất tiếc, tôi tạm thời chưa có sách phù hợp cho thể loại 'romance' mà bạn yêu cầu.
+ [T3] tôi thích đọc sách khoa học vi -> ❌ FAIL (Got: book_search, Exp: recommend_category)
+      Bot: bạn có thể quan tâm đến các cuốn sách như sau:  - "Khía cạnh văn hóa trong thương mại điện tử": Đây là một cuốn sách thú vị về cách thức thương mại điện tử tác động đến văn hóa và xã hội. - "Điều Chỉnh Sóng Não Bằng Công Nghệ Âm Thanh - Thực Hành  Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+ [T4] [IMG] Tìm sách trong ảnh này: bo-me- -> ✅ PASS (image_search) | 2042ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] dùng mã FREESHIP có free ship  -> ❌ FAIL (Got: store_info, Exp: voucher_apply)
+      Bot: Bạn đang muốn **hỏi thông tin cửa hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T6] tôi muốn xem lại đơn cũ        -> ✅ PASS (order_history) | 5064ms
+      Bot: Rất vui được giúp bạn! Dưới đây là thông tin về các đơn hàng gần nhất của bạn:  1. Đơn hàng #7706 - Đã giao hàng:  - Ngày giao hàng: 24/03/2026  - Tổng giá trị: 485,550đ  - Số lượng sách: 3 cuốn  2. Đơn hàng #5108 - Đã giao hàng:  - Ngày giao hàng: 14/03/2026  - Tổng giá trị: 284,500đ  - Số lượng sách: 4 cuốn  3. Đơn hàng #8432 - Đang xử lý:  - Ngày xử lý: 05/03/2026  - Tổng giá trị: 165,000đ  - Số lượng sách: 1 cuốn  Đây đều là những món quà ý nghĩa từ BookStore gửi  Bạn muốn xem chi tiết đơn nào hoặc tìm kiếm theo tháng?
+ [T7] điểm tích luỹ dùng được không  -> ✅ PASS (loyalty_points) | 2727ms
+      Bot: Điểm tích lũy bạn có hiện tại là **491 điểm**, và chúng hoàn toàn có thể sử dụng để giảm giá cho đơn hàng tiếp theo. Mỗi 100 điểm tương đương với 10,000đ giảm giá. Đây thực sự là món quà ý nghĩa từ BookStore gửi đến bạn.  Điểm tích lũy của bạn sẽ có hiệu lực trong vòng 12 tháng kể từ ngày tích luỹ. Bạn đã sẵn sàng để tận dụng chúng chưa?
+ [T8] hủy đơn đặt nhầm               -> ✅ PASS (order_cancel) | 74ms
+      Bot: Bạn đang muốn **hủy đơn hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+
+--- BỘ TEST CASE 5/10 (ID: test_customer_4161f1) ---
+ [T1] [IMG] Tìm sách trong ảnh này: cai-bo -> ✅ PASS (image_search) | 2306ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] thêm Tôi Thấy Hoa Vàng Trên Cỏ -> ✅ PASS (cart_help) | 89ms
+      Bot: Bạn đang muốn **hỗ trợ về giỏ hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T3] mã discount này dùng được chưa -> ✅ PASS (voucher_apply) | 13ms
+      Bot: Bạn muốn kiểm tra **mã giảm giá** nào? Hãy nhập mã vào đây!
+ [T4] [IMG] Tìm sách trong ảnh này: tuoi-t -> ✅ PASS (image_search) | 2550ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] điểm của tôi đổi được gì       -> ✅ PASS (loyalty_points) | 3335ms
+      Bot: Chào bạn! Bạn có **491 điểm tích lũy** hiện tại. Điểm tích lũy của bạn chính là những kỷ niệm đáng nhớ và giá trị cảm xúc mà chúng ta thường không thể mua bằng tiền mặt. Điểm này sẽ giúp giảm giá cho đơn hàng tiếp theo, nhưng quan trọng hơn cả là nó mang lại giá trị ý nghĩa và tình cảm cho mỗi lần sử dụng.  Điểm của bạn có thể quy đổi thành **40,000đ** để giảm giá cho đơn hàng sau. Mỗi điểm đều như một món quà nhỏ từ những trải nghiệm cuộc sống đáng nhớ mà bạn đã từng chia sẻ với chúng tôi. Hãy tận hưởng những giây phút mua s
+ [T6] tôi cần đổi trả cuốn sách bị ố -> ✅ PASS (return_request) | 14ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+ [T7] đơn hàng mình đang ở bước nào  -> ✅ PASS (order_status) | 3081ms
+      Bot: Chào bạn! Đơn hàng của bạn đã hoàn tất và giao hàng thành công. Cả hai đơn #7706 và #5108 đều đã được giao đến tận nhà bạn. Bạn có thể kiểm tra tình trạng đơn hàng này ngay tại đây: [Link đến trang quản lý đơn hàng].   Đơn hàng #8432 cũng đang trên đường tới, dự kiến sẽ đến trong vài ngày tới. Bạn có muốn tôi gửi thông báo cập nhật cho bạn khi đơn hàng này được giao không?  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] bỏ đơn 5555 giúp tôi           -> ✅ PASS (order_cancel) | 20ms
+      Bot: Đơn hàng **#5555** không thể hủy vì đang ở trạng thái **delivered**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 6/10 (ID: test_customer_059936) ---
+ [T1] [IMG] Tìm sách trong ảnh này: phat-t -> ✅ PASS (image_search) | 2175ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] thanh toán bị lỗi phải làm sao -> ✅ PASS (payment_issue) | 15ms
+      Bot: Tôi rất tiếc vì bạn gặp sự cố thanh toán! Để giải quyết nhanh nhất, vui lòng liên hệ đội CSKH của chúng tôi:  **Hotline:** 1800-xxxx (miễn phí, 8h–22h) **Email:** cskh@bookstore.vn  Chúng tôi sẽ phản hồi trong **2–4 giờ làm việc**.
+ [T3] tôi cần đổi địa chỉ nhận hàng  -> ✅ PASS (account_help) | 13ms
+      Bot: Tôi có thể hỗ trợ các vấn đề tài khoản sau: • **Quên mật khẩu**: Vào trang đăng nhập → "Quên mật khẩu" → nhập email • **Đổi email/SĐT**: Vào phần **Tài khoản → Thông tin cá nhân** • **Tài khoản bị khóa**: Liên hệ hotline **1800-xxxx** để mở khóa • **Đăng ký mới**: Nhấn **Đăng ký** trên trang chủ  Vấn đề của bạn thuộc loại nào ở trên?
+ [T4] [IMG] Tìm sách trong ảnh này: noi-o- -> ✅ PASS (image_search) | 2463ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] điểm tích luỹ mình có bao nhiê -> ✅ PASS (loyalty_points) | 2919ms
+      Bot: Bạn đã tích lũy được **491 điểm**. Mỗi điểm đều mang đến giá trị đặc biệt cho bạn trong các lần mua hàng tiếp theo. Bạn có thể dùng chúng để giảm giá trị đơn hàng của mình, hoặc thậm chí quy đổi thành tiền mặt tương đương 10.000đ cho mỗi điểm.  Quý khách cũng biết rằng, những điểm tích lũy này không chỉ giúp tiết kiệm mà còn là món quà ý nghĩa từ BookStore gửi đến bạn. Hãy tận dụng chúng để trải nghiệm thêm nhiều cuốn sách yêu thích và khám phá thế giới kiến thức rộng lớn hơn!
+ [T6] gợi sách tâm lý học bán chạy   -> ❌ FAIL (Got: book_search, Exp: recommend_category)
+      Bot: Chào bạn! Chúng tôi có cuốn "Toàn Thư Tâm Lý Học" - một trong những cuốn sách tâm lý học bán chạy và uy tín nhất. Đây là nguồn tham khảo quý giá dành cho những ai đang tìm hiểu về lĩnh vực này. Hãy để chúng tôi giới thiệu nút bên dưới, nơi bạn có thể dễ dàng mua sắm cuốn sách mà mình quan tâm  Bạn muốn: lọc theo giá, xem đánh giá chi tiết, hay tìm sách tương tự?
+ [T7] đơn hàng #2468 đang ở đâu      -> ✅ PASS (order_status) | 2871ms
+      Bot: Chào bạn! Đơn hàng #2468 của bạn đã được giao và hoàn tất. Bạn đã nhận sách vào hôm nay, 2026-02-16. Chúng tôi rất vui vì bạn đã chọn sách tại BookStore. Đó là một trải nghiệm mua sắm đáng nhớ và chúng tôi hy vọng bạn sẽ thích những cuốn sách mình đã nhận.  Nếu cần thêm bất cứ điều gì, hãy liên hệ với chúng tôi ngay lập tức. Bạn có muốn được gửi lại thông tin về đơn hàng của mình không?  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] hủy đơn 8888 chưa giao         -> ✅ PASS (order_cancel) | 23ms
+      Bot: Đơn hàng **#8888** không thể hủy vì đang ở trạng thái **shipped**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 7/10 (ID: test_customer_9085e3) ---
+ [T1] [IMG] Tìm sách trong ảnh này: ngay-h -> ✅ PASS (image_search) | 2312ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] sách bài tập toán nâng cao tiể -> ❌ FAIL (Got: recommend_category, Exp: book_search)
+      Bot: Bạn đang muốn **gợi ý sách theo thể loại** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T3] thêm sách Doraemon vào giỏ giú -> ✅ PASS (cart_help) | 2967ms
+      Bot: Dạo này bạn có thích đọc về những câu chuyện cổ tích hay truyện tranh không? Tôi gợi ý cho bạn cuốn "Ngày Hôm Nay Cũng Không Quệ Tệ" của tác giả Gu Gyung Seon. Đây là một cuốn sách đáng yêu và ý nghĩa, giá chỉ 110,500đ còn lại hàng.   Và nếu bạn muốn thêm vào giỏ hàng cuốn truyện tranh nổi tiếng Doraemon, tôi có thể giúp bạn tìm hiểu về nó. Bạn đã từng đọc những câu chuyện về cậu bé robot đáng yêu này chưa?  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T4] [IMG] Tìm sách trong ảnh này: thac-m -> ✅ PASS (image_search) | 2191ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] điểm tôi có thể dùng mua được  -> ✅ PASS (loyalty_points) | 3048ms
+      Bot: Bạn hiện tại có **491 điểm tích lũy**, và mỗi 100 điểm bạn có thể quy đổi thành **4.000đ** để giảm giá đơn hàng của mình trong tương lai. Với số điểm này, bạn có thể mua được **4 cuốn sách với mức giảm giá từ hệ thống**.  Để tận dụng tối đa lợi ích của những điểm tích lũy, hãy nhớ sử dụng chúng khi đặt hàng tiếp theo. Mỗi lần dùng sẽ tăng thêm 100 điểm cho tài khoản của bạn. Đây thực sự là một món quà ý nghĩa mà BookStore muốn gửi đến bạn!
+ [T6] muốn đổi sách bị thiếu trang   -> ✅ PASS (return_request) | 15ms
+      Bot: Để xử lý yêu cầu đổi/trả, bạn cho tôi biết **mã đơn hàng** cần đổi trả nhé!
+ [T7] đơn #3579 giao được chưa       -> ✅ PASS (order_status) | 2436ms
+      Bot: Đơn hàng #3579 của bạn đã được giao thành công rồi đó! Bạn có thể nhận sách ngay tại địa chỉ bạn đã cung cấp. Tôi hy vọng bạn sẽ thích cuốn sách và tận hưởng những phút giây đọc sách thú vị.  Nếu bạn cần thêm bất kỳ sự hỗ trợ nào, đừng ngần ngại liên hệ lại với chúng tôi. Chúng tôi luôn sẵn lòng giúp đỡ!  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] huỷ đơn hàng đặt nhầm cuốn sác -> ✅ PASS (order_cancel) | 19ms
+      Bot: Đơn hàng **#3579** không thể hủy vì đang ở trạng thái **delivered**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 8/10 (ID: test_customer_cdf4fa) ---
+ [T1] [IMG] Tìm sách trong ảnh này: lift-t -> ✅ PASS (image_search) | 2045ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] giá cuốn Sapiens tiếng Việt ba -> ✅ PASS (book_detail) | 1755ms
+      Bot: Xin lỗi, nhưng tôi không tìm thấy thông tin về cuốn sách "Sapiens tiếng Việt" trong dữ liệu được cung cấp. Dữ liệu hiện tại chỉ có thông tin về cuốn sách "Bàn Về Chiến Lược Con Người". Tôi hy vọng bạn vẫn có thể tìm thấy những cuốn sách khác mà mình quan tâm.  Bạn muốn **thêm vào giỏ hàng** hay xem **sách cùng tác giả**?
+ [T3] thêm cuốn Think and Grow Rich  -> ✅ PASS (cart_help) | 81ms
+      Bot: Bạn đang muốn **hỗ trợ về giỏ hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: thien- -> ✅ PASS (image_search) | 2395ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] mã SUMMER23 còn hiệu lực không -> ✅ PASS (voucher_apply) | 1972ms
+      Bot: Mã ưu đãi "SUMMER23" hiện tại vẫn đang có hiệu lực. Hãy tận dụng ngay để hưởng những khuyến mãi hấp dẫn nhé! Mỗi đơn hàng chỉ áp dụng một mã giảm giá, vui lòng kiểm tra lại thông tin đặt hàng của bạn để chắc chắn rằng mã này được sử dụng đúng cách.  Chúc bạn và người nhận sách có một ngày thật đáng nhớ!
+ [T6] xem điểm tích luỹ của tôi      -> ✅ PASS (loyalty_points) | 3242ms
+      Bot: Xin chào! Bạn hiện có **491** điểm tích lũy. Điểm của bạn rất đáng quý và sẽ giúp bạn giảm giá cho các đơn hàng trong tương lai. Mỗi 100 điểm bạn có thể quy đổi thành 10.000đ để mua hàng, đồng thời còn được trừ trực tiếp từ tổng hóa đơn.  Điểm tích lũy của bạn có hiệu lực trong vòng 12 tháng kể từ ngày tích lũy. Hãy tận dụng chúng để giảm giá cho các đơn hàng tiếp theo và cảm nhận sự ưu đãi nhé!  Chúc bạn luôn mua sắm vui vẻ!
+ [T7] đơn 7777 shipper liên lạc chưa -> ✅ PASS (order_status) | 2297ms
+      Bot: Đơn hàng #7777 của bạn đã được giao thành công rồi. Bạn đã nhận được sách sớm như một món quà ý nghĩa từ BookStore. Tổng hóa đơn là 265,000đ và đã thanh toán bằng thẻ tín dụng.  Nếu có bất kỳ câu hỏi hay cần hỗ trợ thêm nào khác, hãy liên hệ với chúng tôi ngay lập tức. Chúng tôi luôn sẵn lòng giúp đỡ bạn.  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] mình đổi ý muốn hủy đơn        -> ✅ PASS (order_cancel) | 19ms
+      Bot: Đơn hàng **#7777** không thể hủy vì đang ở trạng thái **delivered**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 9/10 (ID: test_customer_48d8c4) ---
+ [T1] [IMG] Tìm sách trong ảnh này: combo- -> ✅ PASS (image_search) | 2183ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] đơn hàng cũ 6 tháng có còn khô -> ✅ PASS (order_history) | 82ms
+      Bot: Bạn đang muốn **xem lịch sử mua hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T3] dùng điểm giảm giá đơn tiếp th -> ✅ PASS (loyalty_points) | 2152ms
+      Bot: Bạn hiện có **491 điểm** tích lũy. Mỗi lần sử dụng điểm sẽ được giảm **10.000đ** cho đơn hàng tiếp theo của bạn. Bạn muốn tận dụng chúng để giảm giá cho một đơn hàng sắp tới, hoặc có nhu cầu về cách quy đổi khác? Hãy liên hệ với chúng tôi nếu cần thêm thông tin!
+ [T4] [IMG] Tìm sách trong ảnh này: bo-nhu -> ✅ PASS (image_search) | 1833ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] thanh toán online bị từ chối t -> ✅ PASS (payment_issue) | 75ms
+      Bot: Tôi rất tiếc vì bạn gặp sự cố thanh toán! Để giải quyết nhanh nhất, vui lòng liên hệ đội CSKH của chúng tôi:  **Hotline:** 1800-xxxx (miễn phí, 8h–22h) **Email:** cskh@bookstore.vn  Chúng tôi sẽ phản hồi trong **2–4 giờ làm việc**.
+ [T6] thêm Bắt Trẻ Đồng Xanh vào giỏ -> ✅ PASS (cart_help) | 2218ms
+      Bot: Sách "Bộ Những Tia Nắng Đầu Tiên (Bộ 10 Cuốn) (Tái Bản 2022)" đã có sẵn. Bạn chỉ cần nhấn nút 'Thêm vào giỏ' để hoàn tất quá trình mua hàng.  Nếu bạn muốn xem thêm các lựa chọn khác hoặc tổng hợp các sản phẩm hiện tại vào giỏ, hãy
+ [T7] trạng thái đơn hàng #9090 ra s -> ✅ PASS (order_status) | 2645ms
+      Bot: Đơn hàng #9090 của bạn đã được giao thành công! Bạn nhận sách vào ngày hôm qua. Tổng hóa đơn là 292,000đ và đã thanh toán bằng hình thức COD.  Chúng tôi muốn gửi lời cảm ơn chân thành vì sự tin tưởng của bạn với BookStore. Hy vọng cuốn sách sẽ mang đến những giây phút thú vị và ý nghĩa cho bạn và người nhận.  Nếu bạn có thêm bất kỳ yêu cầu nào, hãy liên hệ ngay với chúng tôi!  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T8] hủy đơn hàng tôi vừa tạo xong  -> ✅ PASS (order_cancel) | 21ms
+      Bot: Đơn hàng **#9090** không thể hủy vì đang ở trạng thái **delivered**. Nếu cần hỗ trợ, liên hệ hotline **1800-xxxx**.
+
+--- BỘ TEST CASE 10/10 (ID: test_customer_36d1e7) ---
+ [T1] [IMG] Tìm sách trong ảnh này: con-ng -> ✅ PASS (image_search) | 2229ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T2] gợi ý 3 cuốn sách về self-help -> ✅ PASS (recommend_category) | 105ms
+      Bot: Rất tiếc, tôi tạm thời chưa có sách phù hợp cho thể loại 'self-help' mà bạn yêu cầu.
+ [T3] thêm Cây Cam Ngọt Của Tôi vào  -> ✅ PASS (cart_help) | 80ms
+      Bot: Bạn đang muốn **hỗ trợ về giỏ hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T4] [IMG] Tìm sách trong ảnh này: 500-ba -> ✅ PASS (image_search) | 2126ms
+      Bot: [Không nhận dạng được sách trong ảnh]
+ [T5] bao nhiêu điểm để giảm 50k     -> ✅ PASS (loyalty_points) | 2679ms
+      Bot: Bạn hiện có **491 điểm** và mỗi lần quy đổi sẽ giảm **10.000đ** cho đơn hàng tiếp theo. Để tận dụng được khuyến mãi này, bạn cần tích lũy thêm **50 điểm** nữa. Mỗi điểm tương đương với 10.000đ khi mua hàng tại BookStore, và mỗi lần mua hàng sẽ tặng lại 1 điểm.   Đây là cơ hội tuyệt vời để tăng số điểm của mình, tạo ra một món quà ý nghĩa cho bản thân hoặc người khác!
+ [T6] đơn hàng đang chờ xác nhận thì -> ✅ PASS (order_status) | 2341ms
+      Bot: Khi đơn hàng của bạn đang được xử lý và chuẩn bị giao hàng, tôi có thể giúp bạn theo dõi trạng thái đơn hàng này một cách thuận tiện. Bạn sẽ nhận được thông báo khi đơn hàng đã được xác nhận và bắt đầu quá trình vận chuyển.  Nếu cần thêm hỗ trợ hoặc muốn theo dõi tình hình của đơn hàng #8432, hãy cho tôi biết! Tôi sẵn sàng giúp bạn.  Bạn muốn xem **chi tiết đơn** hoặc tra cứu **đơn hàng khác**?
+ [T7] muốn đổi lại đơn vì sai sản ph -> ✅ PASS (return_request) | 80ms
+      Bot: Bạn đang muốn **yêu cầu đổi/trả hàng** phải không? _(Trả lời **Có** để tiếp tục, hoặc nói rõ hơn điều bạn cần)_
+ [T8] hủy ngay đơn tôi đặt ban nãy   -> ✅ PASS (order_cancel) | 15ms
+      Bot: Bạn muốn hủy đơn hàng nào? Vui lòng cho tôi **mã đơn** (VD: #12345).
+============================================================
+🚀 BẮT ĐẦU CHẠY LUỒNG: STAFF (Auth: 99)
+============================================================
+
+--- BỘ TEST CASE 1/10 (ID: test_staff_4b8535) ---
+ [T1] danh sách đơn hàng đang chờ xử -> ✅ PASS (staff_order_list_pending) | 589ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] xem chi tiết đơn #2233         -> ✅ PASS (staff_order_lookup) | 21ms
+      Bot: **Đơn hàng #2233** Trạng thái: `delivered` Tổng tiền: **1,035,900đ**   Tạm tính: 1,151,000đ | Giảm: 115,100đ Thanh toán: COD – paid Khách hàng: **user049** (user049@example.com) SĐT: 0910049 Địa chỉ: Số 517 Cách Mạng Tháng 8, Phường 12, Bình Thủy, Cần Thơ Ngày đặt: 2026-01-16 13:37 Ghi chú: Không có  Sản phẩm:  - **Hủ Nữ Gaga** × 2 = 240,000đ  - **Tửu Chàng Tiên - Tập 2 - Tặng Kèm Bookmark Ivory** × 2 = 270,000đ  - **Bộ Sách Cô Ấy Và Vị Trí Đứng Đầu Là Của Tôi! - Tập 1 + Tập 2 (Bộ 2 Tập) - Tặng Kèm 2 Bookmark + 2 Thẻ Học Sinh + Trang Gác** × 1 = 388,000đ
+ [T3] chuyển đơn 2233 sang trạng thá -> ✅ PASS (staff_order_status_update) | 2693ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách hàng email test@gmai -> ✅ PASS (staff_customer_lookup) | 22ms
+      Bot: Không tìm thấy khách hàng với email `test@gmail.com`.
+ [T5] tồn kho sách Sapiens còn bao n -> ✅ PASS (staff_inventory_check) | 58ms
+      Bot: Không tìm thấy sách.
+ [T6] cập nhật số lượng sách ID 100  -> ✅ PASS (staff_inventory_update) | 9ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] doanh thu hôm nay được bao nhi -> ✅ PASS (staff_order_statistics) | 20ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] top 5 sách bán chạy nhất tháng -> ✅ PASS (staff_top_selling) | 1130ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 2/10 (ID: test_staff_adb192) ---
+ [T1] show tôi danh sách đơn process -> ✅ PASS (staff_order_list_pending) | 66ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] check bill #3344 cho tôi       -> ✅ PASS (staff_order_lookup) | 17ms
+      Bot: **Đơn hàng #3344** Trạng thái: `delivered` Tổng tiền: **716,000đ**   Tạm tính: 716,000đ | Giảm: 0đ Thanh toán: COD – paid Khách hàng: **user090** (user090@example.com) SĐT: 0910090 Địa chỉ: Số 651 Lê Lợi, Phường 8, Ngô Quyền, Hải Phòng Ngày đặt: 2026-01-24 15:24 Ghi chú: Không có  Sản phẩm:  - **Tiếng Nhật Tại Hiện Trường Làm Việc - Số Tay Từ Vựng Ngành Xây Dựng-Thiết Bị** × 2 = 76,000đ  - **Smart IELTS Vocabulary & Grammar** × 1 = 187,000đ  - **Làm Quen Với TOEFL ITP Grammar** × 2 = 491,000đ
+ [T3] update đơn 3344 thành delivere -> ✅ PASS (staff_order_status_update) | 79ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] lookup khách có số điện thoại  -> ✅ PASS (staff_customer_lookup) | 9ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] kiểm tra tồn kho cuốn Nhà Giả  -> ✅ PASS (staff_inventory_check) | 115ms
+      Bot: Không tìm thấy sách.
+ [T6] nhập thêm 100 cuốn Đắc Nhân Tâ -> ✅ PASS (staff_inventory_update) | 10ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] tổng số đơn thành công hôm nay -> ✅ PASS (staff_order_statistics) | 20ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] sách nào được bán nhiều nhất t -> ✅ PASS (staff_top_selling) | 651ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 3/10 (ID: test_staff_2e6686) ---
+ [T1] đơn nào đang pending cần duyệt -> ✅ PASS (staff_order_list_pending) | 52ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] tìm đơn hàng #5566             -> ✅ PASS (staff_order_lookup) | 18ms
+      Bot: **Đơn hàng #5566** Trạng thái: `shipped` Tổng tiền: **140,400đ**   Tạm tính: 156,000đ | Giảm: 15,600đ Thanh toán: E-Wallet – paid Khách hàng: **user106** (user106@example.com) SĐT: 0910106 Địa chỉ: Số 901 Trần Hưng Đạo, Phường 3, Ngô Quyền, Hải Phòng Ngày đặt: 2025-12-05 00:24 Ghi chú: Không có  Sản phẩm:  - **Những Màu Cánh Thiên Thần** × 1 = 78,000đ
+ [T3] đổi trạng thái đơn 5566 sang s -> ✅ PASS (staff_order_status_update) | 11ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm info khách hàng id 200     -> ✅ PASS (staff_customer_lookup) | 11ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] sách lập trình Python còn mấy  -> ✅ PASS (staff_inventory_check) | 194ms
+      Bot: Không tìm thấy sách.
+ [T6] điều chỉnh số lượng tồn kho sá -> ✅ PASS (staff_inventory_update) | 10ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] báo cáo đơn hàng ngày hôm nay  -> ✅ PASS (staff_order_statistics) | 19ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] top 3 danh mục bán chạy        -> ✅ PASS (staff_top_selling) | 673ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 4/10 (ID: test_staff_0e58f2) ---
+ [T1] lọc đơn chưa xác nhận từ sáng  -> ✅ PASS (staff_order_list_pending) | 118ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] check chi tiết bill #7788 cho  -> ✅ PASS (staff_order_lookup) | 17ms
+      Bot: **Đơn hàng #7788** Trạng thái: `delivered` Tổng tiền: **257,500đ**   Tạm tính: 257,500đ | Giảm: 0đ Thanh toán: E-Wallet – paid Khách hàng: **user240** (user240@example.com) SĐT: 0910240 Địa chỉ: Số 737 Nguyễn Huệ, Phường 5, Ba Đình, Hà Nội Ngày đặt: 2025-10-11 15:14 Ghi chú: Không có  Sản phẩm:  - **Barakamon - Tập 2 (Tái Bản)** × 1 = 32,000đ  - **Nghệ Thuật Trò Chuyện Và Lắng Nghe Con Trẻ - Con Ơi, Con À** × 2 = 223,000đ  - **Cha Mẹ Làm Gì Để Tránh Làm Gây Tổn Thương Cho Con** × 1 = 60,000đ  - **Yêu Thương Cho Con - Mẹ Yêu Con** × 1 = 27,000đ
+ [T3] hủy đơn hàng 7788 do khách yêu -> ✅ PASS (staff_order_status_update) | 9ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách hàng tên Nguyễn Văn  -> ✅ PASS (staff_customer_lookup) | 11ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] Doraemon tập 1 còn không       -> ✅ PASS (staff_inventory_check) | 69ms
+      Bot: Vui lòng cung cấp **tên sách** hoặc **mã ID sách** để kiểm tra.
+ [T6] thay đổi tồn kho sách Atomic H -> ✅ PASS (staff_inventory_update) | 12ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] thống kê đơn hàng theo ngày    -> ✅ PASS (staff_order_statistics) | 18ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] cuốn sách doanh thu cao nhất t -> ✅ PASS (staff_top_selling) | 564ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 5/10 (ID: test_staff_003960) ---
+ [T1] show all orders đang pending   -> ✅ PASS (staff_order_list_pending) | 59ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] xem order #9900 có gì          -> ✅ PASS (staff_order_lookup) | 20ms
+      Bot: Không tìm thấy đơn hàng.
+ [T3] mark đơn 9900 là cancelled     -> ✅ PASS (staff_order_status_update) | 11ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách hàng mua nhiều nhất  -> ✅ PASS (staff_customer_lookup) | 11ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] inventory sách Clean Code bao  -> ✅ PASS (staff_inventory_check) | 178ms
+      Bot: Không tìm thấy sách.
+ [T6] update stock cuốn Design Patte -> ✅ PASS (staff_inventory_update) | 10ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] tổng doanh thu tuần này        -> ✅ PASS (staff_order_statistics) | 21ms
+      Bot: **Doanh thu week** (2026-04-06 → 2026-04-12) ─────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoàn: 0
+ [T8] ranking sách best seller tháng -> ✅ PASS (staff_top_selling) | 509ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 6/10 (ID: test_staff_7fbe8f) ---
+ [T1] đang có bao nhiêu đơn tồn đọng -> ✅ PASS (staff_order_list_pending) | 53ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] kiểm tra đơn số #1357          -> ✅ PASS (staff_order_lookup) | 18ms
+      Bot: **Đơn hàng #1357** Trạng thái: `delivered` Tổng tiền: **0đ**   Tạm tính: 0đ | Giảm: 0đ Thanh toán: CreditCard – paid Khách hàng: **user188** (user188@example.com) SĐT: 0910188 Địa chỉ: Số 226 Nguyễn Thị Minh Khai, Phường 15, Bình Thạnh, TP. Hồ Chí Minh Ngày đặt: 2025-11-10 15:16 Ghi chú: Không có  Sản phẩm:  - **Chúc Ánh Trăng Ngủ Ngon** × 4 = 264,000đ  - **Giám Đốc Phòng Làm Việc Nhân Giới** × 3 = 441,000đ  - **Thị Trấn Đầy Cám Dỗ** × 1 = 76,000đ  - **Viet Nam, 20 Years of Reunification & Development** × 1 = 216,000đ
+ [T3] cập nhật đơn 1357 đã giao xong -> ✅ PASS (staff_order_status_update) | 11ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách hàng user_id 300     -> ✅ PASS (staff_customer_lookup) | 11ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] còn bao nhiêu cuốn 7 Thói Quen -> ✅ PASS (staff_inventory_check) | 114ms
+      Bot: **Thực Hành 7 Thói Quen Của Bạn Trẻ Thành Đạt** (ID: 12436) Tác giả: Sean Covey Giá: 62,000đ Tồn kho: **9 cuốn** (Sắp hết) Trạng thái: active
+ [T6] thêm 50 quyển Rich Dad Poor Da -> ✅ PASS (staff_inventory_update) | 10ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] có bao nhiêu đơn hủy hôm nay   -> ✅ PASS (staff_order_statistics) | 17ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] sách nào bán chạy nhất tuần tr -> ✅ PASS (staff_top_selling) | 722ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 7/10 (ID: test_staff_90484e) ---
+ [T1] lấy danh sách đơn hàng cần gia -> ✅ PASS (staff_order_list_pending) | 55ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] pull order #2468 thông tin gì  -> ✅ PASS (staff_order_lookup) | 17ms
+      Bot: **Đơn hàng #2468** Trạng thái: `delivered` Tổng tiền: **59,850đ**   Tạm tính: 63,000đ | Giảm: 3,150đ Thanh toán: COD – paid Khách hàng: **user173** (user173@example.com) SĐT: 0910173 Địa chỉ: Số 676 Phạm Ngũ Lão, Phường 12, Quận 3, TP. Hồ Chí Minh Ngày đặt: 2026-02-16 11:40 Ghi chú: Không có  Sản phẩm:  - **Thủ Thỉ Cùng Con - Tin Vào Chính Mình** × 2 = 63,000đ
+ [T3] set status đơn 2468 thành proc -> ✅ PASS (staff_order_status_update) | 78ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách email abc@yahoo.com  -> ✅ PASS (staff_customer_lookup) | 16ms
+      Bot: Không tìm thấy khách hàng với email `abc@yahoo.com`.
+ [T5] check kho sách 1984 George Orw -> ✅ PASS (staff_inventory_check) | 128ms
+      Bot: Không tìm thấy sách.
+ [T6] giảm kho sách ID 77 xuống 5 cu -> ✅ PASS (staff_inventory_update) | 10ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] bao nhiêu đơn shipped hôm nay  -> ✅ PASS (staff_order_statistics) | 17ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] best seller theo doanh thu     -> ✅ PASS (staff_top_selling) | 680ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 8/10 (ID: test_staff_b3b800) ---
+ [T1] còn đơn nào chưa duyệt không   -> ✅ PASS (staff_order_list_pending) | 118ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] tra đơn #3691 của khách        -> ✅ PASS (staff_order_lookup) | 16ms
+      Bot: **Đơn hàng #3691** Trạng thái: `delivered` Tổng tiền: **99,000đ**   Tạm tính: 99,000đ | Giảm: 0đ Thanh toán: CreditCard – paid Khách hàng: **user064** (user064@example.com) SĐT: 0910064 Địa chỉ: Khu dân cư 3, Số 177 Phạm Ngũ Lão, Phường 10, Sơn Trà, Đà Nẵng Ngày đặt: 2025-10-12 07:43 Ghi chú: Không có  Sản phẩm:  - **Vẻ Đẹp Của Lời Từ Chối** × 1 = 73,500đ  - **Người Tình Phương Đông** × 2 = 51,000đ
+ [T3] chuyển đơn 3691 sang delivered -> ✅ PASS (staff_order_status_update) | 10ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] lookup thông tin khách id 150  -> ✅ PASS (staff_customer_lookup) | 10ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] sách Harry Potter tập 7 còn kh -> ✅ PASS (staff_inventory_check) | 84ms
+      Bot: **Bộ Sách Harry Potter Tập 7 - Khổ Nhỏ (Bộ 5 Cuốn)** (ID: 19060) Tác giả: J.K. Rowling Giá: 254,000đ Tồn kho: **10 cuốn** (Sắp hết) Trạng thái: active
+ [T6] nhập kho 200 cuốn sách giáo kh -> ✅ PASS (staff_inventory_update) | 71ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] tổng số đơn thành công tháng n -> ✅ PASS (staff_order_statistics) | 21ms
+      Bot: **Doanh thu month** (2026-04-01 → 2026-04-12) ─────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoàn: 0
+ [T8] top sách theo số lượng bán     -> ✅ PASS (staff_top_selling) | 617ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 9/10 (ID: test_staff_345b9e) ---
+ [T1] đơn nào từ tối hôm qua chưa du -> ✅ PASS (staff_order_list_pending) | 51ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] chi tiết đơn hàng #8024        -> ✅ PASS (staff_order_lookup) | 17ms
+      Bot: **Đơn hàng #8024** Trạng thái: `delivered` Tổng tiền: **356,000đ**   Tạm tính: 356,000đ | Giảm: 0đ Thanh toán: CreditCard – paid Khách hàng: **user211** (user211@example.com) SĐT: 0910211 Địa chỉ: Số 358 Nguyễn Huệ, Phường 2, Lê Chân, Hải Phòng Ngày đặt: 2025-10-03 07:23 Ghi chú: Không có  Sản phẩm:  - **Phật giáo với văn hóa Việt Nam và Nhật Bản qua một cách tham chiếu** × 2 = 192,000đ  - **Vì Sao Phật Giáo Giàu Chân Lý** × 1 = 82,000đ
+ [T3] xác nhận đơn 8024 đã xử lý     -> ✅ PASS (staff_order_status_update) | 10ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách sdt 0379             -> ✅ PASS (staff_customer_lookup) | 10ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] tồn kho cuốn Cây Cam Ngọt      -> ✅ PASS (staff_inventory_check) | 125ms
+      Bot: Không tìm thấy sách.
+ [T6] update tồn kho sách ID 200 thà -> ✅ PASS (staff_inventory_update) | 14ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] thống kê đơn theo trạng thái   -> ✅ PASS (staff_order_statistics) | 18ms
+      Bot: **Thống kê ngày 2026-04-12** ─────────────────────────────────── Tổng đơn: **0**   Đã giao: None   Đang xử lý/chờ: None   Đã hủy: None   Yêu cầu trả: None ─────────────────────────────────── Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ**
+ [T8] top 10 sách theo rating cao nh -> ✅ PASS (staff_top_selling) | 750ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+
+--- BỘ TEST CASE 10/10 (ID: test_staff_449c71) ---
+ [T1] còn tồn đơn xử lý không        -> ✅ PASS (staff_order_list_pending) | 51ms
+      Bot: **Đơn chờ xử lý** (15 đơn): - **#8242** | processing | 247,000đ | user044 | 2025-09-29 - **#8090** | processing | 787,000đ | user067 | 2025-09-29 - **#7416** | processing | 128,250đ | user054 | 2025-09-29 - **#2544** | pending | 658,750đ | user193 | 2025-09-29 - **#3809** | processing | 605,000đ | user168 | 2025-09-29 - **#8689** | processing | 528,300đ | user045 | 2025-09-30 - **#6951** | pending | 91,800đ | user106 | 2025-09-30 - **#5963** | pending | 233,500đ | user285 | 2025-09-30 - **#4054** | processing | 548,000đ | user085 | 2025-09-30 - **#9212** | processing | 230,000đ | user080 | 2025-09-30 - **#1910** | processing | 580,450đ | user170 | 2025-09-30 - **#6333** | processing | 118,350đ | user138 | 2025-09-30 - **#6038** | processing | 247,851đ | user091 | 2025-09-30 - **#6554** | processing | 191,500đ | user016 | 2025-09-30 - **#2654** | pending | 760,500đ | user178 | 2025-09-30
+ [T2] check bill #6060 phải trả bao  -> ✅ PASS (staff_order_lookup) | 16ms
+      Bot: **Đơn hàng #6060** Trạng thái: `shipped` Tổng tiền: **87,780đ**   Tạm tính: 87,780đ | Giảm: 0đ Thanh toán: E-Wallet – paid Khách hàng: **user120** (user120@example.com) SĐT: 0910120 Địa chỉ: Tòa nhà 8, Số 302 Cách Mạng Tháng 8, Phường 10, Đống Đa, Hà Nội Ngày đặt: 2026-01-08 16:10 Ghi chú: Không có  Sản phẩm:  - **Toán Nâng Cao Và Bồi Dưỡng Học Sinh Giỏi Lớp 1 - Nâng Cao Kiến Thức Ngoài Chương Trình Lên Lớp (Tái Bản 2025)** × 2 = 87,780đ
+ [T3] cập nhật bill 6060 thành đang  -> ✅ PASS (staff_order_status_update) | 10ms
+      Bot: Vui lòng cung cấp **mã đơn hàng** để cập nhật.
+ [T4] tìm khách hàng có địa chỉ Hà N -> ✅ PASS (staff_customer_lookup) | 10ms
+      Bot: Vui lòng cung cấp **email** khách hàng, ví dụ: `Tìm khách example@gmail.com`
+ [T5] check inventory cuốn sách kỹ n -> ✅ PASS (staff_inventory_check) | 42ms
+      Bot: **Bộ Sách Kỹ Năng Mềm - Anh Gấu Trúc - Bìa Cứng (Bộ 4 Cuốn)** (ID: 15689) Tác giả: Steve Antony Giá: 356,000đ Tồn kho: **10 cuốn** (Sắp hết) Trạng thái: active
+ [T6] nhập hàng mới: 80 cuốn sách IT -> ✅ PASS (staff_inventory_update) | 23ms
+      Bot: Để cập nhật tồn kho, vui lòng truy cập: **Admin Panel → Tồn kho → Cập nhật số lượng**  Hoặc sử dụng API: `PATCH /admin/inventory/{book_id}`
+ [T7] doanh thu tuần này so sánh tuầ -> ✅ PASS (staff_order_statistics) | 22ms
+      Bot: **Doanh thu week** (2026-04-06 → 2026-04-12) ─────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Tổng doanh thu: **0đ** Doanh thu xác nhận: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoàn: 0
+ [T8] danh sách sách hot tháng 4     -> ✅ PASS (staff_top_selling) | 945ms
+      Bot: **Top sách bán chạy:** 1. **Sơn Hải Kinh** – Không rõ    Bán: **97 cuốn** | 31,331,000đ | Rating: 4.4 2. **Bộ Sách Toán Cơ Bản Và Nâng Cao Trung Học Cơ Sở 6 - Theo Chương Trình Mới - Tập 1 + Tập 2 (Bộ 2 Cuốn) - Tặng Kèm Sách Tuyển Tập Các Bài Toán Hay Và Khó 6** – Phan Văn Đức    Bán: **93 cuốn** | 7,812,000đ | Rating: 4.4 3. **Phiếu Ôn Tập Cuối Tuần Tiếng Việt Lớp 4 (Theo Chương Trình Giáo Dục Phổ Thông Mới)** – Nguyễn Thanh Thủy, Trịnh Thu Giang    Bán: **91 cuốn** | 4,904,900đ | Rating: 4.2 4. **xXxHoLic (Tiếng Việt)** – CLAMP    Bán: **90 cuốn** | 2,880,000đ | Rating: 3.9 5. **Phát Triển Năng Lực Môn Vật Lý - Lớp 10** – Nguyễn Văn Biên, Nguyễn Thị Lâm Quỳnh, Tưởng Duy Hải, Nguyễn Thị Tố Khuyên    Bán: **85 cuốn** | 3,952,500đ | Rating: 4.3 6. **Tin Học 4 (Kết Nối Tri Thức) (Chuẩn)** – Nhiều Tác Giả    Bán: **83 cuốn** | 830,000đ | Rating: 4.3 7. **Long Thần Tướng: Tập 1** – Nguyễn Khánh Dương, Nguyễn Thành Phong    Bán: **82 cuốn** | 2,624,000đ | Rating: 3.9 8. **Ôn Tập Hè Tiếng Việt 3** – ThS Nguyễn Hồng Nga, Trương Thu Trang    Bán: **81 cuốn** | 3,280,500đ | Rating: 4.3 9. **Đột Phá Tư Duy Kì Thi Tốt Nghiệp THPT - Môn Vật Lí** – Nhiều Tác Giả    Bán: **80 cuốn** | 10,200,000đ | Rating: 4.4 10. **Vở Ô Li Bài Tập Toán Lớp 3 - Quyển 1** – PGS TS NSƯT Vũ Dương Thụy, Nguyễn Thu Hòa, Nguyễn Lệ Thi    Bán: **79 cuốn** | 2,686,000đ | Rating: 4.3
+============================================================
+🚀 BẮT ĐẦU CHẠY LUỒNG: ADMIN (Auth: 1)
+============================================================
+
+--- BỘ TEST CASE 1/10 (ID: test_admin_6538c5) ---
+ [T1] doanh thu tuần này bao nhiêu   -> ✅ PASS (admin_revenue_stats) | 58ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] tỷ lệ đơn giao thành công thán -> ✅ PASS (admin_order_stats) | 3665ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] liệt kê tài khoản đang bị khóa -> ✅ PASS (admin_banned_users) | 24ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] ban tài khoản lừa đảo user 99  -> ✅ PASS (admin_user_lock_unlock) | 16ms
+      Bot: **Xác nhận khóa tài khoản?** User: `99` → Status: `locked`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] đổi role user 200 thành staff  -> ✅ PASS (admin_user_update_role) | 15ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] tạo mã giảm giá SUMMER2026     -> ✅ PASS (admin_promotion_create_guide) | 17ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách nào rating dưới 2 sao     -> ✅ PASS (admin_book_low_rating) | 29ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] kiểm tra trạng thái server     -> ✅ PASS (admin_system_health) | 81ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 2/10 (ID: test_admin_a1bc24) ---
+ [T1] báo cáo doanh thu tháng 3      -> ✅ PASS (admin_revenue_stats) | 40ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] tổng số đơn hàng hôm nay       -> ✅ PASS (admin_order_stats) | 28ms
+      Bot: **Thống kê đơn hàng** – Hôm nay 2026-04-12 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] account nào đang bị suspend    -> ✅ PASS (admin_banned_users) | 21ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] khóa user spam bình luận       -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: **Xác nhận khóa tài khoản?** User: `spam` → Status: `locked`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] cấp quyền admin cho user 50    -> ✅ PASS (admin_user_update_role) | 14ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] thêm voucher mới FLASH30       -> ✅ PASS (admin_promotion_create_guide) | 14ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] xem sách có điểm đánh giá thấp -> ✅ PASS (admin_book_low_rating) | 85ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] health check hệ thống          -> ✅ PASS (admin_system_health) | 72ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 3/10 (ID: test_admin_938596) ---
+ [T1] gross revenue cả năm ngoái     -> ✅ PASS (admin_revenue_stats) | 53ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] đơn nào bị hoàn trả nhiều nhất -> ✅ PASS (admin_order_stats) | 91ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] tài khoản bị banned ai quản lý -> ✅ PASS (admin_banned_users) | 20ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] vô hiệu hóa user 777           -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: **Xác nhận khóa tài khoản?** User: `777` → Status: `locked`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] thăng chức user 88 lên admin   -> ✅ PASS (admin_user_update_role) | 70ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] khởi tạo chương trình sale mới -> ✅ PASS (admin_promotion_create_guide) | 15ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách nào cần cải thiện chất lư -> ✅ PASS (admin_book_low_rating) | 85ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] check mysql và elasticsearch   -> ✅ PASS (admin_system_health) | 83ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 4/10 (ID: test_admin_e3e343) ---
+ [T1] revenue tháng này so t trước   -> ✅ PASS (admin_revenue_stats) | 101ms
+      Bot: **Báo cáo doanh thu Tháng này** 2026-04-01 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] tỉ lệ hủy đơn tháng 4          -> ✅ PASS (admin_order_stats) | 32ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] show me danh sách user bị lock -> ✅ PASS (admin_banned_users) | 19ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] block account gian lận         -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: Vui lòng cung cấp **user ID** hoặc **email** để thực hiện.
+ [T5] upgrade quyền user thành staff -> ✅ PASS (admin_user_update_role) | 74ms
+      Bot: **Xác nhận thay đổi role?** User: `th` → Role mới: `staff`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T6] setup promotion cho ngày lễ    -> ✅ PASS (admin_promotion_create_guide) | 15ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] review sản phẩm dưới 3 sao     -> ✅ PASS (admin_book_low_rating) | 90ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] ping database status           -> ✅ PASS (admin_system_health) | 75ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 5/10 (ID: test_admin_3c9e7a) ---
+ [T1] tổng doanh thu Q1 năm nay      -> ✅ PASS (admin_revenue_stats) | 43ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] tỷ lệ thành công đơn hàng 3 th -> ✅ PASS (admin_order_stats) | 32ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] danh sách user đang lock       -> ✅ PASS (admin_banned_users) | 21ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] tạm khóa tài khoản suspect     -> ✅ PASS (admin_user_lock_unlock) | 14ms
+      Bot: Vui lòng cung cấp **user ID** hoặc **email** để thực hiện.
+ [T5] role update user sang customer -> ✅ PASS (admin_user_update_role) | 83ms
+      Bot: **Xác nhận thay đổi role?** User: `sang` → Role mới: `customer`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T6] hướng dẫn thêm mã coupon mới   -> ✅ PASS (admin_promotion_create_guide) | 15ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] đánh giá sách kém chất lượng   -> ✅ PASS (admin_book_low_rating) | 78ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] service ollama đang chạy không -> ✅ PASS (admin_system_health) | 73ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 6/10 (ID: test_admin_5489b7) ---
+ [T1] doanh thu theo danh mục sách   -> ✅ PASS (admin_revenue_stats) | 39ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] số đơn bị trả hàng tháng này   -> ✅ PASS (admin_order_stats) | 94ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] user nào đang bị inactive      -> ✅ PASS (admin_banned_users) | 20ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] khóa user vi phạm chính sách   -> ✅ PASS (admin_user_lock_unlock) | 16ms
+      Bot: **Xác nhận khóa tài khoản?** User: `vi` → Status: `locked`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] set role user thành staff leve -> ✅ PASS (admin_user_update_role) | 14ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] tạo promotion cho sự kiện      -> ✅ PASS (admin_promotion_create_guide) | 16ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách 1-2 sao cần xem lại       -> ✅ PASS (admin_book_low_rating) | 21ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] system health overall status   -> ✅ PASS (admin_system_health) | 73ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 7/10 (ID: test_admin_7b7d74) ---
+ [T1] tổng doanh thu year to date    -> ✅ PASS (admin_revenue_stats) | 39ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] conversion rate đơn hàng       -> ✅ PASS (admin_order_stats) | 34ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] ai bị khóa tài khoản gần đây   -> ✅ PASS (admin_banned_users) | 22ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] disable account user spam      -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: **Xác nhận mở khóa tài khoản?** User: `spam` → Status: `active`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] assign staff role cho nhân viê -> ❌ FAIL (Got: admin_list_staff, Exp: admin_user_update_role)
+      Bot: **Danh sách Staff** (9 tài khoản): - **#301** Nghia Nguyen (nghia7hktvn@gmail.com) – active - **#3** Staff 01 (staff01@example.com) – active - **#4** Staff 02 (staff02@example.com) – active - **#5** Staff 03 (staff03@example.com) – active - **#6** Staff 04 (staff04@example.com) – active - **#7** Staff 05 (staff05@example.com) – active - **#8** Staff 06 (staff06@example.com) – active - **#9** Staff 07 (staff07@example.com) – active - **#10** Staff 08 (staff08@example.com) – active
+ [T6] tạo discount code cho black fr -> ✅ PASS (admin_promotion_create_guide) | 15ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách bị review xấu cần kiểm tr -> ✅ PASS (admin_book_low_rating) | 21ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] check logs server hôm nay      -> ✅ PASS (admin_system_health) | 69ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 8/10 (ID: test_admin_bf7290) ---
+ [T1] revenue breakdown theo kênh    -> ✅ PASS (admin_revenue_stats) | 38ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] đơn hàng delivered thành công  -> ✅ PASS (admin_order_stats) | 33ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] list locked accounts           -> ✅ PASS (admin_banned_users) | 19ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] suspend user lợi dụng hệ thống -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: **Xác nhận mở khóa tài khoản?** User: `l` → Status: `active`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] change user permission to staf -> ✅ PASS (admin_user_update_role) | 15ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] tạo voucher mã NEWBOOK         -> ✅ PASS (admin_promotion_create_guide) | 14ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách đang có phản hồi tiêu cực -> ✅ PASS (admin_book_low_rating) | 82ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] trạng thái các service backend -> ✅ PASS (admin_system_health) | 75ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 9/10 (ID: test_admin_766a06) ---
+ [T1] tổng kết doanh thu cuối tháng  -> ✅ PASS (admin_revenue_stats) | 37ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] tỷ lệ đơn shipped vs delivered -> ❌ FAIL (Got: admin_out_of_scope, Exp: admin_order_stats)
+      Bot: Tôi không hiểu yêu cầu này. Gõ `help` để xem danh sách các lệnh admin.
+ [T3] user nào bị report nhiều       -> ✅ PASS (admin_banned_users) | 79ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] lock user có hành vi gian lận  -> ✅ PASS (admin_user_lock_unlock) | 15ms
+      Bot: **Xác nhận khóa tài khoản?** User: `c` → Status: `locked`  **Có** – Xác nhận | **Không** – Hủy bỏ
+ [T5] promote user lên manager       -> ✅ PASS (admin_user_update_role) | 14ms
+      Bot: Bạn vui lòng xác nhận: **Có** (tiếp tục) hoặc **Không** (hủy bỏ)?
+ [T6] tạo mã sale cuối năm           -> ✅ PASS (admin_promotion_create_guide) | 16ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] review thấp nhất hệ thống      -> ✅ PASS (admin_book_low_rating) | 20ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] check api gateway status       -> ✅ PASS (admin_system_health) | 76ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+--- BỘ TEST CASE 10/10 (ID: test_admin_228cb0) ---
+ [T1] COD revenue vs online payment  -> ✅ PASS (admin_revenue_stats) | 42ms
+      Bot: **Báo cáo doanh thu Tuần này** 2026-04-06 → 2026-04-12 ──────────────────────────────────────── Tổng đơn: **0** Khách duy nhất: 0 Gross revenue: **0đ** Confirmed revenue: **0đ** Tổng giảm giá: 0đ Đơn hủy: 0 | Hoan: 0 COD: 0 | Online: 0
+ [T2] đơn đang vận chuyển bao nhiêu  -> ✅ PASS (admin_order_stats) | 33ms
+      Bot: **Thống kê đơn hàng** – Tháng này 2026-04-01 → 2026-04-12 ────────────────────────────── Tổng đơn: **0** Đơn hủy: 0 | Hoàn: 0 Tỷ lệ hủy: 0.0%
+ [T3] ai đang bị restricted          -> ✅ PASS (admin_banned_users) | 19ms
+      Bot: ✅ Hiện tại **không có** tài khoản nào bị khóa trong hệ thống. Tổng user: **303** | Active: 303
+ [T4] tắt tài khoản test user        -> ✅ PASS (admin_user_lock_unlock) | 16ms
+      Bot: Vui lòng cung cấp **user ID** hoặc **email** để thực hiện.
+ [T5] nâng quyền nhân viên mới lên s -> ✅ PASS (admin_user_update_role) | 85ms
+      Bot: Vui lòng cung cấp **user ID** hoặc **email** và **role mới**.
+ [T6] setup mã giảm giá birthday     -> ✅ PASS (admin_promotion_create_guide) | 15ms
+      Bot: **Hướng dẫn tạo Promotion mới:**  1. Vào **Admin Panel → Khuyến mãi → Tạo mới** 2. Điền: Mã code (VD: SALE30), % giảm, Ngày bắt đầu, Ngày kết thúc 3. Click **Lưu** để kích hoạt  API: `POST /admin/promotions` Mã phải duy nhất và viết IN HOA (VD: `BOOKFEST50`) Giảm giá tối đa: 100% (nhập 100 = miễn phí)
+ [T7] sách bị khiếu nại chất lượng i -> ✅ PASS (admin_book_low_rating) | 23ms
+      Bot: **Sách có rating thấp (cần review):** - **Từ bục giảng đến văn đàn** (ID: 2840)   Rating: 3.0/5 (9 đánh giá) | Status: active - **Chương trình đào tạo phát triển cơ sở hạ tầng nông thôn** (ID: 419)   Rating: 3.0/5 (8 đánh giá) | Status: active - **Mặt Nạ Quản Lý - Giữ Cảm Xúc Để Giữ Quyền Lực Giữ Bình Tĩnh Để Giữ Lòng Người** (ID: 6362)   Rating: 3.0/5 (7 đánh giá) | Status: active
+ [T8] database connection pool statu -> ✅ PASS (admin_system_health) | 151ms
+      Bot: **System Health Check**   MYSQL: ✅ online   OLLAMA: ✅ online     Models: qwen2.5:3b   OPENSEARCH: ⚠️ degraded
+
+🏆 TỔNG KẾT: 307/320 TURNS PASSED.

@@ -221,7 +221,7 @@ public class UserService implements UserDetailsService {
             }
         }
 
-        address.setStatus(Status.locked);
+        address.setStatus(Status.deleted);
         address.setUpdatedAt(LocalDateTime.now());
         addressRepository.save(address);
 
@@ -438,7 +438,7 @@ public class UserService implements UserDetailsService {
                 .totalAmount(order.getTotalAmount())
                 .orderDate(order.getOrderDate())
                 .status(order.getStatus())
-                .deliveryDate(order.getUpdatedAt())
+                .deliveryDate(order.getStatus() == com.be.book.BookStorage.enums.Oder.OrderStatus.delivered ? order.getUpdatedAt() : (order.getOrderDate() != null ? order.getOrderDate().plusDays(3) : LocalDateTime.now().plusDays(3)))
                 .paymentMethod(order.getPaymentMethod())
                 .shippingAddress(shippingAddress)
                 .customerName(customerName)

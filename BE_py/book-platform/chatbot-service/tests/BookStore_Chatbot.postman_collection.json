@@ -1,0 +1,540 @@
+{
+  "info": {
+    "name": "BookStore Chatbot API – Full Test",
+    "_postman_id": "bookstore-chatbot-v2",
+    "description": "Bộ test 42 testcase cho Hybrid RAG Chatbot\nBase URL: http://localhost:8004",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🏥 Health Check",
+      "item": [
+        {
+          "name": "TC00 – Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8004/api/chat/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 Nhóm A – Chitchat (Regex Engine)",
+      "item": [
+        {
+          "name": "TC01 – Greeting có dấu",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t01\",\"message\":\"xin chào\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC02 – Greeting không dấu",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t02\",\"message\":\"xin chao\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC03 – Bot là ai",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t03\",\"message\":\"ban la ai\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC04 – Cảm ơn",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t04\",\"message\":\"cảm ơn bạn nhé\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC05 – Tạm biệt không dấu",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t05\",\"message\":\"tam biet nhe\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Nhóm B – Tìm Sách",
+      "item": [
+        {
+          "name": "TC06 – Tìm sách kỹ năng sống",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t06\",\"message\":\"tìm sách kỹ năng sống\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC07 – Không dấu",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t07\",\"message\":\"tim sach ky nang song\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC08 – Theo tác giả",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t08\",\"message\":\"tìm sách của Nguyễn Nhật Ánh\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC09 – Thể loại trinh thám",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t09\",\"message\":\"tim sach the loai trinh tham\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC10 – Câu phức hợp (SBERT)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t10\",\"message\":\"cho tôi xem những cuốn sách về tâm lý học\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌟 Nhóm C – Gợi Ý Sách",
+      "item": [
+        {
+          "name": "TC11 – Gợi ý lập trình (Guest)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t11\",\"message\":\"goi y sach cho nguoi moi bat dau hoc lap trinh\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC12 – Gợi ý cá nhân (Logged in user=123)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t12\",\"message\":\"gợi ý sách cho tôi\",\"user_id\":123,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC13 – Sách đang bán chạy",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t13\",\"message\":\"sach ban chay nhat hien nay\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC14 – Sách làm quà tặng",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t14\",\"message\":\"muon mua sach tang ban gai\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC15 – Sách văn học hay nhất",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t15\",\"message\":\"gợi ý sách văn học hay nhất\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Nhóm D – Đơn Hàng",
+      "item": [
+        {
+          "name": "TC16 – Kiểm tra đơn hàng",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t16\",\"message\":\"kiem tra don hang cua toi\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC17 – Đơn đến đâu rồi",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t17\",\"message\":\"đơn hàng của tôi đến đâu rồi\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC18 – Lịch sử mua hàng",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t18\",\"message\":\"xem lich su mua hang cua toi\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC19 – Hủy đơn hàng",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t19\",\"message\":\"toi muon huy don hang\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔄 Nhóm E – Đổi Trả & Khiếu Nại",
+      "item": [
+        {
+          "name": "TC20 – Chính sách đổi trả",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t20\",\"message\":\"chinh sach doi tra nhu the nao\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC21 – Sách bị rách bìa",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t21\",\"message\":\"sach toi mua bi rach bia muon doi\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC22 – Giao nhầm sách",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t22\",\"message\":\"họ giao nhầm sách rồi không đúng cuốn tôi đặt\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC23 – Hoàn tiền",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t23\",\"message\":\"toi muon hoan tien\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Nhóm F – Thanh Toán",
+      "item": [
+        {
+          "name": "TC24 – Thanh toán Momo",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t24\",\"message\":\"co nhan thanh toan qua momo khong\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC25 – COD",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t25\",\"message\":\"có nhận COD không\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC26 – Lỗi thanh toán",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t26\",\"message\":\"thanh toan that bai roi phai lam gi\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎁 Nhóm G – Khuyến Mãi",
+      "item": [
+        {
+          "name": "TC27 – Chương trình khuyến mãi",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t27\",\"message\":\"dang co chuong trinh khuyen mai gi khong\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC28 – Mã giảm giá",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t28\",\"message\":\"ma giam gia BOOK50 con dung duoc khong\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC29 – Điểm tích lũy",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t29\",\"message\":\"diem tich luy cua toi con bao nhieu\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏪 Nhóm H – Thông Tin Cửa Hàng",
+      "item": [
+        {
+          "name": "TC30 – Hotline",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t30\",\"message\":\"so hotline ho tro la bao nhieu\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC31 – Thời gian giao hàng",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t31\",\"message\":\"giao hang mat may ngay\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔗 Nhóm I – Multi-turn",
+      "item": [
+        {
+          "name": "TC32 – Hỏi follow-up với history",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t32\",\"message\":\"cuốn thứ 2 giá bao nhiêu\",\"user_id\":null,\"history\":[{\"role\":\"user\",\"content\":\"tìm sách kỹ năng sống\"},{\"role\":\"assistant\",\"content\":\"1. Đắc Nhân Tâm - 89,000đ\\n2. 7 Thói Quen - 115,000đ\"}]}"
+            }
+          }
+        },
+        {
+          "name": "TC33 – Xác nhận mua sau gợi ý",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t33\",\"message\":\"ok tôi muốn mua cuốn đó\",\"user_id\":null,\"history\":[{\"role\":\"user\",\"content\":\"gợi ý sách Python\"},{\"role\":\"assistant\",\"content\":\"Lập Trình Python - 120,000đ đang còn hàng\"}]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚡ Nhóm J – Edge Cases",
+      "item": [
+        {
+          "name": "TC34 – Câu rất ngắn",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t34\",\"message\":\"sách\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC35 – Câu rất dài (stress test)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t35\",\"message\":\"tôi muốn tìm một cuốn sách rất hay về chủ đề kỹ năng mềm dành cho sinh viên mới ra trường đang tìm việc làm với giá cả phải chăng dưới 100 ngàn đồng có thể giao hàng nhanh trong ngày\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC36 – Ngoài phạm vi",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t36\",\"message\":\"thoi tiet hom nay the nao\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC37 – Tiếng Anh",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t37\",\"message\":\"can you recommend me some good books\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC38 – Code trộn Việt-Anh",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t38\",\"message\":\"tôi muốn order một cuốn book về marketing\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        },
+        {
+          "name": "TC39 – Đa intent",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8004/api/chat/message",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"session_id\":\"t39\",\"message\":\"tìm sách Python vừa rẻ vừa hay và cho tôi biết chính sách đổi trả\",\"user_id\":null,\"history\":[]}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

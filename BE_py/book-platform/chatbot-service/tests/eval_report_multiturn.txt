@@ -1,0 +1,80 @@
+
+==============================================================================
+  📊 KẾT QUẢ MULTI-TURN EVALUATION v5 – 1000 turns
+==============================================================================
+  API OK       : 927/1000 = 92.7%
+  Intent Acc   : 527/1000 = 52.7%
+  SERVER_ERROR : 0
+  CONN_ERROR   : 73
+  Latency avg  : 3197ms
+──────────────────────────────────────────────────────────────────────────────
+  CUSTOMER    : 106/350  =  30.3%
+  STAFF       : 281/350  =  80.3%
+  ADMIN       : 140/300  =  46.7%
+──────────────────────────────────────────────────────────────────────────────  TURN BREAKDOWN
+  Turn 1        : 168/200  =  84.0%
+  Turn 2        : 123/200  =  61.5%
+  Turn 3        : 105/200  =  52.5%
+
+  ❌ 473 FAILED TURNS (showing up to 60):
+    [customer] C-Normal-Inquiry               T3 [book_detail] → [CONNECTION_ERROR]  "cuon dac nhan tam bao nhieu tien vay"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T2 [out_of_scope] → [CONNECTION_ERROR]  "mua giay the thao sz 42 mau xanh ngoc"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [out_of_scope]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [out_of_scope]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T3 [book_detail] → [CONNECTION_ERROR]  "cuon dac nhan tam bao nhieu tien vay"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [out_of_scope]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [out_of_scope]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [CONNECTION_ERROR]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [CONNECTION_ERROR]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T2 [out_of_scope] → [CONNECTION_ERROR]  "mua giay the thao sz 42 mau xanh ngoc"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [CONNECTION_ERROR]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [out_of_scope]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [CONNECTION_ERROR]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T2 [out_of_scope] → [CONNECTION_ERROR]  "mua giay the thao sz 42 mau xanh ngoc"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [out_of_scope]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [out_of_scope]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+    [customer] C-Normal-Inquiry               T5 [store_info] → [out_of_scope]  "ok mua cuon dac nhan tam ship ve ha noi mat b"
+    [customer] C-Edge-ContextSwitch           T2 [chitchat] → [confirmation_no]  "thoi bo qua di m tim mua cuon khac"
+    [customer] C-Edge-ContextSwitch           T3 [book_search] → [out_of_scope]  "co ban tieu thuyet trinh tham sherlock holmes"
+    [customer] C-Edge-ContextSwitch           T4 [order_cancel] → [out_of_scope]  "vua dat nham 2 cuon muon huy the nao"
+    [customer] C-Edge-ContextSwitch           T5 [return_request] → [out_of_scope]  "cho xin link gui yeu cau tra hang nhanh nhat"
+    [customer] C-Negative-Aggressive          T3 [out_of_scope] → [voucher_apply]  "tk mtt h t h nhung lo nhap mgg"
+    [customer] C-Negative-Aggressive          T4 [voucher_apply] → [out_of_scope]  "ib cho minh cach nhan ma giam gia"
+    [customer] C-Negative-Aggressive          T5 [order_status] → [out_of_scope]  "dk kiem tra dh trc khi tt ko shop"
+    [customer] C-Normal-Inquiry               T4 [book_compare] → [book_detail]  "cuon nay co hay hon cuon nha gia kim goc khon"
+==============================================================================

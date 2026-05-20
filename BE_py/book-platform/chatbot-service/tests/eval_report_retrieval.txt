@@ -1,0 +1,38 @@
+
+==========================================================================================
+  📊 KẾT QUẢ TỔNG HỢP v4 – CUSTOMER RETRIEVAL FLOW
+==========================================================================================
+  Tổng scenarios : 27
+  Passed         : 22 (81.5%)
+  Failed         : 5 (18.5%)
+──────────────────────────────────────────────────────────────────────────────────────────
+  Group                                    Pass   Total      Acc  Bar
+──────────────────────────────────────────────────────────────────────────────────────────
+  Tìm sách có trong kho – khớp tên         4      4       100.0%  ██████████
+  Tìm sách không có → gợi ý thay thế       2      2       100.0%  ██████████
+  Multi-turn: nhớ thể loại                 2      3        66.7%  ██████░░░░
+  Multi-turn: đại từ / gõ sai (coref v7)   2      4        50.0%  █████░░░░░
+  Multi-turn: điều hướng thể loại          2      2       100.0%  ██████████
+  Edge cases                               4      4       100.0%  ██████████
+  Chống hallucination                      1      2        50.0%  █████░░░░░
+  Chất lượng phản hồi                      3      3       100.0%  ██████████
+  Continuity (4-turn)                      0      1         0.0%  ░░░░░░░░░░
+  Giá & Tồn kho                            2      2       100.0%  ██████████
+
+  ❌ THẤT BẠI (5):
+    [C001] xXxHoLic → hỏi cùng thể loại không hỏi lại
+      Lượt 2: "cung the loai co nhung cuon sach nao" → có cụm từ bị cấm
+        Bot: Bạn muốn khám phá sách về mảng nào? Chúng tôi có nhiều đầu sách hay thuộc các lĩnh vực như **Lịch sử, Kinh doa
+    [D002] Tìm sách → 'cuon do gia bao nhieu'
+      Lượt 2: "cuon do gia bao nhieu tien vay" → thiếu từ kỳ vọng
+        Bot: Bạn muốn xem thông tin cuốn sách nào? Cho tôi biết **tên sách** nhé!
+    [D004] Sách vừa xem → hỏi 'cuon nay bao trang'
+      Lượt 2: "cuon nay bao nhieu trang vay ban" → thiếu từ kỳ vọng
+        Bot: Bạn muốn xem thông tin cuốn sách nào? Cho tôi biết **tên sách** nhé!
+    [G002] Hỏi giá sách
+      Lượt 2: "cuon nay gia bao nhieu" → thiếu từ kỳ vọng
+        Bot: Bạn muốn xem thông tin cuốn sách nào? Cho tôi biết **tên sách** nhé!
+    [I001] Multi-turn 4 lượt
+      Lượt 4: "ok toi muon mua" → thiếu từ kỳ vọng
+        Bot: Rất vui được giúp bạn! Chúng tôi có sách "Quản Lý Sếp Ok Thôi!" với giá chỉ 57,750đ rất phù hợp cho nhu cầu củ
+==========================================================================================

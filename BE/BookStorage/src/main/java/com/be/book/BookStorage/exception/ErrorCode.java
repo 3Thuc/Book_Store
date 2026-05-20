@@ -1,10 +1,8 @@
 package com.be.book.BookStorage.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
-@Getter
 public enum ErrorCode {
 
     // ========== NHÓM 1xxx: CHUNG, XÁC THỰC & NGƯỜI DÙNG ==========
@@ -32,24 +30,28 @@ public enum ErrorCode {
     OPERATION_NOT_ALLOWED(1020, "Thao tác không được phép", HttpStatus.FORBIDDEN),
     INVALID_CREDENTIALS(1024, "Sai email hoặc mật khẩu", HttpStatus.UNAUTHORIZED),
     INCORRECT_PASSWORD(1025, "Sai mật khẩu", HttpStatus.BAD_REQUEST),
+    USER_LOCKED(1026, "Tài khoản của bạn đã bị khóa", HttpStatus.FORBIDDEN),
 
     // ========== NHÓM 2xxx: SẢN PHẨM, TÁC GIẢ, THỂ LOẠI ==========
     BOOK_NOT_FOUND(2001, "Sách không tồn tại", HttpStatus.NOT_FOUND),
     BOOK_ALREADY_DELETED(2012, "Sách đã được xóa", HttpStatus.CONFLICT),
     AUTHOR_NOT_FOUND(2002, "Không tìm thấy tác giả", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_FOUND(2003, "Không tìm thấy thể loại", HttpStatus.NOT_FOUND),
-    PUBLISHER_NOT_FOUND(2004,"Không tìm thấy nhà xuất bản", HttpStatus.NOT_FOUND),
+    PUBLISHER_NOT_FOUND(2004, "Không tìm thấy nhà xuất bản", HttpStatus.NOT_FOUND),
 
     // --- Lỗi nghiệp vụ (Admin) ---
-    AUTHOR_ALREADY_EXISTED(2005, "Tên tác giả này đã tồn tại", HttpStatus.CONFLICT), // Sửa lỗi trùng 1003
+    AUTHOR_ALREADY_EXISTED(2005, "Tên tác giả này đã tồn tại", HttpStatus.CONFLICT),
     CATEGORY_ALREADY_EXISTED(2006, "Tên thể loại này đã tồn tại", HttpStatus.CONFLICT),
+    CATEGORY_HAS_BOOKS(2013, "Không thể xóa vĩnh viễn danh mục vì vẫn còn sách liên quan", HttpStatus.CONFLICT),
+    PUBLISHER_HAS_BOOKS(2014, "Không thể xóa vĩnh viễn nhà xuất bản vì vẫn còn sách liên quan", HttpStatus.CONFLICT),
+    AUTHOR_HAS_BOOKS(2015, "Không thể xóa vĩnh viễn tác giả vì vẫn còn sách liên quan", HttpStatus.CONFLICT),
     SKU_ALREADY_EXISTED(2007, "Mã SKU của sách đã tồn tại", HttpStatus.CONFLICT),
-    CANNOT_DELETE_ASSOCIATED_RESOURCE(2008, "Không thể xoá (tác giả/thể loại) vì còn sách liên quan", HttpStatus.CONFLICT),
-    PUBLISHER_ALREADY_EXISTED(2009,"Tên nhà xuất bản này đã tồn tại", HttpStatus.CONFLICT),
+    CANNOT_DELETE_ASSOCIATED_RESOURCE(2008, "Không thể xoá (tác giả/thể loại) vì còn sách liên quan",
+            HttpStatus.CONFLICT),
+    PUBLISHER_ALREADY_EXISTED(2009, "Tên nhà xuất bản này đã tồn tại", HttpStatus.CONFLICT),
     // --- Lỗi kho hàng (Inventory) ---
     PRODUCT_OUT_OF_STOCK(2010, "Sản phẩm đã hết hàng", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_STOCK(2011, "Số lượng trong kho không đủ", HttpStatus.BAD_REQUEST),
-
 
     // ========== NHÓM 3xxx: GIỎ HÀNG & THANH TOÁN (CART & CHECKOUT) ==========
     CART_NOT_FOUND(3001, "Không tìm thấy giỏ hàng", HttpStatus.NOT_FOUND),
@@ -81,7 +83,6 @@ public enum ErrorCode {
     CANNOT_ACTIVATE_EXPIRED_PROMOTION(4021, "Không thể kích hoạt khuyến mãi đã hết hạn", HttpStatus.BAD_REQUEST),
     ADMIN_ONLY_OPERATION(4030, "Chỉ quản trị viên mới được phép thực hiện thao tác này", HttpStatus.FORBIDDEN),
 
-
     // ========== NHÓM 5xxx: KHUYẾN MÃI & ĐÁNH GIÁ (PROMOTION & REVIEW) ==========
     VOUCHER_NOT_FOUND(5001, "Mã giảm giá không tồn tại", HttpStatus.NOT_FOUND),
     VOUCHER_EXPIRED(5002, "Mã giảm giá đã hết hạn", HttpStatus.BAD_REQUEST),
@@ -98,7 +99,6 @@ public enum ErrorCode {
     RESOURCE_CONFLICT(9004, "Xung đột tài nguyên", HttpStatus.CONFLICT),
     UNCATEGORIZED_EXCEPTION(9999, "Lỗi chưa xác định", HttpStatus.INTERNAL_SERVER_ERROR);
 
-
     // --- Phần mã boilerplate ---
     private final int code;
     private final String message;
@@ -108,5 +108,17 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
         this.httpStatusCode = httpStatusCode;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public HttpStatusCode getHttpStatusCode() {
+        return httpStatusCode;
     }
 }

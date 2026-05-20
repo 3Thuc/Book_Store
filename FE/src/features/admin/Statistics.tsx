@@ -1,5 +1,6 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useAdmin } from './AdminContext';
+import { useDashboardFilter } from './DashboardFilterContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
@@ -8,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, DollarSign, ShoppingCart, BookOpen, Users, Package, Star, ArrowUpRight, Loader2 } from 'lucide-react';
 import { ImageWithFallback } from '../../components/fallbackimg/ImageWithFallback';
 import { formatVND } from '../../lib/formatters';
+import adminService from '../../services/adminService';
 
 // Type declarations
 type ChangeType = 'increase' | 'decrease' | 'neutral';
@@ -47,200 +49,243 @@ interface StatusData {
   color: string;
 }
 
-export const Statistics: React.FC = () => {
-  const { orders, books, users, inventory, refreshAll } = useAdmin();
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [isLoading, setIsLoading] = useState(true);
+const POLL_INTERVAL_MS = 60_000; // 60 giây
 
-  // Auto-load admin data when dashboard mounts
+export const Statistics: React.FC = () => {
+  const { orders, books, users, inventory, isInventoryLoading, loadInventory, refreshAll } = useAdmin();
+  const { filter, inPeriod, filterLabel, reset } = useDashboardFilter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false); // true khi đang poll ngầm
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const refreshAllRef = React.useRef(refreshAll);
+  refreshAllRef.current = refreshAll;
+
+  // Doanh thu chính xác từ API /admin/order-statistics (SUM(total_amount) từ DB)
+  // Đồng nhất với trang Quản lý đơn hàng — tránh recompute sai từ orders[]
+  const [apiTotalRevenue, setApiTotalRevenue] = useState<number | null>(null);
+  const apiRevenueLoadedRef = useRef(false);
+
   useEffect(() => {
-    if (refreshAll) {
-      console.log('[Statistics] Auto-loading dashboard data');
+    const fetchRevenue = async () => {
+      try {
+        const res = await adminService.getOrderStats();
+        const data = res?.result ?? res?.data ?? res;
+        if (data && typeof data.totalRevenue === 'number') {
+          setApiTotalRevenue(data.totalRevenue);
+          apiRevenueLoadedRef.current = true;
+        }
+      } catch {
+        // fallback: dùng giá trị tính từ orders[] (không chính xác với đơn cũ)
+      }
+    };
+    fetchRevenue();
+  }, [orders]); // re-fetch khi orders thay đổi để bắt kịp đơn mới
+
+  // O(1) book lookup
+  const bookMapById = useMemo(
+    () => new Map(books.map(b => [String(b.bookId), b])),
+    [books]
+  );
+
+  // Luôn refresh khi vào Dashboard để đảm bảo số liệu mới nhất
+  useEffect(() => {
+    // Đảm bảo inventory được load (lazy) ngay khi vào Dashboard
+    // để chart "Tình trạng kho" không phải chờ user mở tab Quản lý kho
+    if (loadInventory) loadInventory();
+
+    if (refreshAllRef.current) {
       setIsLoading(true);
-      refreshAll().finally(() => {
-        setIsLoading(false);
-      });
+      refreshAllRef.current().then(() => setLastUpdated(new Date())).finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-poll mỗi 60s — dừng khi tab ẩn để tiết kiệm tài nguyên
+  useEffect(() => {
+    let handle: ReturnType<typeof setInterval> | null = null;
+    let canceled = false;
+
+    const poll = async () => {
+      if (canceled || document.hidden || !refreshAllRef.current) return;
+      setIsPolling(true);
+      try {
+        await refreshAllRef.current();
+        if (!canceled) setLastUpdated(new Date());
+      } catch {
+        // Silent fail — không làm hỏng UI
+      } finally {
+        if (!canceled) setIsPolling(false);
+      }
+    };
+
+    handle = setInterval(poll, POLL_INTERVAL_MS);
+    return () => { canceled = true; if (handle) clearInterval(handle); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reset filter về "Tất cả năm" mỗi khi vào Dashboard
+  useEffect(() => {
+    reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatCurrency = (amount: number) => formatVND(amount);
 
-  // Memoize expensive calculations
+  // ─── Stats ────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    // Revenue from all non-cancelled and non-returned orders (actual business revenue)
-    const totalRevenue = orders
-      .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED')
-      .reduce((sum, o) => sum + o.totalAmount, 0);
+    const yr = filter.year; const mo = filter.month; const dy = filter.day;
+    const periodOrders = orders.filter(o => {
+      const d = new Date(o.orderDate);
+      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
+      if (dy !== 0 && d.getDate()        !== dy) return false;
+      return true;
+    });
+    const computedRevenue = periodOrders.filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED').reduce((s, o) => s + o.totalAmount, 0);
+    // Khi xem "Tất cả năm", dùng API totalRevenue (chính xác, đồng nhất với Quản lý đơn hàng)
+    // Khi lọc theo năm/tháng/ngày, fallback về giá trị tính từ orders[]
+    const isGlobalView = yr === 0 && mo === 0 && dy === 0;
+    const totalRevenue = isGlobalView && apiTotalRevenue !== null ? apiTotalRevenue : computedRevenue;
+    const totalOrders     = periodOrders.length;
+    const completedOrders = periodOrders.filter(o => o.status === 'DELIVERED').length;
+    const activeOrders    = periodOrders.filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED').length;
+    
+    // Use inventory for more accurate active books count
+    const totalBooks      = inventory && inventory.length > 0 ? inventory.length : books.length;
+    const inStockBooks    = inventory && inventory.length > 0 
+                              ? inventory.filter(b => Number(b.availableQuantity ?? b.stockQuantity ?? 0) > 0).length 
+                              : books.filter(b => b.stockQuantity).length;
+                              
+    const totalCustomers  = users.filter(u => u.role === 'customer').length;
+    return { totalRevenue, totalOrders, completedOrders, activeOrders,
+             averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
+             totalBooks, inStockBooks, totalCustomers };
+  }, [orders, books, users, filter.year, filter.month, filter.day, apiTotalRevenue]);
 
-    const totalOrders = orders.length;
-    // Completed = DELIVERED status only
-    const completedOrders = orders.filter(o => o.status === 'DELIVERED').length;
-
-    const totalBooks = books.length;
-    const inStockBooks = books.filter(b => b.stockQuantity).length;
-    const totalCustomers = users.filter(u => u.role === 'customer').length;
-
-    // Count non-cancelled/returned orders for subtitle consistency
-    const activeOrders = orders.filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED').length;
-
-    return {
-      totalRevenue,
-      totalOrders,
-      completedOrders,
-      activeOrders,
-      averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
-      totalBooks,
-      inStockBooks,
-      totalCustomers,
-    };
-  }, [orders, books, users]);
-
-  // Top selling books - memoized
+  // ─── Top selling books ────────────────────────────────────────────────────
   const topSellingBooks = useMemo(() => {
-    const bookSales = new Map<string, number>();
-
-    // Aggregate quantities by book id - include DELIVERED + other valid statuses (exclude CANCELLED, RETURNED)
+    const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const validStatuses = ['DELIVERED', 'COMPLETED', 'PROCESSING', 'SHIPPED', 'CONFIRMED'];
-    const relevantOrders = (orders || []).filter(o => 
-      o.status && !['CANCELLED', 'RETURNED'].includes(o.status) && validStatuses.includes(o.status)
-    );
-
-    relevantOrders.forEach(order => {
+    const bookSales = new Map<string, number>();
+    (orders || []).filter(o => {
+      if (!o.status || ['CANCELLED','RETURNED'].includes(o.status)) return false;
+      if (!validStatuses.includes(o.status)) return false;
+      const d = new Date(o.orderDate);
+      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
+      if (dy !== 0 && d.getDate()        !== dy) return false;
+      return true;
+    }).forEach(order => {
       (order.items || []).forEach((item: any) => {
-        const maybeId = item?.bookId ?? item?.id ?? item?.book?.bookId ?? item?.book?.id;
-        const quantity = Number(item?.quantity ?? 0);
-        if (maybeId && quantity > 0) {
-          const key = String(maybeId);
-          bookSales.set(key, (bookSales.get(key) || 0) + quantity);
-        }
+        const id  = item?.bookId ?? item?.id ?? item?.book?.bookId ?? item?.book?.id;
+        const qty = Number(item?.quantity ?? 0);
+        if (id && qty > 0) bookSales.set(String(id), (bookSales.get(String(id)) || 0) + qty);
       });
     });
-
     return Array.from(bookSales.entries())
       .map(([bookId, quantity]) => {
-        const book = books.find((b: any) =>
-          String(b.bookId) === String(bookId) ||
-          String(b.id) === String(bookId) ||
-          String((b as any)._id) === String(bookId)
-        );
-        if (book) {
-          return { 
-            book, 
-            quantity, 
-            revenue: quantity * Number(book.price ?? 0) 
-          };
-        }
-        return null;
+        const book = bookMapById.get(bookId);
+        return book ? { book, quantity, revenue: quantity * Number(book.price ?? 0) } : null;
       })
-      .filter((item) => item !== null)
-      .sort((a, b) => (b!.quantity - a!.quantity))
+      .filter(x => x !== null)
+      .sort((a, b) => b!.quantity - a!.quantity)
       .slice(0, 10);
-  }, [orders, books]);
+  }, [orders, bookMapById, filter.year, filter.month, filter.day]);
 
-  // Category revenue - memoized
+  // ─── Category revenue ────────────────────────────────────────────────────
   const categoryData = useMemo(() => {
+    const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const categoryRevenue = new Map<string, number>();
-    orders
-      .filter(o => o.status === 'DELIVERED')
-      .forEach(order => {
-        order.items.forEach(item => {
-          const book = books.find(b => String(b.bookId) === String(item.bookId));
-          if (book) {
-            const revenue = item.price * item.quantity;
-            const categoryKey = book.categories.map((c: any) => c.categoryName).join(', ') || 'Khác';
-            categoryRevenue.set(categoryKey, (categoryRevenue.get(categoryKey) || 0) + revenue);
-          }
-        });
+    orders.filter(o => {
+      if (o.status !== 'DELIVERED') return false;
+      const d = new Date(o.orderDate);
+      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
+      if (dy !== 0 && d.getDate()        !== dy) return false;
+      return true;
+    }).forEach(order => {
+      order.items.forEach(item => {
+        const book = bookMapById.get(String(item.bookId));
+        if (book) {
+          const key = book.categories.map((c: any) => c.categoryName).join(', ') || 'Khác';
+          categoryRevenue.set(key, (categoryRevenue.get(key) || 0) + item.price * item.quantity);
+        }
       });
-
+    });
     return Array.from(categoryRevenue.entries())
       .map(([category, revenue]) => ({ category, revenue }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 8);
-  }, [orders, books]);
+      .sort((a, b) => b.revenue - a.revenue).slice(0, 8);
+  }, [orders, bookMapById, filter.year, filter.month, filter.day]);
 
-  // Monthly data - memoized (12 months)
-  const monthlyData = useMemo(() => {
-    const months = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-    ];
-    
-    // Calculate actual monthly data from orders in selected year
-    const monthlyStats = Array.from({ length: 12 }, (_, monthIndex) => {
-      const monthNum = monthIndex + 1;
-      
-      const monthOrders = orders.filter(o => {
-        const orderDate = new Date(o.orderDate || o.orderDate);
-        return orderDate.getFullYear() === selectedYear && 
-               (orderDate.getMonth() + 1) === monthNum &&
-               o.status !== 'CANCELLED' && 
-               o.status !== 'RETURNED';
+  // ─── Chart data ──────────────────────────────────────────────────────────
+  const chartData = useMemo(() => {
+    const yr = filter.year; const mo = filter.month; const dy = filter.day;
+    const valid = (o: any) => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED';
+    if (yr === 0) {
+      const cur = new Date().getFullYear();
+      return Array.from({ length: 5 }, (_, i) => cur - 4 + i).map(y => {
+        const yo = orders.filter(o => new Date(o.orderDate).getFullYear() === y && valid(o));
+        return { label: `${y}`, revenue: yo.reduce((s, o) => s + o.totalAmount, 0), orders: yo.length };
       });
-      
-      const revenue = monthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-      
-      return {
-        month: months[monthIndex],
-        revenue,
-        orders: monthOrders.length,
-      };
+    }
+    if (mo === 0) {
+      const months = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+      return months.map((label, i) => {
+        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === i+1 && valid(o); });
+        return { label, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
+      });
+    }
+    if (dy === 0) {
+      const days = new Date(yr, mo, 0).getDate();
+      return Array.from({ length: days }, (_, i) => i + 1).map(day => {
+        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === mo && d.getDate() === day && valid(o); });
+        return { label: `${day}`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
+      });
+    }
+    return Array.from({ length: 24 }, (_, h) => {
+      const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === mo && d.getDate() === dy && d.getHours() === h && valid(o); });
+      return { label: `${h}h`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
     });
-    
-    return monthlyStats;
-  }, [orders, selectedYear]);
+  }, [orders, filter.year, filter.month, filter.day]);
 
-  // Inventory status - memoized
+  // ─── Inventory (real-time, no date filter) ────────────────────────────────
   const inventoryStatusData = useMemo(() => {
-    const inStock = inventory.filter(i => (i.quantity || 0) > 5).length;
-    const lowStock = inventory.filter(i => {
-      const qty = i.quantity || 0;
-      return qty <= 5 && qty > 0;
-    }).length;
-    const outOfStock = inventory.filter(i => (i.quantity || 0) === 0).length;
-
+    if (!inventory || inventory.length === 0) return [];
+    
+    // Inventory array items have availableQuantity or stockQuantity
+    const getAvailable = (b: any) => Number(b.availableQuantity ?? b.stockQuantity ?? 0);
+    
+    const inStock    = inventory.filter(b => getAvailable(b) > 5).length;
+    const lowStock   = inventory.filter(b => { const q = getAvailable(b); return q >= 1 && q <= 5; }).length;
+    const outOfStock = inventory.filter(b => getAvailable(b) <= 0).length;
+    
     return [
-      { name: 'Đủ hàng', value: inStock, color: '#10b981' },
-      { name: 'Sắp hết', value: lowStock, color: '#f59e0b' },
+      { name: 'Đủ hàng',  value: inStock,    color: '#10b981' },
+      { name: 'Sắp hết',  value: lowStock,   color: '#f59e0b' },
       { name: 'Hết hàng', value: outOfStock, color: '#ef4444' },
-    ].filter(item => item.value > 0);
+    ].filter(x => x.value > 0);
   }, [inventory]);
 
-  // Order status - memoized
+  // ─── Order status ─────────────────────────────────────────────────────────
   const orderStatusData = useMemo(() => {
+    const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const statusMap = new Map<string, number>();
-    const statusTranslations: { [key: string]: string } = {
-      'PENDING': 'Chờ xử lý',
-      'CONFIRMED': 'Đã xác nhận',
-      'PROCESSING': 'Đang xử lý',
-      'SHIPPED': 'Đang giao',
-      'DELIVERED': 'Đã giao',
-      'COMPLETED': 'Hoàn thành',
-      'CANCELLED': 'Đã hủy',
-      'RETURNED': 'Trả hàng',
-    };
-    const statusColors: { [key: string]: string } = {
-      'PENDING': '#f59e0b',
-      'CONFIRMED': '#3b82f6',
-      'PROCESSING': '#8b5cf6',
-      'SHIPPED': '#06b6d4',
-      'DELIVERED': '#10b981',
-      'COMPLETED': '#059669',
-      'CANCELLED': '#ef4444',
-      'RETURNED': '#dc2626',
-    };
-
-    orders.forEach(o => {
-      const status = o.status || 'UNKNOWN';
-      statusMap.set(status, (statusMap.get(status) || 0) + 1);
+    const T: Record<string,string> = { PENDING:'Chờ xử lý', CONFIRMED:'Đã xác nhận', PROCESSING:'Đang xử lý', SHIPPED:'Đang giao', DELIVERED:'Đã giao', COMPLETED:'Hoàn thành', CANCELLED:'Đã hủy', RETURNED:'Trả hàng', CANCEL_REQUESTED:'Yêu cầu hủy', RETURN_REQUESTED:'Yêu cầu trả', FAILED:'Thất bại' };
+    const C: Record<string,string> = { PENDING:'#f59e0b', CONFIRMED:'#3b82f6', PROCESSING:'#8b5cf6', SHIPPED:'#06b6d4', DELIVERED:'#10b981', COMPLETED:'#059669', CANCELLED:'#ef4444', RETURNED:'#dc2626', CANCEL_REQUESTED:'#6b7280', RETURN_REQUESTED:'#6b7280', FAILED:'#1f2937' };
+    orders.filter(o => {
+      const d = new Date(o.orderDate);
+      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
+      if (dy !== 0 && d.getDate()        !== dy) return false;
+      return true;
+    }).forEach(o => {
+      const s = o.status || 'UNKNOWN';
+      statusMap.set(s, (statusMap.get(s) || 0) + 1);
     });
-
-    return Array.from(statusMap.entries()).map(([status, value]) => ({
-      name: statusTranslations[status] || status,
-      value,
-      color: statusColors[status] || '#6b7280',
-    }));
-  }, [orders]);
+    return Array.from(statusMap.entries()).map(([s, value]) => ({ name: T[s] || s, value, color: C[s] || '#6b7280' }));
+  }, [orders, filter.year, filter.month, filter.day]);
 
   const statsCards: StatsCard[] = [
     {
@@ -289,6 +334,7 @@ export const Statistics: React.FC = () => {
     },
   ];
 
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Welcome Banner */}
@@ -298,16 +344,43 @@ export const Statistics: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Xin chào, Admin! 👋</h2>
-              <p className="opacity-90 mb-4">
-                Đây là tổng quan về hiệu suất kinh doanh của bạn
-              </p>
-              <div className="flex items-center gap-4 text-sm">
+              <p className="opacity-90 mb-4">Đây là tổng quan về hiệu suất kinh doanh của bạn</p>
+              <div className="flex items-center gap-4 text-sm flex-wrap">
                 <div className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
                   <span>Hệ thống hoạt động tốt</span>
                 </div>
+                {/* Live update indicator */}
+                {isPolling ? (
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span className="text-xs">Đang cập nhật...</span>
+                  </div>
+                ) : lastUpdated ? (
+                  <div className="flex items-center gap-1.5 opacity-70">
+                    <div className="h-1.5 w-1.5 rounded-full bg-white/80"></div>
+                    <span className="text-xs">
+                      Cập nhật lúc {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
+            {/* Manual refresh button */}
+            <button
+              onClick={() => {
+                if (refreshAllRef.current && !isPolling && !isLoading) {
+                  setIsPolling(true);
+                  refreshAllRef.current().then(() => setLastUpdated(new Date())).finally(() => setIsPolling(false));
+                }
+              }}
+              title="Làm mới số liệu"
+              className="flex items-center gap-1.5 text-xs bg-white/15 hover:bg-white/25 transition-colors rounded-lg px-3 py-2 cursor-pointer"
+              disabled={isPolling || isLoading}
+            >
+              <Loader2 className={`h-3.5 w-3.5 ${(isPolling || isLoading) ? 'animate-spin' : ''}`} />
+              <span>Làm mới</span>
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -353,29 +426,23 @@ export const Statistics: React.FC = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-emerald-600" />
-                  Doanh thu theo tháng
+                  {filter.year === 0
+                    ? 'Doanh thu theo năm (5 năm gần nhất)'
+                    : filter.month === 0
+                      ? `Doanh thu theo tháng — Năm ${filter.year}`
+                      : filter.day === 0
+                        ? `Doanh thu theo ngày — Tháng ${filter.month}/${filter.year}`
+                        : `Doanh thu theo giờ — Ngày ${filter.day}/${filter.month}/${filter.year}`}
                 </CardTitle>
-                <CardDescription>12 tháng năm {selectedYear}</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="px-3 py-2 text-sm border rounded-lg bg-background text-foreground cursor-pointer"
-                >
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-                <Badge variant="secondary">
-                  +15.3%
-                </Badge>
+                <CardDescription>
+                  {filterLabel}
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={monthlyData}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -383,32 +450,48 @@ export const Statistics: React.FC = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="label"
                   className="text-muted-foreground"
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: filter.month === 0 ? 12 : 10 }}
+                  label={filter.month > 0 ? { value: `Ngày (Tháng ${filter.month}/${filter.year})`, position: 'insideBottom', offset: -2, fontSize: 11 } : undefined}
                 />
-                <YAxis 
+                <YAxis
                   className="text-muted-foreground"
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value: number) => {
+                    if (value === 0) return '0';
+                    if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+                    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+                    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+                    return value.toString();
                   }}
-                  formatter={(value: number) => formatCurrency(value)}
+                  width={55}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#10b981" 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                  formatter={(value: number, name: string) =>
+                    name === 'revenue' ? [formatCurrency(value), 'Doanh thu'] :
+                    [value, 'Đơn hàng']
+                  }
+                  labelFormatter={(label) =>
+                    filter.day > 0 ? `${label}` :
+                    filter.month > 0 ? `Ngày ${label}` : `Tháng ${label.replace('T','')}`
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10b981"
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                  name="Doanh thu"
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                  name="revenue"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -427,46 +510,80 @@ export const Statistics: React.FC = () => {
               <ShoppingCart className="h-5 w-5 text-green-600" />
               Phân bố đơn hàng
             </CardTitle>
-            <CardDescription>Trạng thái đơn hàng hiện tại</CardDescription>
+            <CardDescription>Trạng thái đơn hàng ({stats.totalOrders.toLocaleString()} đơn)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <ResponsiveContainer width="50%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={orderStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    fill="#8884d8"
-                    dataKey="value"
-                    paddingAngle={5}
-                  >
-                    {orderStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-3 flex-1">
-                {orderStatusData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                      <span className="text-sm text-foreground">{item.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">{item.value}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({stats.totalOrders > 0 ? Math.round((item.value / stats.totalOrders) * 100) : 0}%)
+            {stats.totalOrders === 0 ? (
+              <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm">
+                Chưa có dữ liệu đơn hàng
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {/* Donut + Center Label */}
+                <div className="flex items-center gap-6">
+                  <div className="relative flex-shrink-0">
+                    <ResponsiveContainer width={240} height={240}>
+                      <PieChart>
+                        <Pie
+                          data={orderStatusData}
+                          cx="50%" cy="50%"
+                          innerRadius={80} outerRadius={110}
+                          dataKey="value"
+                          paddingAngle={3}
+                          minAngle={4}
+                          strokeWidth={0}
+                        >
+                          {orderStatusData.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(v: number) => [`${v.toLocaleString()} đơn hàng`, '']}
+                          contentStyle={{ borderRadius: 8, fontSize: 12 }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center label */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-2xl font-bold text-foreground leading-none">
+                        {stats.totalOrders.toLocaleString()}
                       </span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">đơn hàng</span>
                     </div>
                   </div>
-                ))}
+
+                  {/* Legend */}
+                  <div className="flex-1 space-y-3">
+                    {orderStatusData
+                      .sort((a, b) => b.value - a.value) // Sort desc by value to look better
+                      .map((item, i) => {
+                        const pct = stats.totalOrders > 0 ? (item.value / stats.totalOrders) * 100 : 0;
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                                <span className="text-foreground font-medium">{item.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-foreground">{item.value.toLocaleString()}</span>
+                                <span className="text-xs text-muted-foreground">({pct.toFixed(1)}%)</span>
+                              </div>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%`, backgroundColor: item.color }}
+                              />
+                            </div>
+                          </div>
+                        );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -477,52 +594,101 @@ export const Statistics: React.FC = () => {
               <Package className="h-5 w-5 text-orange-600" />
               Tình trạng kho
             </CardTitle>
-            <CardDescription>Phân bố tồn kho</CardDescription>
+            <CardDescription>Phân bố tồn kho ({(inventory?.length || 0).toLocaleString()} đầu sách)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <ResponsiveContainer width="50%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={inventoryStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    fill="#8884d8"
-                    dataKey="value"
-                    paddingAngle={2}
-                    minAngle={5}
-                  >
-                    {inventoryStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `${value} mục`} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-3 flex-1">
-                {inventoryStatusData.map((item, index) => {
-                  const total = inventoryStatusData.reduce((sum, i) => sum + i.value, 0);
-                  return (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="text-sm text-foreground">{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground">{item.value}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({total > 0 ? ((item.value / total) * 100).toFixed(2) : 0}%)
+            {isInventoryLoading && (!inventory || inventory.length === 0) ? (
+              <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm">
+                <div className="text-center space-y-2">
+                  <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p>Đang tải dữ liệu kho...</p>
+                </div>
+              </div>
+            ) : (!inventory || inventory.length === 0) ? (
+              <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm">
+                Chưa có dữ liệu tồn kho
+              </div>
+            ) : (() => {
+              const total = inventoryStatusData.reduce((s, i) => s + i.value, 0);
+              return (
+                <div className="flex flex-col gap-5">
+                  {/* Donut + Center Label */}
+                  <div className="flex items-center gap-6">
+                    <div className="relative flex-shrink-0">
+                      <ResponsiveContainer width={240} height={240}>
+                        <PieChart>
+                          <Pie
+                            data={inventoryStatusData}
+                            cx="50%" cy="50%"
+                            innerRadius={80} outerRadius={110}
+                            dataKey="value"
+                            paddingAngle={3}
+                            minAngle={4}
+                            strokeWidth={0}
+                          >
+                            {inventoryStatusData.map((entry, i) => (
+                              <Cell key={i} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(v: number) => [`${v.toLocaleString()} đầu sách`, '']}
+                            contentStyle={{ borderRadius: 8, fontSize: 12 }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      {/* Center label */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-2xl font-bold text-foreground leading-none">
+                          {total.toLocaleString()}
                         </span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">đầu sách</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+
+                    {/* Legend */}
+                    <div className="flex-1 space-y-3">
+                      {inventoryStatusData.map((item, i) => {
+                        const pct = total > 0 ? (item.value / total) * 100 : 0;
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                                <span className="text-foreground font-medium">{item.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-foreground">{item.value.toLocaleString()}</span>
+                                <span className="text-xs text-muted-foreground">({pct.toFixed(1)}%)</span>
+                              </div>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%`, backgroundColor: item.color }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Footer note */}
+                  <div 
+                    className="border-t border-border flex flex-wrap items-center justify-center text-[11px] text-muted-foreground"
+                    style={{ marginTop: '20px', paddingTop: '16px', gap: '24px' }}
+                  >
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#10b981' }}></span> Đủ hàng: &gt; 5</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f59e0b' }}></span> Sắp hết: 1 - 5</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ef4444' }}></span> Hết hàng: 0</span>
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
+
       </div>
 
       {/* Top Selling Books */}

@@ -73,19 +73,23 @@ def get_similar_books(
     if only_in_stock:
         filter_clauses.append({"term": {"in_stock": True}})
 
-    # Lấy limit+5 để sau khi lọc vẫn đủ limit sách
-    k = limit + 5
+    # Lấy k lớn hơn limit một chút để sau khi post-filter vẫn đủ sách
+    k = limit * 2 + 10
     query = {
-        "size": k,
+        "size": limit,
         "query": {
-            "knn": {
-                "sbert_embedding": {
-                    "vector": vector,
-                    "k": k,
-                    "filter": {
-                        "bool": {"must": filter_clauses}
+            "bool": {
+                "must": [
+                    {
+                        "knn": {
+                            "sbert_embedding": {
+                                "vector": vector,
+                                "k": k
+                            }
+                        }
                     }
-                }
+                ],
+                "filter": filter_clauses
             }
         },
         "_source": [

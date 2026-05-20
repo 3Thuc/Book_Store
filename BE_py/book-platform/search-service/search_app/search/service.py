@@ -42,7 +42,12 @@ def suggest_books(q: str, limit: int = 10):
                         }
                     },
                 ],
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
+                # Fix #5: Loại sách đã xóa / ngừng bán khỏi autocomplete.
+                # Chỉ gợi ý sách active (còn bán) hoặc out_of_stock (hết hàng)
+                "filter": [
+                    {"terms": {"status": ["active", "out_of_stock"]}}
+                ],
             }
         }
     }
@@ -153,7 +158,7 @@ def search_books(
         ],
         "highlight": {"fields": {"title": {}, "author_name": {}}},
     }
-    
+
     # Add query with function_score only if there's a search term
     if not q or not q.strip():
         body["query"] = text_query
@@ -191,3 +196,115 @@ def search_books(
         items.append(src)
 
     return {"page": page, "limit": limit, "total": total, "items": items}
+
+
+def _sanitize_ocr_query(q: str) -> str:
+    """
+    Làm sạch query OCR trước khi gửi vào OpenSearch DSL.
+
+    Loại bỏ/thay thế ký tự đặc biệt có thể gây vỡ OpenSearch query parser:
+    / : \ ? ( ) { } [ ] ^ ~ * + > < !
+
+    Tại sao cần?
+    - OCR full_text thường chứa nhiều noise: "HÔN TÂM - Xow / Cluen"
+    - Ký tự '/' hay '+' trong OpenSearch simple_query_string có nghĩa regex
+    - Gửi thẳng vào multi_match best_fields → OpenSearch parse lỗi → HTTP 500
+
+    Giữ lại: chữ cái, số, khoảng trắng, dấu tiếng Việt, dấu phẩy, dấu chấm.
+    """
+    import re
+    # Xóa ký tự đặc biệt OpenSearch không thích trong multi_match raw query
+    cleaned = re.sub(r'[/\\?:(){}\[\]^~*+><!=|@#$%&";`]', ' ', q)
+    # Giữ dấu gạch ngang đơn lẻ nhưng xóa chuỗi dấu gạch
+    cleaned = re.sub(r'-{2,}', ' ', cleaned)
+    # Chuẩn hóa khoảng trắng
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned or q  # Fallback về query gốc nếu sau clean thành rỗng
+
+
+def search_books_ocr(q: str, limit: int = 15) -> Dict[str, Any]:
+    """
+    Search đặc biệt cho OCR – tolerant với lỗi chính tả nặng.
+
+    Khác biệt so với search_books thông thường:
+    - minimum_should_match: "30%" → Chỉ cần 30% từ khớp (OCR thường đọc sai nhiều từ)
+    - fuzziness: "AUTO" → Cho phép sai tối đa 2 ký tự mỗi từ (dùng string thay integer)
+    - operator: OR → Bất kỳ từ nào khớp cũng tính (thay vì AND phải khớp tất cả)
+    - Tìm cả trên title_folded (không dấu) để bắt được lỗi dấu tiếng Việt
+    - Query được sanitize trước để tránh HTTP 500 khi có ký tự đặc biệt
+
+    Ví dụ:
+    OCR đọc: "NGUÒl QIÀU cO /HẤT THÀNH BABYLOIY"
+    fold_vi: "nguoi qiau co hat thanh babyloiy"  (/ đã bị strip)
+    → Khớp 3/5 từ của "nguoi giau co nhat thanh babylon" → 60% → tìm được!
+    """
+    client = get_os_client()
+
+    # v2: Sanitize query trước – loại bỏ ký tự đặc biệt gây HTTP 500
+    q_clean = _sanitize_ocr_query(q)
+    q_folded = fold_vi(q_clean)
+
+    body = {
+        "size": min(limit, 20),
+        "_source": [
+            "book_id", "title", "author_name", "publisher_name",
+            "main_image_url", "price", "avg_rating",
+        ],
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "multi_match": {
+                            "query": q_clean,
+                            "type": "best_fields",
+                            "fields": ["title^6", "author_name^3", "description^1"],
+                            "fuzziness": "AUTO",    # v2: string thay integer (tránh lỗi OpenSearch)
+                            "prefix_length": 1,
+                            "operator": "or",
+                            "minimum_should_match": "30%",
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": q_folded,
+                            "type": "best_fields",
+                            "fields": [
+                                "title_folded^8",       # Boost cao hơn vì fold loại bỏ lỗi dấu
+                                "author_name_folded^4",
+                                "description_folded^1",
+                            ],
+                            "fuzziness": "AUTO",    # v2: string thay integer
+                            "prefix_length": 1,
+                            "operator": "or",
+                            "minimum_should_match": "30%",
+                        }
+                    },
+                ],
+                "minimum_should_match": 1,
+                "filter": [
+                    {"terms": {"status": ["active", "out_of_stock", "inactive"]}}
+                ],
+            }
+        },
+    }
+
+    # v2: Bọc OpenSearch call trong try-except → trả về rỗng thay vì HTTP 500
+    try:
+        res = client.search(index=INDEX, body=body)
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning(
+            "search_books_ocr OpenSearch lỗi (q=%r): %s – trả về rỗng", q_clean[:60], exc
+        )
+        return {"page": 1, "limit": limit, "total": 0, "items": []}
+
+    hits = res.get("hits", {}).get("hits", [])
+    total = res.get("hits", {}).get("total", {}).get("value", 0)
+
+    results = []
+    for h in hits:
+        src = h["_source"]
+        src["_score"] = h["_score"]
+        results.append(src)
+
+    return {"page": 1, "limit": limit, "total": total, "items": results}

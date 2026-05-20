@@ -7,11 +7,11 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../components/ui/dropdown-menu';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { ImageSearchPanel } from '../components/ImageSearchPanel';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useScrollPosition } from '../hooks/useScrollPosition';
 import { PythonSearchService } from '../services';
+import { OCRUploadButton, OCRResultModal, useOCR } from '../components/OCRUpload';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -19,9 +19,13 @@ interface HeaderProps {
   onLogoClick?: () => void;
   onLoginClick?: () => void;
   onAccountClick?: () => void;
+  /** Callback khi OCR tìm thấy sách → navigate SearchResultsPage */
+  onOCRSearch?: (query: string) => void;
+  /** Callback khi click vào book result trong OCR modal */
+  onOCRBookClick?: (bookId: number) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoClick, onLoginClick, onAccountClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoClick, onLoginClick, onAccountClick, onOCRSearch, onOCRBookClick }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -31,6 +35,58 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoCli
   const { getTotalItems } = useCart();
   const { user, isLoggedIn, logout } = useAuth();
   const { isScrolled } = useScrollPosition();
+
+  // ── OCR state ────────────────────────────────────────────────────
+  const {
+    isLoading: isOCRLoading,
+    error: ocrError,
+    result: ocrResult,
+    selectedFile: ocrFile,
+    isModalOpen: isOCRModalOpen,
+    handleFileSelected: handleOCRFileSelected,
+    closeModal: closeOCRModal,
+  } = useOCR();
+
+  /** Rút gọn query OCR: bỏ phụ đề sau ' - ' đầu tiên và bỏ '(Tái Bản …)' */
+  const trimOCRQuery = (q: string): string => {
+    if (!q) return q;
+    // Bỏ phần sau dấu ' - ' đầu tiên nếu tổng > 40 ký tự (VD: "5 Ngôn Ngữ Yêu Thương - The Five…")
+    const dashIdx = q.indexOf(' - ');
+    let trimmed = dashIdx > 0 && q.length > 40 ? q.slice(0, dashIdx).trim() : q;
+    // Bỏ "(Tái Bản …)" hay "(…)"
+    trimmed = trimmed.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    return trimmed || q;
+  };
+
+  const handleOCRSearch = (query: string) => {
+    const trimmedQuery = trimOCRQuery(query);
+    if (onOCRSearch) {
+      onOCRSearch(trimmedQuery);
+    } else if (onSearch) {
+      onSearch(trimmedQuery);
+    } else {
+      // Luôn dùng ?q= query string, không dùng path param (tránh double-decode)
+      navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    }
+  };
+
+  // "Xem tất cả" – dùng query string ?q= thay vì path param
+  // Lý do: encodeURIComponent('%') = '%25', khi đặt vào path React Router decode '%25'→'%'
+  // rồi nếu gọi decodeURIComponent lần 2 thì '%' + ' ' = URIError → trang trắng.
+  // Query string (?q=) được useSearchParams đọc an toàn, không bị double-decode.
+  const handleOCRSearchWithResults = (query: string, _ocrResults: any[]) => {
+    const trimmedQuery = trimOCRQuery(query);
+    navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`, { state: { ocrResults: _ocrResults, ocrQuery: trimmedQuery } });
+  };
+
+  const handleOCRBookClick = (bookId: number) => {
+    if (onOCRBookClick) {
+      onOCRBookClick(bookId);
+    } else {
+      // Fallback: tự navigate tới book detail page
+      navigate(`/book/${bookId}`);
+    }
+  };
 
   // Autocomplete suggestions
   useEffect(() => {
@@ -86,6 +142,9 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoCli
   };
 
   const handleAdminClick = () => {
+    // Dispatch ĐỒNG BỘ trước navigate — listener chạy ngay lập tức,
+    // manipulate DOM trực tiếp, bypass hoàn toàn React state/batching
+    window.dispatchEvent(new Event('adminNavStart'));
     navigate('/admin');
     setIsMobileMenuOpen(false);
   };
@@ -110,43 +169,56 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoCli
           </div>
 
           {/* Desktop Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8 gap-2" ref={searchRef}>
-            <form onSubmit={handleSearch} className="w-full relative">
-              <Input
-                type="text"
-                placeholder="Tìm kiếm sách, tác giả..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                className="w-full pl-4 pr-12"
-              />
-              <Button type="submit" size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2">
-                <Search className="h-4 w-4" />
-              </Button>
+          <div className="hidden md:flex flex-1 max-w-lg mx-8" ref={searchRef}>
+            <div className="flex items-center gap-1.5 w-full">
+              {/* Search form */}
+              <form onSubmit={handleSearch} className="flex-1 relative">
+                <Input
+                  type="text"
+                  placeholder="Tìm kiếm sách, tác giả..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  className="w-full pl-4 pr-10"
+                />
+                <Button type="submit" size="sm" className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0">
+                  <Search className="h-3.5 w-3.5" />
+                </Button>
 
-              {/* Autocomplete Suggestions */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg max-h-80 overflow-y-auto z-50">
-                  {suggestions.map((suggestion, index) => (
-                    <div
-                      key={index}
-                      className="px-4 py-2 hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      <div className="font-medium text-sm">{suggestion.title}</div>
-                      {suggestion.author_name && (
-                        <div className="text-xs text-muted-foreground">{suggestion.author_name}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </form>
-            {/* Image Search Panel - OUTSIDE form */}
-            <ImageSearchPanel />
+                {/* Autocomplete Suggestions */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg max-h-80 overflow-y-auto z-50">
+                    {suggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-2 hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        <div className="font-medium text-sm">{suggestion.title}</div>
+                        {suggestion.author_name && (
+                          <div className="text-xs text-muted-foreground">{suggestion.author_name}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </form>
+
+              {/* OCR Camera Button – ngoài input, ngay sát bên phải */}
+              <div
+                title="Tìm sách bằng ảnh bìa"
+                className="flex-shrink-0"
+              >
+                <OCRUploadButton
+                  onFileSelected={handleOCRFileSelected}
+                  isLoading={isOCRLoading}
+                  title="Tìm sách bằng ảnh bìa (OCR)"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Desktop Actions */}
@@ -318,6 +390,21 @@ export const Header: React.FC<HeaderProps> = ({ onSearch, onCartClick, onLogoCli
           </div>
         )}
       </div>
+
+      {/* OCR Result Modal – render ngoài header để tránh z-index issue */}
+      <OCRResultModal
+        isOpen={isOCRModalOpen}
+        onClose={closeOCRModal}
+        imageFile={ocrFile}
+        ocrResult={ocrResult}
+        isLoading={isOCRLoading}
+        error={ocrError}
+        onSearchQuery={handleOCRSearch}
+        onSearchWithResults={handleOCRSearchWithResults}
+        onBookClick={handleOCRBookClick}
+        onRetake={handleOCRFileSelected}
+      />
+
     </header>
   );
 };

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useRe
 import { Book } from '../../types/book';
 import { Order } from '../../types/order';
 import adminService from '../../services/adminService';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
 // Status enum used across admin UI for soft-delete / active state
@@ -121,7 +122,6 @@ const mapServerInventoryToUi = (it: any): InventoryItem => {
     status: (it.status ?? '').toString() as any,
     lastRestocked: it.lastRestocked ?? it.last_restocked ?? '',
     // aliases used by existing InventoryManagement UI
-    // keep both names for compatibility
     // @ts-ignore
     stock: quantity,
     // @ts-ignore
@@ -130,6 +130,8 @@ const mapServerInventoryToUi = (it: any): InventoryItem => {
     available: available ?? (quantity - (ordered ?? 0)),
     // @ts-ignore
     lowStockThreshold: threshold ?? 0,
+    // @ts-ignore
+    imageUrl: it.imageUrl ?? null,  // proxy path from /admin/inventory
   } as any as InventoryItem;
 };
 
@@ -151,22 +153,27 @@ interface AdminContextType {
 
   // Categories
   categories: Category[];
+  isInventoryLoading: boolean;
+  loadInventory: () => Promise<void>;
   addCategory: (category: Omit<Category, 'id' | 'bookCount'>) => Promise<void>;
   updateCategory: (id: string, category: Partial<Category>) => Promise<void>;
   updateCategoryStatus: (id: string, status: ItemStatus) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  hardDeleteCategory: (id: string) => Promise<void>;
 
   // Publishers
   publishers: Publisher[];
   addPublisher: (publisher: Omit<Publisher, 'id' | 'bookCount'>) => void;
   updatePublisher: (id: string, publisher: Partial<Publisher>) => void;
   deletePublisher: (id: string) => void;
+  hardDeletePublisher: (id: string) => Promise<void>;
 
   // Authors
   authors: Author[];
   addAuthor: (author: Omit<Author, 'id' | 'bookCount'>) => void;
   updateAuthor: (id: string, author: Partial<Author>) => void;
   deleteAuthor: (id: string) => void;
+  hardDeleteAuthor: (id: string) => Promise<void>;
 
   // Orders
   orders: Order[];
@@ -174,12 +181,21 @@ interface AdminContextType {
   refreshOrders: (params?: { page?: number; size?: number }) => Promise<void>;
   // Refresh all admin data (books, users, orders, inventory, etc.)
   refreshAll?: () => Promise<void>;
+  // Dữ liệu trang 1 orders được prefetch ngay khi login
+  // OrderManagement dùng để hiển thị tức thì không cần chờ API
+  prefetchedOrdersPage: { data: any[]; totalPages: number; totalElements: number } | null;
 
   // Inventory
   inventory: InventoryItem[];
   updateInventory: (id: string, quantity: number) => void;
   // update stock on server and refresh list
   updateStock: (bookId: string | number, payload: { stockQuantity?: number; threshold?: number }) => Promise<void>;
+  // Lazy-load inventory – chỉ gọi khi tab kho được mở lần đầu
+  loadInventory: () => Promise<void>;
+  // Force reload bất kể trạng thái ref – dùng cho nút "Tải lại"
+  reloadInventory: () => Promise<void>;
+  // true khi đang fetch inventory từ server (kể cả background call)
+  isInventoryLoading: boolean;
 
   // Promotions
   promotions: Promotion[];
@@ -248,10 +264,20 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     return stored ? JSON.parse(stored) : [];
   });
 
+  // Prefetched page-1 orders \u2014 populated ngay sau login \u0111\u1ec3 OrderManagement hi\u1ec3n th\u1ecb t\u1ee9c th\u00ec
+  const [prefetchedOrdersPage, setPrefetchedOrdersPage] = useState<{
+    data: any[];
+    totalPages: number;
+    totalElements: number;
+  } | null>(null);
+  const ordersPagePrefetchedRef = useRef(false);
+
   const [inventory, setInventory] = useState<InventoryItem[]>(() => {
     const stored = localStorage.getItem('admin_inventory');
     return stored ? JSON.parse(stored) : [];
   });
+  // true khi đang fetch inventory (kể cả background call lúc login)
+  const [isInventoryLoading, setIsInventoryLoading] = useState(true);
 
   const [promotions, setPromotions] = useState<Promotion[]>(() => {
     const stored = localStorage.getItem('admin_promotions');
@@ -390,7 +416,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     name: u.name ?? u.fullName ?? u.username ?? '',
     email: u.email ?? u.emailAddress ?? '',
     role: normalizeRole(u.role),
-    status: (u.status === 'locked' || u.status === 'deleted') ? 'locked' : 'active',
+    status: u.status === 'unverified' ? 'unverified' : ((u.status === 'locked' || u.status === 'deleted') ? 'locked' : 'active'),
     createdAt: u.createdAt ?? u.created_at ?? new Date().toISOString(),
     totalOrders: Number(u.totalOrders ?? u.orderCount ?? 0),
     totalSpent: Number(u.totalSpent ?? u.total_spent ?? 0),
@@ -442,7 +468,13 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
   // Extracted fetch logic so it can be invoked on-demand by consumers (e.g. Statistics page)
   const mountedRef = useRef(true);
+  const isRefreshingRef = useRef(false); // Guard: ngăn concurrent refreshAll calls
   const refreshAll = async () => {
+    if (isRefreshingRef.current) {
+      console.debug('[AdminContext] refreshAll already in progress, skipping');
+      return;
+    }
+    isRefreshingRef.current = true;
     try {
       console.log('[AdminContext] refreshAll: Calling dedicated dashboard API...');
       
@@ -455,7 +487,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         return;
       }
 
-      // Extract data from dashboard response
+      // Extract data from dashboard response (users now included in parallel fetch)
       const booksData = dashboard.books ?? [];
       const categoriesData = dashboard.categories ?? [];
       const ordersData = dashboard.orders ?? [];
@@ -463,14 +495,8 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       const authorsData = dashboard.authors ?? [];
       const promotionsData = dashboard.promotions ?? [];
       const inventoryData = dashboard.inventory ?? [];
-      let usersRes = null;
-      
-      try {
-        usersRes = await adminService.getUsers();
-      } catch (usersErr) {
-        console.error('[AdminContext] Users API failed in refreshAll:', usersErr);
-        usersRes = null;
-      }
+      // Users trả về từ dashboard (song song), không cần extra call
+      const usersFromDashboard = dashboard.users ?? [];
 
       console.log('[AdminContext] Dashboard data loaded - books:', booksData.length, 'orders:', ordersData.length);
 
@@ -541,12 +567,11 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         setAuthors(uiAuthors);
       }
 
-      // Process users
-      if (usersRes && mountedRef.current) {
-        const usersData = usersRes?.result ?? usersRes ?? [];
-        const uiUsers = Array.isArray(usersData)
-          ? usersData.map(mapServerUserToUi)
-          : (usersData && Array.isArray((usersData as any).users) ? (usersData as any).users.map(mapServerUserToUi) : []);
+      // Process users (now from dashboard response, no separate call needed)
+      if (mountedRef.current) {
+        const uiUsers = Array.isArray(usersFromDashboard)
+          ? usersFromDashboard.map(mapServerUserToUi)
+          : [];
         setUsers(uiUsers);
       }
 
@@ -562,9 +587,14 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       const uiInventory = Array.isArray(inventoryData)
         ? inventoryData.map(mapServerInventoryToUi)
         : (inventoryData && Array.isArray((inventoryData as any).items) ? (inventoryData as any).items.map(mapServerInventoryToUi) : []);
-      if (inventoryData && mountedRef.current) {
-        console.log('[AdminContext] Setting inventory:', uiInventory.length);
+      // Dashboard API intentionally returns inventory=[] (lazy-loaded separately).
+      // Only overwrite if dashboard actually returned data — never reset existing inventory to [].
+      if (uiInventory.length > 0 && mountedRef.current) {
+        console.log('[AdminContext] Setting inventory from dashboard:', uiInventory.length);
         setInventory(uiInventory);
+        inventoryLoadedRef.current = true;
+      } else {
+        console.log('[AdminContext] Dashboard inventory empty — preserving existing data, lazy-load will handle it.');
       }
 
       console.log('[AdminContext] ordersData extracted:', ordersData);
@@ -601,21 +631,115 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       }
     } catch (err) {
       console.error('[AdminContext] Failed to refresh admin data', err);
+    } finally {
+      isRefreshingRef.current = false;
     }
   };
 
+  // Theo dõi lần cuối cùng dữ liệu được fetch thành công
+  // Dùng timestamp thay vì boolean để tự động invalidate sau TTL
+  const dataLastLoadedRef = useRef<number>(0); // 0 = chưa load
+  const DATA_TTL_MS = 5 * 60 * 1000; // 5 phút
+  // Compat alias cho code cũ dùng dataLoadedRef
+  const dataLoadedRef = { 
+    get current() { return dataLastLoadedRef.current > 0; },
+    set current(v: boolean) { if (!v) dataLastLoadedRef.current = 0; }
+  };
+
+  const { user } = useAuth();
+
+  // Inventory lazy-load – khai báo trước useEffect để có thể gọi trong prefetch
+  const inventoryLoadedRef = useRef(false);
+  const isLoadingInventoryRef = useRef(false);
+
+  const loadInventory = async () => {
+    if (inventoryLoadedRef.current || isLoadingInventoryRef.current) return;
+    isLoadingInventoryRef.current = true;
+    setIsInventoryLoading(true);
+    try {
+      const res = await adminService.getInventory();
+      const inventoryData = (res as any)?.result ?? res ?? [];
+      const uiInventory = Array.isArray(inventoryData)
+        ? inventoryData.map(mapServerInventoryToUi)
+        : (inventoryData && Array.isArray((inventoryData as any).items)
+          ? (inventoryData as any).items.map(mapServerInventoryToUi) : []);
+      if (mountedRef.current) {
+        setInventory(uiInventory);
+        // Cache vào localStorage → lần sau mở tab hiện data ngay, không chờ API
+        try { localStorage.setItem('admin_inventory', JSON.stringify(uiInventory)); } catch (_) {}
+        inventoryLoadedRef.current = true;
+      }
+    } catch (err) {
+      console.error('[AdminContext] Failed to load inventory', err);
+    } finally {
+      isLoadingInventoryRef.current = false;
+      if (mountedRef.current) setIsInventoryLoading(false);
+    }
+  };
+
+
+  // Prefetch trang 1 đơn hàng ngay khi login — OrderManagement hiển thị tức thì không chờ API
+  const prefetchOrders = async () => {
+    if (ordersPagePrefetchedRef.current) return;
+    ordersPagePrefetchedRef.current = true;
+    try {
+      const res = await adminService.getOrders({ page: 1, size: 10 });
+      const data = (res as any)?.result?.books
+        ?? (res as any)?.result?.data
+        ?? [];
+      const meta = (res as any)?.result;
+      if (Array.isArray(data) && mountedRef.current) {
+        setPrefetchedOrdersPage({
+          data,
+          totalPages: meta?.totalPages ?? 1,
+          totalElements: meta?.totalElements ?? data.length,
+        });
+      }
+    } catch (e) {
+      ordersPagePrefetchedRef.current = false; // retry on next click
+      console.debug('[AdminContext] prefetchOrders failed silently', e);
+    }
+  };
+
+  // Prefetch ngay khi user đăng nhập với vai trò admin/staff,
+  // TRƯỚC khi họ navigate đến /admin.
+  // AdminProvider giờ nằm ở App level nên không bị unmount khi navigate.
   useEffect(() => {
     mountedRef.current = true;
-    console.log('[AdminContext] Starting initial refreshAll...');
-    refreshAll();
-    return () => { mountedRef.current = false; };
-  }, []);
+    const isAdminUser = user?.role === 'admin' || user?.role === 'staff';
 
-  // Poll inventory periodically so admin UI reflects backend changes quickly
+    if (isAdminUser) {
+      const now = Date.now();
+      const isStale = (now - dataLastLoadedRef.current) > DATA_TTL_MS;
+      const neverLoaded = dataLastLoadedRef.current === 0;
+      if (neverLoaded || isStale) {
+        console.log(`[AdminContext] User is admin/staff — ${neverLoaded ? 'first load' : 'data stale (>5min)'}, refreshing dashboard...`);
+        dataLastLoadedRef.current = now; // mark immediately to prevent double-fire
+        refreshAll().then(() => { dataLastLoadedRef.current = Date.now(); }); // update after success
+        if (neverLoaded) {
+          loadInventory();   // background: Quản lý kho
+          prefetchOrders();  // background: Quản lý đơn hàng trang 1
+        }
+      } else {
+        console.debug('[AdminContext] Data still fresh, skipping refresh');
+      }
+    } else if (!isAdminUser) {
+      // Reset khi user logout hoặc role thay đổi
+      dataLoadedRef.current = false;
+      inventoryLoadedRef.current = false;
+    }
+
+    return () => {
+      // Không unmount vì Provider ở App level
+    };
+  }, [user?.role]);
+
+  // Poll inventory mỗi 5 phút để giữ freshness – chỉ sau khi đã lazy-loaded
   useEffect(() => {
     let canceled = false;
-    const intervalMs = 10000; // 10s
+    const intervalMs = 5 * 60 * 1000; // 5 phút
     const poll = async () => {
+      if (!inventoryLoadedRef.current) return; // chưa lazy-load, bỏ qua
       try {
         const res = await adminService.getInventory();
         const inventoryData = (res as any)?.result ?? res ?? [];
@@ -625,15 +749,122 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         if (canceled) return;
         setInventory(uiInventory);
       } catch (err) {
-        // ignore polling errors
         console.debug('[AdminContext] inventory poll failed', err);
       }
     };
 
-    const t = setTimeout(() => { poll(); }, 2000);
     const handle = setInterval(poll, intervalMs);
-    return () => { canceled = true; clearTimeout(t); clearInterval(handle); };
+    return () => { canceled = true; clearInterval(handle); };
   }, []);
+
+  // Lắng nghe sự kiện từ ChatWidget khi bot xác nhận thay đổi dữ liệu
+  // → Phase 1: Optimistic update ngay lập tức (0ms) — cập nhật order trong memory
+  // → Phase 2: Background refreshAll() để đồng bộ data chính xác từ server
+  const refreshAllRef2 = useRef(refreshAll);
+  refreshAllRef2.current = refreshAll;
+  const setOrdersRef = useRef(setOrders);
+  setOrdersRef.current = setOrders;
+  const setUsersRef = useRef(setUsers);
+  setUsersRef.current = setUsers;
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        source?: string; role?: string;
+        orderId?: number | null; newStatus?: string | null;
+        type?: string;
+      };
+      console.log('[AdminContext] bookstore:data-changed received', detail);
+
+      // ── Phase 1: Optimistic Update — đổi status trong memory NGAY (0ms) ──
+      if (detail.orderId && detail.newStatus && detail.type !== 'inventory') {
+        const id = String(detail.orderId);
+        setOrdersRef.current(prev => prev.map((order: any) => {
+          // Hỗ trợ cả order.id, order.orderId, order.order_id
+          const oid = String(order.id ?? order.orderId ?? order.order_id ?? '');
+          return oid === id ? { ...order, status: detail.newStatus as string } : order;
+        }));
+        console.log(`[AdminContext] ✅ Optimistic update: đơn #${detail.orderId} → ${detail.newStatus}`);
+      }
+
+      // ── User status update (lock/unlock từ chatbot) ──
+      if (detail.type === 'user_status' && detail.userId) {
+        const uid = String(detail.userId);
+        setUsersRef.current(prev => prev.map((u: any) =>
+          String(u.id) === uid ? { ...u, status: detail.newUserStatus } : u
+        ));
+        console.log(`[AdminContext] ✅ Optimistic update user status: #${uid} → ${detail.newUserStatus}`);
+      }
+
+      // ── User role update (đổi role từ chatbot) ──
+      if (detail.type === 'user_role' && detail.userId && detail.newRole) {
+        const uid = String(detail.userId);
+        setUsersRef.current(prev => prev.map((u: any) =>
+          String(u.id) === uid ? { ...u, role: detail.newRole } : u
+        ));
+        console.log(`[AdminContext] ✅ Optimistic update user role: #${uid} → ${detail.newRole}`);
+      }
+
+      // ── Phase 2: Background refresh để đồng bộ server data ──
+      if (detail.type === 'inventory') {
+        console.log('[AdminContext] Refreshing inventory only...');
+        inventoryLoadedRef.current = false;
+        isLoadingInventoryRef.current = false;
+        loadInventory().catch(() => {});
+      } else {
+        refreshAllRef2.current().catch(() => {});
+      }
+      dataLastLoadedRef.current = Date.now();
+    };
+    window.addEventListener('bookstore:data-changed', handler);
+    return () => window.removeEventListener('bookstore:data-changed', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * FALLBACK: nếu API /admin/inventory chậm hoặc lỗi, tự tính inventory từ books đã tải.
+   * Effect này chạy khi books thay đổi. Nếu books đã có data mà inventory vẫn trống
+   * (và không đang trong quá trình fetch thực), derive ngay để UI hiển thị dữ liệu.
+   * Khi API inventory thực sự trả về, setInventory() sẽ ghi đè với data chính xác hơn.
+   */
+  useEffect(() => {
+    if (
+      books.length > 0 &&
+      inventory.length === 0 &&
+      !inventoryLoadedRef.current
+    ) {
+      console.warn('[AdminContext] Inventory API chậm/lỗi — deriving từ books:', books.length);
+      const derived: InventoryItem[] = books.map((b: any) => {
+        const stock = Number(b.stockQuantity ?? b.stock_quantity ?? 0);
+        const available = Number(b.availableQuantity ?? stock);
+        const threshold = 5;
+        const statusVal: InventoryItem['status'] =
+          stock === 0 ? 'out-of-stock'
+          : available <= threshold ? 'low-stock'
+          : 'in-stock';
+        return {
+          id: String(b.bookId),
+          bookId: String(b.bookId),
+          bookTitle: b.title ?? '',
+          sku: '',
+          quantity: stock,
+          orderedQuantity: 0,
+          availableQuantity: available,
+          reorderLevel: threshold,
+          threshold,
+          status: statusVal,
+          lastRestocked: '',
+          stock,
+          reserved: 0,
+          available,
+          lowStockThreshold: threshold,
+        } as any as InventoryItem;
+      });
+      setInventory(derived);
+      // Không set inventoryLoadedRef = true → khi API thực trả về vẫn ghi đè được
+      if (mountedRef.current) setIsInventoryLoading(false);
+    }
+  }, [books]);
 
   // Ensure persisted read flags survive server pushes: merge localStorage's isRead into live notifications
   // No longer needed: merge logic is now in setNotifications
@@ -743,12 +974,29 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     return (async () => {
       try {
         await adminService.deletePublisher(id);
-        toast.success('Xóa nhà xuất bản thành công');
-      } catch (err) {
+        toast.success('Vô hiệu hóa nhà xuất bản thành công');
+      } catch (err: any) {
         setPublishers(prev);
+        const message = err?.response?.data?.message ?? err?.message ?? 'Vô hiệu hóa thất bại';
+        toast.error(String(message));
         console.error('Failed to delete publisher', err);
       }
     })();
+  };
+
+  /** Hard delete: xóa vĩnh viễn khỏi DB — chỉ thành công nếu backend xác nhận 0 sách */
+  const hardDeletePublisher = async (id: string): Promise<void> => {
+    const prev = publishersRef.current;
+    try {
+      await adminService.hardDeletePublisher(id);
+      setPublishers(prevList => prevList.filter(p => p.id !== id));
+      toast.success('Xóa vĩnh viễn nhà xuất bản thành công');
+    } catch (err: any) {
+      setPublishers(prev);
+      const message = err?.response?.data?.message ?? err?.message ?? 'Xóa vĩnh viễn thất bại';
+      toast.error(String(message));
+      console.error('Failed to hard delete publisher', err);
+    }
   };
 
   const addAuthor = (author: Omit<Author, 'id' | 'bookCount'>) => {
@@ -821,13 +1069,29 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     return (async () => {
       try {
         await adminService.deleteAuthor(id);
-        toast.success('Xóa tác giả thành công');
-
-      } catch (err) {
+        toast.success('Vô hiệu hóa tác giả thành công');
+      } catch (err: any) {
         setAuthors(prev);
+        const message = err?.response?.data?.message ?? err?.message ?? 'Vô hiệu hóa thất bại';
+        toast.error(String(message));
         console.error('Failed to delete author', err);
       }
     })();
+  };
+
+  /** Hard delete: xóa vĩnh viễn khỏi DB — chỉ thành công nếu backend xác nhận 0 sách */
+  const hardDeleteAuthor = async (id: string): Promise<void> => {
+    const prev = authorsRef.current;
+    try {
+      await adminService.hardDeleteAuthor(id);
+      setAuthors(prevList => prevList.filter(a => a.id !== id));
+      toast.success('Xóa vĩnh viễn tác giả thành công');
+    } catch (err: any) {
+      setAuthors(prev);
+      const message = err?.response?.data?.message ?? err?.message ?? 'Xóa vĩnh viễn thất bại';
+      toast.error(String(message));
+      console.error('Failed to hard delete author', err);
+    }
   };
 
   const parseUiId = (idOrBook: any) => {
@@ -1004,7 +1268,6 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     })();
   };
 
-  // TODO-API: Implement POST /api/admin/categories
   // Category operations
   const addCategory = (category: Omit<Category, 'id' | 'bookCount'>) => {
     return (async () => {
@@ -1013,10 +1276,25 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       setCategories(prev => [...prev, temp]);
       try {
         const res = await adminService.createCategory(category);
-        const created = res?.result ?? res;
-        setCategories(prev => prev.map(c => (c.id === tempId ? (created as Category) : c)));
-      } catch (err) {
+        const raw = res?.result ?? res;
+        // Map server response (categoryId, categoryName, status...) → UI Category shape (id, ...)
+        const mapped: Category = {
+          id: String(raw?.categoryId ?? raw?.id ?? tempId),
+          categoryName: raw?.categoryName ?? raw?.name ?? category.categoryName ?? '',
+          description: raw?.description ?? '',
+          bookCount: raw?.bookCount ?? 0,
+          status: raw?.status === null || raw?.status === undefined
+            ? ItemStatus.Active
+            : (typeof raw.status === 'string'
+              ? (String(raw.status).toLowerCase() === 'active' ? ItemStatus.Active : ItemStatus.Deleted)
+              : (typeof raw.status === 'boolean' ? (raw.status ? ItemStatus.Active : ItemStatus.Deleted) : ItemStatus.Active)),
+        };
+        setCategories(prev => prev.map(c => (c.id === tempId ? mapped : c)));
+        toast.success('Thêm danh mục thành công');
+      } catch (err: any) {
         setCategories(prev => prev.filter(c => c.id !== tempId));
+        const message = err?.response?.data?.message ?? err?.message ?? 'Thêm danh mục thất bại';
+        toast.error(String(message));
         console.error('Failed to create category', err);
       }
     })();
@@ -1094,9 +1372,29 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     return (async () => {
       try {
         await adminService.deleteCategory(id);
-      } catch (err) {
+        toast.success('Vô hiệu hóa danh mục thành công');
+      } catch (err: any) {
         setCategories(prevCats);
+        const message = err?.response?.data?.message ?? err?.message ?? 'Vô hiệu hóa thất bại';
+        toast.error(String(message));
         console.error('Failed to delete category', err);
+      }
+    })();
+  };
+
+  /** Hard delete: xóa vĩnh viễn khỏi DB — chỉ thành công nếu backend xác nhận 0 sách */
+  const hardDeleteCategory = (id: string) => {
+    const prevCats = categoriesRef.current;
+    return (async () => {
+      try {
+        await adminService.hardDeleteCategory(id);
+        setCategories(prev => prev.filter(cat => cat.id !== id));
+        toast.success('Xóa vĩnh viễn danh mục thành công');
+      } catch (err: any) {
+        setCategories(prevCats);
+        const message = err?.response?.data?.message ?? err?.message ?? 'Xóa vĩnh viễn thất bại';
+        toast.error(String(message));
+        console.error('Failed to hard delete category', err);
       }
     })();
   };
@@ -1131,6 +1429,38 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     }
   };
 
+  // Ref để dùng trong setInterval mà không bị stale closure
+  const refreshOrdersRef = useRef(refreshOrders);
+  refreshOrdersRef.current = refreshOrders;
+
+  // Poll đơn hàng mỗi 60 giây — Dashboard và OrderManagement tự cập nhật khi có đơn mới.
+  // Dừng khi tab bị ẩn (document.visibilityState) để tiết kiệm tài nguyên.
+  useEffect(() => {
+    const isAdminUser = user?.role === 'admin' || user?.role === 'staff';
+    if (!isAdminUser) return;
+
+    let handle: ReturnType<typeof setInterval> | null = null;
+    let canceled = false;
+
+    const pollOrders = async () => {
+      if (canceled || document.hidden) return;
+      try {
+        await refreshOrdersRef.current();
+      } catch (err) {
+        console.debug('[AdminContext] orders poll failed silently', err);
+      }
+    };
+
+    handle = setInterval(pollOrders, 60_000); // mỗi 60 giây
+
+    return () => {
+      canceled = true;
+      if (handle) clearInterval(handle);
+    };
+  }, [user?.role]);
+
+
+
   // TODO-API: Implement PATCH /api/admin/inventory/:id
   // TODO-API: Create low-stock notification when quantity <= reorderLevel
   // Inventory operations
@@ -1151,6 +1481,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     setInventory(prevList => prevList.map(i => i.bookId === String(bookId) ? { ...i, quantity: payload.stockQuantity ?? i.quantity, reorderLevel: payload.threshold ?? i.reorderLevel } : i));
     try {
       await adminService.updateStock(bookId, payload);
+      toast.success('Cập nhật tồn kho thành công!');
       // refresh authoritative list
       try {
         const res = await adminService.getInventory();
@@ -1273,12 +1604,21 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   };
 
   const deletePromotion = (id: string) => {
+    const targetPromo = promotions.find(p => p.id === id);
+    const isAlreadyDeleted = (targetPromo as any)?.isDeleted === true || targetPromo?.status === 'deleted';
     const prev = promotions;
-    setPromotions(prevList => prevList.map(p => p.id === id ? { ...p, status: 'deleted', isActive: false } : p));
+    setPromotions(prevList => prevList.filter(p => p.id !== id));
     return (async () => {
       try {
-        await adminService.deletePromotion(id);
-        toast.success('Đã vô hiệu hóa khuyến mãi');
+        if (isAlreadyDeleted) {
+          // Gọi permanent delete nếu đã bị soft-delete trước đó
+          await adminService.permanentDeletePromotion(id);
+          toast.success('Đã xóa vĩnh viễn khuyến mãi');
+        } else {
+          // Soft delete cho khuyến mãi đang active/inactive
+          await adminService.deletePromotion(id);
+          toast.success('Đã vô hiệu hóa khuyến mãi');
+        }
         try {
           const refreshRes = await adminService.getPromotions();
           const promotionsData = refreshRes?.result ?? refreshRes ?? [];
@@ -1290,7 +1630,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         }
       } catch (err: any) {
         setPromotions(prev);
-        const message = err?.response?.data?.message ?? err?.message ?? 'Vô hiệu hóa thất bại';
+        const message = err?.response?.data?.message ?? err?.message ?? 'Xóa thất bại';
         toast.error(String(message));
         console.error('Failed to delete promotion', err);
       }
@@ -1320,21 +1660,33 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     updateCategory,
     updateCategoryStatus,
     deleteCategory,
+    hardDeleteCategory,
     publishers,
     addPublisher,
     updatePublisher,
     deletePublisher,
+    hardDeletePublisher,
     authors,
     addAuthor,
     updateAuthor,
     deleteAuthor,
+    hardDeleteAuthor,
     orders,
     updateOrderStatus,
     refreshOrders,
     refreshAll,
+    prefetchedOrdersPage,
     inventory,
+    isInventoryLoading,
     updateInventory,
     updateStock,
+    loadInventory,
+    reloadInventory: async () => {
+      // Reset cả hai refs để buộc fetch lại
+      inventoryLoadedRef.current = false;
+      isLoadingInventoryRef.current = false;
+      await loadInventory();
+    },
     promotions,
     addPromotion,
     updatePromotion,

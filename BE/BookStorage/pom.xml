@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.6</version>
+		<version>3.4.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.be.book</groupId>
@@ -120,6 +120,13 @@
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
 			<version>2.3.0</version>
+			<exclusions>
+				<!-- Loại bỏ javax.servlet cũ, Spring Boot 3 dùng jakarta.servlet -->
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -134,11 +141,23 @@
 			<groupId>com.google.oauth-client</groupId>
 			<artifactId>google-oauth-client-jetty</artifactId>
 			<version>1.34.1</version>
+			<exclusions>
+				<!-- Loại bỏ javax.servlet cũ, Spring Boot 3 dùng jakarta.servlet -->
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+		<!-- GsonFactory: thay thế JacksonFactory đã bị deprecated trong google-api-client 2.x -->
 		<dependency>
-			<groupId>com.google.api-client</groupId>
-			<artifactId>google-api-client-jackson2</artifactId>
-			<version>1.28.1</version>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-gson</artifactId>
+			<version>1.44.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

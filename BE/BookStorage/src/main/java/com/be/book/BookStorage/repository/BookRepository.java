@@ -16,24 +16,73 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer>, JpaSpecificationExecutor<BookEntity> {
 
+    /**
+     * Bước 1/2: Paginates chỉ trên book IDs — không có JOIN FETCH collection.
+     * LIMIT/OFFSET được áp dụng đúng tại DB (không phải in-memory).
+     * Sửa lỗi Hibernate HHH90003004: firstResult/maxResults with collection fetch.
+     */
     @Query(value = """
-    SELECT DISTINCT b FROM BookEntity b
-    LEFT JOIN FETCH b.author
-    LEFT JOIN FETCH b.publisher
-    LEFT JOIN FETCH b.categories c
-    LEFT JOIN FETCH b.image
-    WHERE (:category IS NULL OR c.categoryId = :category)
-      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')))
+    SELECT DISTINCT b.bookId FROM BookEntity b
+    LEFT JOIN b.categories c
+    LEFT JOIN b.author a
+    WHERE b.status <> 'deleted'
+      AND (:category IS NULL OR c.categoryId = :category)
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
+    ORDER BY b.bookId ASC
     """,
             countQuery = """
     SELECT COUNT(DISTINCT b) FROM BookEntity b
     LEFT JOIN b.categories c
-    WHERE (:category IS NULL OR c.categoryId = :category)
-      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')))
+    LEFT JOIN b.author a
+    WHERE b.status <> 'deleted'
+      AND (:category IS NULL OR c.categoryId = :category)
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<Integer> findBookIdsPaged(
+            @Param("category") Long category,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    /**
+     * Bước 2/2: Fetch chi tiết chỉ cho những ID vừa lấy.
+     * An toàn với JOIN FETCH vì không có Pageable.
+     */
+    @Query("""
+    SELECT DISTINCT b FROM BookEntity b
+    LEFT JOIN FETCH b.author
+    LEFT JOIN FETCH b.publisher
+    LEFT JOIN FETCH b.categories
+    LEFT JOIN FETCH b.image
+    WHERE b.bookId IN :ids
+    """)
+    List<BookEntity> findByIdsWithDetails(@Param("ids") List<Integer> ids);
+
+    /**
+     * Legacy: chỉ dùng khi không cần pagination (v.d. bulk operations).
+     * DEPRECATED cho paginated list vì gây in-memory pagination.
+     */
+    @Query(value = """
+    SELECT DISTINCT b FROM BookEntity b
+    LEFT JOIN FETCH b.author a
+    LEFT JOIN FETCH b.publisher
+    LEFT JOIN FETCH b.categories c
+    LEFT JOIN FETCH b.image
+    WHERE b.status <> 'deleted'
+      AND (:category IS NULL OR c.categoryId = :category)
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
+    """,
+            countQuery = """
+    SELECT COUNT(DISTINCT b) FROM BookEntity b
+    LEFT JOIN b.categories c
+    LEFT JOIN b.author a
+    WHERE b.status <> 'deleted'
+      AND (:category IS NULL OR c.categoryId = :category)
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
     """)
     Page<BookEntity> findAllWithDetails(
-            Long category,
-            String search,
+            @Param("category") Long category,
+            @Param("search") String search,
             Pageable pageable
     );
 
@@ -57,18 +106,20 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, JpaS
            )
     FROM BookEntity b
     LEFT JOIN b.categories c  
+    LEFT JOIN b.author a
     LEFT JOIN BookImageEntity bi ON bi.book.bookId = b.bookId AND bi.isMain = true
     WHERE b.status = 'active'
       AND (:category IS NULL OR c.categoryId = :category)
-      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')))
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
 """,
             countQuery = """
     SELECT COUNT(DISTINCT b.bookId)
     FROM BookEntity b
     LEFT JOIN b.categories c
+    LEFT JOIN b.author a
     WHERE b.status = 'active'
       AND (:category IS NULL OR c.categoryId = :category)
-      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')))
+      AND (:search IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.authorName) LIKE LOWER(CONCAT('%', :search, '%')))
 """
     )
     Page<Object[]> findUserBooks(@Param("category") Long category,
@@ -114,61 +165,42 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, JpaS
     List<BookEntity> searchRough(@Param("keyword") String keyword);
 
 
+    /**
+     * Inventory query: ch\u1ec9 l\u1ea5y 3 c\u1ed9t c\u1ea7n thi\u1ebft (bookId, title, stockQuantity).
+     * KHÔNG load to\u00e0n b\u1ed9 BookEntity (proxy, lazy-collections, v.v.).
+     * Nhanh h\u01a1n findAllActiveBooks ~5-10x v\u1edbi dataset l\u1edbn.
+     * Tr\u1ea3 [bookId, title, stockQuantity] theo alphabet.
+     */
     @Query("""
-    SELECT new com.be.book.BookStorage.dto.Response.Admin.InventoryRes(
-        b.bookId,
-        b.title,
-        b.stockQuantity,
+        SELECT b.bookId, b.title, COALESCE(b.stockQuantity, 0), i.imageUrl
+        FROM BookEntity b
+        LEFT JOIN b.image i
+        WHERE b.status = 'active'
+        ORDER BY b.title ASC
+        """)
+    List<Object[]> findActiveBooksForInventory();
 
-        /* Đã đặt - dùng subquery dựa trên order.status (bao gồm COD) */
-        CAST(
-            COALESCE((
-                SELECT SUM(od2.quantity)
-                FROM OrderDetailEntity od2
-                JOIN od2.order o2
-                WHERE od2.book = b
-                  AND o2.status IN ('pending', 'processing', 'shipped')
-            ), 0) AS integer
-        ),
+    /**
+     * @deprecated D\u00f9ng findActiveBooksForInventory thay th\u1ebf \u2014 hi\u1ec7u n\u0103ng ~5-10x t\u1ed1t h\u01a1n.
+     */
+    @Deprecated
+    @Query("SELECT b FROM BookEntity b WHERE b.status = 'active' ORDER BY b.title ASC")
+    List<BookEntity> findAllActiveBooks();
 
-        /* Có sẵn */
-        CAST(
-            b.stockQuantity - COALESCE((
-                SELECT SUM(od2.quantity)
-                FROM OrderDetailEntity od2
-                JOIN od2.order o2
-                WHERE od2.book = b
-                  AND o2.status IN ('pending', 'processing', 'shipped')
-            ), 0) AS integer
-        ),
+    /**
+     * Bước 2/2: Tính tổng số lượng đã đặt (status pending/processing/shipped) theo từng sách.
+     * Trả về [bookId, sumQty] gom theo GROUP BY — 1 query duy nhất cho toàn bộ dataset.
+     * Thay thế 4 correlated subqueries × N sách = hạn chế từ O(N) → O(1) về số queries.
+     */
+    @Query("""
+        SELECT od.book.bookId, SUM(od.quantity)
+        FROM OrderDetailEntity od
+        JOIN od.order o
+        WHERE o.status IN ('pending', 'processing', 'shipped')
+        GROUP BY od.book.bookId
+    """)
+    List<Object[]> findOrderedQuantitiesByBookId();
 
-        5,
-
-        /* Trạng thái */
-        CASE
-            WHEN (b.stockQuantity - COALESCE((
-                SELECT SUM(od2.quantity)
-                FROM OrderDetailEntity od2
-                JOIN od2.order o2
-                WHERE od2.book = b
-                  AND o2.status IN ('pending', 'processing', 'shipped')
-            ), 0)) <= 0
-                THEN 'Hết hàng'
-            WHEN (b.stockQuantity - COALESCE((
-                SELECT SUM(od2.quantity)
-                FROM OrderDetailEntity od2
-                JOIN od2.order o2
-                WHERE od2.book = b
-                  AND o2.status IN ('pending', 'processing', 'shipped')
-            ), 0)) <= 5
-                THEN 'Cần nhập thêm'
-            ELSE 'Đầy đủ'
-        END
-    )
-    FROM BookEntity b
-    ORDER BY b.title ASC
-""")
-    List<InventoryRes> getInventoryList();
 
     @Query("""
     SELECT CAST(

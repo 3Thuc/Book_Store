@@ -13,24 +13,23 @@ export const PYTHON_API_ENDPOINTS = {
   // RECOMMENDATION SERVICE
   // ==========================================
   RECOMMEND: {
-    // Home
-    POPULAR: '/recommend/popular',
-    TRENDING: '/recommend/trending',
+    // ─ Trang chủ ───────────────────────────────────────────
+    POPULAR:   '/recommend/popular',
+    TRENDING:  '/recommend/trending',
     TOP_RATED: '/recommend/top-rated',
 
-    // Item-based (Similar Books)
-    BOOK_RULE: (bookId: number) => `/recommend/book/${bookId}/rule`,
-    BOOK_ALSO_BOUGHT: (bookId: number) => `/recommend/book/${bookId}/cb-fallback`,
-    BOOK_CB: (bookId: number) => `/recommend/book/${bookId}/cb`,
-    BOOK_CF: (bookId: number) => `/recommend/book/${bookId}/cf`,
+    // ─ Trang chi tiết sách ──────────────────────────────
+    /** Sách tương tự AI (SBERT k-NN + fallback popular) – đang dùng */
+    BOOK_CB_FALLBACK: (bookId: number) => `/recommend/book/${bookId}/cb-fallback`,
+    /** Khách hàng cũng mua (co-purchase từ đơn hàng thực tế) – đang dùng */
+    BOOK_ALSO_BOUGHT: (bookId: number) => `/recommend/book/${bookId}/also`,
 
-    // User Personalized
-    USER_RULE: (userId: number) => `/recommend/user/${userId}/rule`,
-    USER_CF: (userId: number) => `/recommend/user/${userId}/cf`,
+    // ─ Cá nhân hoá ─────────────────────────────────────────
+    /** CF + Rule + Popular fallback theo user – đang dùng */
     USER_FOR_YOU: (userId: number) => `/recommend/user/${userId}/for-you`,
 
-    // Admin
-    USER_CF_REBUILD: (userId: number) => `/recommend/user/${userId}/cf/rebuild`,
+    // ─ Admin / Maintenance ──────────────────────────────────
+    USER_CF_REBUILD:    (userId: number) => `/recommend/user/${userId}/cf/rebuild`,
     BOOK_CB_CLEAR_CACHE: (bookId: number) => `/recommend/book/${bookId}/cb/clear-cache`,
   },
 
@@ -40,7 +39,6 @@ export const PYTHON_API_ENDPOINTS = {
   SEARCH: {
     SUGGEST: '/books/suggest',
     SEARCH: '/books/search',
-    SEARCH_BY_IMAGE: '/api/books/search-by-image',
   },
 
   // ==========================================

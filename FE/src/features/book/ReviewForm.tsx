@@ -30,7 +30,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   editingReviewId
 }) => {
   const { submitReview, updateReview, reviews } = useOrder();
-  const { user, refreshOrders } = useAuth();
+  const { user } = useAuth();
+
   
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -110,9 +111,6 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           rating,
           review: review.trim(),
         });
-
-        // Refresh orders so isReviewed state updates without a full page reload
-        await refreshOrders();
 
         toast.success('Đánh giá thành công!', {
           description: 'Cảm ơn bạn đã chia sẻ trải nghiệm của mình.',

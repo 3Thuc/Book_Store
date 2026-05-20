@@ -60,12 +60,6 @@ export class BookService {
       params: { bookId, limit },
     });
   }
-
-  static async getPersonalizedRecommendations(limit?: number): Promise<ApiResponse<Book[]>> {
-    return apiRequest.get<ApiResponse<Book[]>>(API_ENDPOINTS.BOOKS.PERSONALIZED, {
-      params: { limit },
-    });
-  }
 }
 
 export default BookService;

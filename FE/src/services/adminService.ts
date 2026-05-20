@@ -26,18 +26,21 @@ export const adminService = {
   createCategory: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_CATEGORY, payload),
   updateCategory: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_CATEGORY(id), payload),
   deleteCategory: (id: string) => apiRequest.delete(API_ENDPOINTS.ADMIN.DELETE_CATEGORY(id)),
+  hardDeleteCategory: (id: string) => apiRequest.delete(`${API_ENDPOINTS.ADMIN.DELETE_CATEGORY(id)}/permanent`),
 
   // Publishers
   getPublishers: () => apiRequest.get(API_ENDPOINTS.ADMIN.PUBLISHERS),
   createPublisher: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_PUBLISHER, payload),
   updatePublisher: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_PUBLISHER(id), payload),
   deletePublisher: (id: string) => apiRequest.delete(API_ENDPOINTS.ADMIN.DELETE_PUBLISHER(id)),
+  hardDeletePublisher: (id: string) => apiRequest.delete(`${API_ENDPOINTS.ADMIN.DELETE_PUBLISHER(id)}/permanent`),
 
   // Authors
   getAuthors: () => apiRequest.get(API_ENDPOINTS.ADMIN.AUTHORS),
   createAuthor: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_AUTHOR, payload),
   updateAuthor: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_AUTHOR(id), payload),
   deleteAuthor: (id: string) => apiRequest.delete(API_ENDPOINTS.ADMIN.DELETE_AUTHOR(id)),
+  hardDeleteAuthor: (id: string) => apiRequest.delete(`${API_ENDPOINTS.ADMIN.DELETE_AUTHOR(id)}/permanent`),
 
   // Users
   getUsers: () => apiRequest.get(API_ENDPOINTS.ADMIN.USERS),
@@ -51,6 +54,7 @@ export const adminService = {
   createPromotion: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_PROMOTION, payload),
   updatePromotion: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_PROMOTION(id), payload),
   deletePromotion: (id: string) => apiRequest.delete(API_ENDPOINTS.ADMIN.DELETE_PROMOTION(id)),
+  permanentDeletePromotion: (id: string) => apiRequest.delete(`${API_ENDPOINTS.ADMIN.DELETE_PROMOTION(id)}/permanent`),
 
   // Inventory
   getInventory: () => apiRequest.get(API_ENDPOINTS.ADMIN.INVENTORY),
@@ -58,7 +62,7 @@ export const adminService = {
 
   // Orders
   getOrders: (params?: any) => apiRequest.get(API_ENDPOINTS.ADMIN.ORDERS, { params }),
-  getOrderStats: () => apiRequest.get(API_ENDPOINTS.ADMIN.ORDER_STATS),
+  getOrderStats: () => apiRequest.get(API_ENDPOINTS.ADMIN.ORDER_STATISTICS),
   getOrderStatistics: () => apiRequest.get(API_ENDPOINTS.ADMIN.ORDER_STATISTICS),
   getOrderById: (id: string | number) => apiRequest.get(API_ENDPOINTS.ADMIN.ORDER_DETAIL(id)),
   getOrderTimeline: (id: string | number) => apiRequest.get(API_ENDPOINTS.ADMIN.ORDER_TIMELINE(id)),

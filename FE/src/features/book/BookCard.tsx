@@ -15,20 +15,30 @@ interface BookCardProps {
   book: Book;
   onClick?: (book: Book) => void;
   variant?: 'grid' | 'list';
+  /** Đặt true cho 4 BookCard đầu tiên mỗi trang → browser ưu tiên load ảnh ngay */
+  priority?: boolean;
 }
 
-export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'grid' }) => {
+export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'grid', priority = false }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
 
+  // Tồn kho thực tế (đã trừ đơn đang chờ/xử lý/giao)
+  const available = book.availableQuantity ?? book.stockQuantity ?? 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Check if user is logged in
     if (!isLoggedIn) {
       toast.error('Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng');
       navigate('/login');
+      return;
+    }
+
+    // Guard hết hàng — phòng trường hợp UI chưa kịp cập nhật
+    if (available <= 0) {
+      toast.error('Sản phẩm hiện đã hết hàng');
       return;
     }
     
@@ -50,8 +60,8 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
               <ImageWithFallback
                 src={book.imageUrl}
                 alt={book.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 transform-gpu backface-hidden"
-                style={{ imageRendering: '-webkit-optimize-contrast' as any, willChange: 'transform' }}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 transform-gpu"
+                priority={priority}
               />
               
               {/* Stock Badge */}
@@ -91,10 +101,10 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
               {/* Price and Actions */}
               <div className="flex items-center justify-between">
                 <span className="font-bold text-lg text-primary">
-                  {formatPrice(book.price)}
+                  {formatPrice(book.price ?? 0)}
                 </span>
                 
-                {book.stockQuantity > 0 && (
+                {available > 0 && (
                   <Button
                     size="sm"
                     onClick={handleAddToCart}
@@ -123,21 +133,23 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
           <ImageWithFallback
             src={book.imageUrl}
             alt={book.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 transform-gpu backface-hidden"
-            style={{ imageRendering: '-webkit-optimize-contrast' as any, willChange: 'transform' }}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 transform-gpu"
+            priority={priority}
           />
           
-          {/* Overlay Buttons */}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <Button
-              size="sm"
-              onClick={handleAddToCart}
-              className="bg-white dark:bg-white text-black dark:text-black hover:bg-gray-100 dark:hover:bg-gray-200"
-            >
-              <ShoppingCart className="h-4 w-4 mr-1" />
-              Thêm vào giỏ
-            </Button>
-          </div>
+          {/* Overlay Buttons — chỉ hiện khi còn hàng */}
+          {available > 0 && (
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <Button
+                size="sm"
+                onClick={handleAddToCart}
+                className="bg-white dark:bg-white text-black dark:text-black hover:bg-gray-100 dark:hover:bg-gray-200"
+              >
+                <ShoppingCart className="h-4 w-4 mr-1" />
+                Thêm vào giỏ
+              </Button>
+            </div>
+          )}
 
           {/* Stock Badge */}
           {((book.availableQuantity ?? book.stockQuantity) === 0) && (
@@ -168,11 +180,11 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <span className="font-bold text-sm text-primary">
-                {formatPrice(book.price)}
+                {formatPrice(book.price ?? 0)}
               </span>
             </div>
             
-            {book.stockQuantity > 0 && (
+            {available > 0 && (
               <Button
                 size="sm"
                 variant="ghost"

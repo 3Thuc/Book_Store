@@ -15,6 +15,7 @@ public class OrderStatisticsRes {
     private Long processingOrders;
     private Long shippedOrders;
     private Long deliveredOrders;
+    private Long cancelRequestedOrders;
     private Long cancelledOrders;
     private Long returnRequestedOrders;
     private Long returnedOrders;

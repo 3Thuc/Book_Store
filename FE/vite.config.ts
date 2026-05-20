@@ -1,63 +1,91 @@
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
-  export default defineConfig({
-    plugins: [react()],
-    define: {
-      global: 'globalThis',
+export default defineConfig({
+  plugins: [react()],
+  define: {
+    global: 'globalThis',
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    alias: {
+      'vaul@1.1.2': 'vaul',
+      'sonner': 'sonner',
+      'recharts@2.15.2': 'recharts',
+      'react-resizable-panels@2.1.7': 'react-resizable-panels',
+      'react-hook-form@7.55.0': 'react-hook-form',
+      'react-day-picker@8.10.1': 'react-day-picker',
+      'lucide-react': 'lucide-react',
+      'input-otp@1.4.2': 'input-otp',
+      'figma:asset/c399fa81857a5c9f1045e7ff788ca9730ac8b544.png': path.resolve(__dirname, './src/assets/c399fa81857a5c9f1045e7ff788ca9730ac8b544.png'),
+      'embla-carousel-react@8.6.0': 'embla-carousel-react',
+      'cmdk@1.1.1': 'cmdk',
+      'class-variance-authority': 'class-variance-authority',
+      '@radix-ui/react-tooltip@1.1.8': '@radix-ui/react-tooltip',
+      '@radix-ui/react-toggle@1.1.2': '@radix-ui/react-toggle',
+      '@radix-ui/react-toggle-group@1.1.2': '@radix-ui/react-toggle-group',
+      '@radix-ui/react-tabs@1.1.3': '@radix-ui/react-tabs',
+      '@radix-ui/react-switch@1.1.3': '@radix-ui/react-switch',
+      '@radix-ui/react-slot@1.1.2': '@radix-ui/react-slot',
+      '@radix-ui/react-slider@1.2.3': '@radix-ui/react-slider',
+      '@radix-ui/react-separator@1.1.2': '@radix-ui/react-separator',
+      '@radix-ui/react-select@2.1.6': '@radix-ui/react-select',
+      '@radix-ui/react-scroll-area@1.2.3': '@radix-ui/react-scroll-area',
+      '@radix-ui/react-radio-group@1.2.3': '@radix-ui/react-radio-group',
+      '@radix-ui/react-progress@1.1.2': '@radix-ui/react-progress',
+      '@radix-ui/react-popover@1.1.6': '@radix-ui/react-popover',
+      '@radix-ui/react-navigation-menu@1.2.5': '@radix-ui/react-navigation-menu',
+      '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
+      '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
+      '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
+      '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
+      '@radix-ui/react-context-menu@2.2.6': '@radix-ui/react-context-menu',
+      '@radix-ui/react-collapsible@1.1.3': '@radix-ui/react-collapsible',
+      '@radix-ui/react-checkbox@1.1.4': '@radix-ui/react-checkbox',
+      '@radix-ui/react-avatar@1.1.3': '@radix-ui/react-avatar',
+      '@radix-ui/react-aspect-ratio@1.1.2': '@radix-ui/react-aspect-ratio',
+      '@radix-ui/react-alert-dialog': '@radix-ui/react-alert-dialog',
+      '@radix-ui/react-accordion': '@radix-ui/react-accordion',
+      '@': path.resolve(__dirname, './src'),
     },
-    resolve: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-      alias: {
-        'vaul@1.1.2': 'vaul',
-        'sonner': 'sonner',
-        'recharts@2.15.2': 'recharts',
-        'react-resizable-panels@2.1.7': 'react-resizable-panels',
-        'react-hook-form@7.55.0': 'react-hook-form',
-        'react-day-picker@8.10.1': 'react-day-picker',
-        'lucide-react': 'lucide-react',
-        'input-otp@1.4.2': 'input-otp',
-        'figma:asset/c399fa81857a5c9f1045e7ff788ca9730ac8b544.png': path.resolve(__dirname, './src/assets/c399fa81857a5c9f1045e7ff788ca9730ac8b544.png'),
-        'embla-carousel-react@8.6.0': 'embla-carousel-react',
-        'cmdk@1.1.1': 'cmdk',
-        'class-variance-authority': 'class-variance-authority',
-        '@radix-ui/react-tooltip@1.1.8': '@radix-ui/react-tooltip',
-        '@radix-ui/react-toggle@1.1.2': '@radix-ui/react-toggle',
-        '@radix-ui/react-toggle-group@1.1.2': '@radix-ui/react-toggle-group',
-        '@radix-ui/react-tabs@1.1.3': '@radix-ui/react-tabs',
-        '@radix-ui/react-switch@1.1.3': '@radix-ui/react-switch',
-        '@radix-ui/react-slot@1.1.2': '@radix-ui/react-slot',
-        '@radix-ui/react-slider@1.2.3': '@radix-ui/react-slider',
-        '@radix-ui/react-separator@1.1.2': '@radix-ui/react-separator',
-        '@radix-ui/react-select@2.1.6': '@radix-ui/react-select',
-        '@radix-ui/react-scroll-area@1.2.3': '@radix-ui/react-scroll-area',
-        '@radix-ui/react-radio-group@1.2.3': '@radix-ui/react-radio-group',
-        '@radix-ui/react-progress@1.1.2': '@radix-ui/react-progress',
-        '@radix-ui/react-popover@1.1.6': '@radix-ui/react-popover',
-        '@radix-ui/react-navigation-menu@1.2.5': '@radix-ui/react-navigation-menu',
-        '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
-        '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
-        '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
-        '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
-        '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
-        '@radix-ui/react-context-menu@2.2.6': '@radix-ui/react-context-menu',
-        '@radix-ui/react-collapsible@1.1.3': '@radix-ui/react-collapsible',
-        '@radix-ui/react-checkbox@1.1.4': '@radix-ui/react-checkbox',
-        '@radix-ui/react-avatar@1.1.3': '@radix-ui/react-avatar',
-        '@radix-ui/react-aspect-ratio@1.1.2': '@radix-ui/react-aspect-ratio',
-        '@radix-ui/react-alert-dialog': '@radix-ui/react-alert-dialog',
-        '@radix-ui/react-accordion': '@radix-ui/react-accordion',
-        '@': path.resolve(__dirname, './src'),
+  },
+  build: {
+    target: 'esnext',
+    outDir: 'build',
+  },
+  server: {
+    port: 3000,
+    open: true,
+    proxy: {
+      // Proxy API calls to Spring Boot (bypass self-signed cert)
+      '/bookdb': {
+        target: 'https://127.0.0.1:8443',
+        changeOrigin: true,
+        secure: false, // Accept self-signed certificate
+      },
+      // Proxy MinIO image requests (bypass cross-origin + mixed content)
+      '/minio': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/minio/, ''),
+        headers: { host: 'localhost:9000' },
+      },
+      // Proxy MinIO bucket 'bookstore' image requests (book covers)
+      // URLs from backend: /bookstore/covers/books/{id}/{id}.jpg?X-Amz-...
+      '/bookstore': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        headers: { host: 'localhost:9000' },
+      },
+      // Proxy Python FastAPI (recommendation + search service at port 8000)
+      '/pyapi': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/pyapi/, ''),
       },
     },
-    build: {
-      target: 'esnext',
-      outDir: 'build',
-    },
-    server: {
-      port: 3000,
-      open: true,
-    },
-  });
+  },
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAdmin, InventoryItem } from './AdminContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
@@ -7,18 +7,30 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Package, AlertTriangle, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Package, AlertTriangle, Search, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import PaginationControls from '../../components/admin/PaginationControls';
 import { ImageWithFallback } from '../../components/fallbackimg/ImageWithFallback';
 
 export const InventoryManagement: React.FC = () => {
-  const { inventory, books, updateInventory, updateStock } = useAdmin();
+  const { inventory, books, updateInventory, updateStock, loadInventory, reloadInventory, isInventoryLoading } = useAdmin();
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newStock, setNewStock] = useState('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+
+  // Smart load:
+  // - Nếu inventory đã có data (từ localStorage hoặc fetch trước): dùng cache, không gọi API lại.
+  // - Nếu inventory trống (chưa load, lỗi server, hoặc server restart): buộc fetch lại ngay.
+  useEffect(() => {
+    if (inventory.length === 0) {
+      reloadInventory(); // force, bypass ref guards
+    } else {
+      loadInventory();   // no-op if inventoryLoadedRef = true (cache hit)
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleUpdateStock = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -49,19 +61,38 @@ export const InventoryManagement: React.FC = () => {
     }
   };
 
-  // Get book details for inventory item
-  const getBookDetails = (bookId: string) => {
-    return books.find(b => String(b.bookId) === String(bookId));
-  };
+  // O(1) book lookup — build once, tham chiếu nhiều lần.
+  // Trước: mỗi row gọi books.find() = O(N) → 500×500 = 250,000 so sánh/render.
+  // Sau:  mỗi row gọi bookMap.get() = O(1) → 500 lookups/render.
+  const bookMap = useMemo(
+    () => new Map(books.map(b => [String(b.bookId), b])),
+    [books]
+  );
 
-  // Filter inventory
-    const filteredInventory = inventory.filter(item => {
-      const book = getBookDetails(item.bookId);
-      if (!book) return false;
-      const titleMatch = (book.title ?? '').toLowerCase().includes(searchTerm.toLowerCase());
-      const authorMatch = (book.author ?? '').toLowerCase().includes(searchTerm.toLowerCase());
-      return titleMatch || authorMatch;
+  const getBookDetails = (bookId: string) => bookMap.get(String(bookId));
+
+  // Mênh giá filteredInventory chỉ khi inventory/searchTerm thay đổi —
+  // không tính lại khi dialog mở/đóng, chọn item, v.v.
+  const filteredInventory = useMemo(() => {
+    if (!searchTerm.trim()) return inventory;
+    const lower = searchTerm.toLowerCase();
+    return inventory.filter(item => {
+      // Ưu tiên bookTitle từ inventory item (luôn có), bổ sung author từ bookMap (nếu có)
+      const title = (item as any).bookTitle ?? bookMap.get(String(item.bookId))?.title ?? '';
+      const author = bookMap.get(String(item.bookId))?.author ?? '';
+      return title.toLowerCase().includes(lower)
+          || author.toLowerCase().includes(lower);
     });
+  }, [inventory, searchTerm, bookMap]);
+
+  // Thống kê kho — chỉ tính lại khi inventory thay đổi
+  const inventoryStats = useMemo(() => ({
+    lowStockItems:  inventory.filter(i => getAvailable(i) > 0 && getAvailable(i) <= getThreshold(i)).length,
+    outOfStockItems: inventory.filter(i => getAvailable(i) <= 0).length,
+    totalStock:     inventory.reduce((s, i) => s + getStock(i), 0),
+    totalAvailable: inventory.reduce((s, i) => s + getAvailable(i), 0),
+  }), [inventory]);
+
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / pageSize));
@@ -72,11 +103,7 @@ export const InventoryManagement: React.FC = () => {
 
   const paginatedInventory = filteredInventory.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Statistics
-  const lowStockItems = inventory.filter(i => getAvailable(i) <= getThreshold(i)).length;
-  const outOfStockItems = inventory.filter(i => getAvailable(i) === 0).length;
-  const totalStock = inventory.reduce((sum, i) => sum + getStock(i), 0);
-  const totalAvailable = inventory.reduce((sum, i) => sum + getAvailable(i), 0);
+  const { lowStockItems, outOfStockItems, totalStock, totalAvailable } = inventoryStats;
 
   const getStockStatus = (item: InventoryItem) => {
     const availableVal = getAvailable(item);
@@ -183,32 +210,49 @@ export const InventoryManagement: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInventory.length === 0 ? (
+                {isInventoryLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Không tìm thấy sản phẩm
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Đang tải dữ liệu kho...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredInventory.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      {searchTerm ? 'Không tìm thấy sách phù hợp' : 'Không có sản phẩm nào'}
                     </TableCell>
                   </TableRow>
                 ) : (
                   paginatedInventory.map((item) => {
+                    // Ưu tiên imageUrl từ API inventory (backend đã trả về proxy path)
+                    // Fallback: tìm trong books context nếu có
                     const book = getBookDetails(item.bookId);
-                    if (!book) return null;
+                    const displayTitle = (item as any).bookTitle ?? book?.title ?? '';
+                    const displayAuthor = book?.author ?? '';
+                    const displayImage = (item as any).imageUrl
+                      ?? (book as any)?.imageUrl
+                      ?? (book as any)?.images
+                      ?? '';
 
                     return (
                       <TableRow key={item.bookId}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <ImageWithFallback
-                              src={(book as any).images ?? (book as any).imageUrl ?? ''}
-                              alt={book.title}
+                              src={displayImage}
+                              alt={displayTitle}
                               className="w-12 h-16 object-cover rounded"
                             />
                             <div>
-                              <div className="max-w-[200px] truncate">{book.title}</div>
-                              <div className="text-sm text-muted-foreground">{book.author}</div>
+                              <div className="max-w-[200px] truncate">{displayTitle}</div>
+                              <div className="text-sm text-muted-foreground">{displayAuthor}</div>
                             </div>
                           </div>
                         </TableCell>
+
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-muted-foreground" />
