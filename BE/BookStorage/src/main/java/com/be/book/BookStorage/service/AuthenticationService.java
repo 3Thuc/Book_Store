@@ -489,8 +489,11 @@ public class AuthenticationService {
 
     @Transactional
     public void resetPassword(String email) {
+        log.info("🔥 resetPassword được gọi với email: {}", email);  
         String cleanEmail = email.trim().toLowerCase();
+        log.info("🔥 cleanEmail sau trim: {}", cleanEmail);  
         Optional<UserEntity> optionalUser = userRepository.findByEmail(cleanEmail);
+        log.info("🔥 Tìm thấy user: {}", optionalUser.isPresent());  
         if (optionalUser.isPresent()) {
             UserEntity user = optionalUser.get();
             String newPassword = UUID.randomUUID().toString().substring(0, 10);
@@ -498,8 +501,10 @@ public class AuthenticationService {
             userRepository.save(user);
             String requestTime = LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+            log.info("🔥 Chuẩn bị publish event cho: {}", user.getEmail());  
             eventPublisher.publishEvent(
                     new GoogleUserForgotPasswordEvent(this, user, newPassword, requestTime));
+            log.info("🔥 Đã publish event xong");  
         }
     }
 
