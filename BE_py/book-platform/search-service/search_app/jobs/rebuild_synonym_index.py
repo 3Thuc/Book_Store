@@ -72,6 +72,10 @@ new_settings = {
     "settings": {
         "number_of_shards":   1,
         "number_of_replicas": 0,
+        "index": {
+            "knn": True,
+            "knn.algo_param.ef_search": 100
+        },
         "analysis": {
             "filter": {
                 "vn_synonyms": {

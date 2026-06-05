@@ -48,11 +48,15 @@ public class EmailNotificationListener {
         this.verifyDuration = verifyDuration;
     }
 
-    @Async
+    @Async("email-async")
     @EventListener
     public void handleUserRegistration(UserRegisteredEvent event) {
-        log.info("Nhận được sự kiện đăng ký người dùng, chuẩn bị gửi email tới: {}", event.getUser().getEmail());
-        sendVerificationEmail(event.getUser());
+        log.info("Nhận được sự kiện đăng ký, gửi email tới: {}", event.getUser().getEmail());
+        try {
+            sendVerificationEmail(event.getUser());
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email xác thực: {}", e.getMessage(), e);
+        }
     }
 
     private void sendVerificationEmail(UserEntity user) {
@@ -111,15 +115,14 @@ public class EmailNotificationListener {
             throw new RuntimeException("Không thể tạo token xác thực", e);
         }
     }
-    @Async
+    @Async("email-async")
     @EventListener
     public void handleGoogleUserCreated(GoogleUserCreatedEvent event) {
-        UserEntity user = event.getUser();
-        String rawPassword = event.getRawPassword();
-
+        log.info("Gửi email Google welcome tới: {}", event.getUser().getEmail());
         try {
-            sendGooglePasswordEmail(user, rawPassword);
-        } catch (Exception ignored) {
+            sendGooglePasswordEmail(event.getUser(), event.getRawPassword());
+        } catch (Exception e) {
+            log.error("❌ Lỗi gửi email Google welcome: {}", e.getMessage(), e);
         }
     }
 
@@ -135,17 +138,14 @@ public class EmailNotificationListener {
         sendHtmlMail(user.getEmail(), subject, htmlContent);
     }
 
-    @Async
+    @Async("email-async")
     @EventListener
     public void handleGoogleUserForgotPassword(GoogleUserForgotPasswordEvent event) {
-        UserEntity user = event.getUser();
-        String newPassword = event.getNewPassword();
-        String requestTime = event.getRequestTime();
-
+        log.info("Gửi email quên mật khẩu tới: {}", event.getUser().getEmail());
         try {
-            sendGoogleForgotPasswordEmail(user, newPassword, requestTime);
+            sendGoogleForgotPasswordEmail(event.getUser(), event.getNewPassword(), event.getRequestTime());
         } catch (Exception e) {
-            log.error("Lỗi khi gửi email quên mật khẩu cho {}: {}", user.getEmail(), e.getMessage());
+            log.error("❌ Lỗi gửi email quên mật khẩu: {}", e.getMessage(), e);
         }
     }
 

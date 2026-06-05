@@ -1,16 +1,16 @@
 ============================================= 
-[Sun 05/03/2026  2:00:02.23] START CF RETRAIN 
+[Fri 05/29/2026 15:45:39.87] START CF RETRAIN 
 ============================================= 
-[ 2:00:03.47] Step 1: build_cf_implicit... 
-C:\Users\ADMIN\AppData\Local\Programs\Python\Python312\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 16 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
+[15:45:40.31] Step 1: build_cf_implicit... 
+E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 12 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
   check_blas_config()
 [ALS-CF] factors=64 iter=20 alpha=5.0 topk=50
 [1/4] Tải Implicit Feedback từ MySQL...
-      Interactions: 73,690  |  Users: 303  |  Books: 19,995
+      Interactions: 73,761  |  Users: 304  |  Books: 19,995
 [2/4] Build Confidence Matrix...
-      Shape: (303, 19995)  |  Sparsity: 98.78%
+      Shape: (304, 19995)  |  Sparsity: 98.79%
 [3/4] Huấn luyện ALS...
-  0%|          | 0/20 [00:00<?, ?it/s] 10%|█         | 2/20 [00:00<00:01, 17.42it/s] 20%|██        | 4/20 [00:00<00:00, 16.44it/s] 30%|███       | 6/20 [00:00<00:00, 14.96it/s] 40%|████      | 8/20 [00:00<00:00, 14.40it/s] 50%|█████     | 10/20 [00:00<00:00, 14.28it/s] 60%|██████    | 12/20 [00:00<00:00, 14.29it/s] 70%|███████   | 14/20 [00:00<00:00, 14.20it/s] 80%|████████  | 16/20 [00:01<00:00, 14.24it/s] 90%|█████████ | 18/20 [00:01<00:00, 14.28it/s]100%|██████████| 20/20 [00:01<00:00, 14.22it/s]100%|██████████| 20/20 [00:01<00:00, 14.47it/s]
+  0%|          | 0/20 [00:00<?, ?it/s] 15%|█▌        | 3/20 [00:00<00:00, 28.42it/s] 30%|███       | 6/20 [00:00<00:00, 27.67it/s] 45%|████▌     | 9/20 [00:00<00:00, 26.84it/s] 60%|██████    | 12/20 [00:00<00:00, 26.33it/s] 75%|███████▌  | 15/20 [00:00<00:00, 26.20it/s] 90%|█████████ | 18/20 [00:00<00:00, 26.31it/s]100%|██████████| 20/20 [00:00<00:00, 26.45it/s]
       Item Factor Matrix: (19995, 64)
 [4/4] Tính Top-K & Lưu DB...
       Tổng rows: 999,750
@@ -115,30 +115,30 @@ C:\Users\ADMIN\AppData\Local\Programs\Python\Python312\Lib\site-packages\implici
   Saved 990000/999750 rows...
   Saved 999750/999750 rows...
 
-[DONE] CF_IMPLICIT hoàn tất trong 197.3s
-[ 2:03:27.97] Step 1 done (start:  2:00:03.47 / end:  2:03:27.97). 
-[ 2:03:27.98] Step 2: build_cf_purchase... 
-C:\Users\ADMIN\AppData\Local\Programs\Python\Python312\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 16 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
+[DONE] CF_IMPLICIT hoàn tất trong 58.9s
+[15:46:40.46] Step 1 done (start: 15:45:40.31 / end: 15:46:40.46). 
+[15:46:40.47] Step 2: build_cf_purchase... 
+E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 12 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
   check_blas_config()
 [ALS-CF-PURCHASE] factors=64 iterations=20 alpha=10.0 topk=50
 [1/4] Tải Purchase data từ orders/order_details...
-      Interactions: 17,764  |  Users: 301  |  Books: 8,569
+      Interactions: 17,772  |  Users: 302  |  Books: 8,573
 [2/4] Build Confidence Matrix...
-      Shape: (301, 8569)  |  Sparsity: 99.31%
+      Shape: (302, 8573)  |  Sparsity: 99.31%
 [3/4] Huấn luyện ALS...
-  0%|          | 0/20 [00:00<?, ?it/s] 25%|██▌       | 5/20 [00:00<00:00, 40.38it/s] 50%|█████     | 10/20 [00:00<00:00, 37.93it/s] 70%|███████   | 14/20 [00:00<00:00, 36.51it/s] 90%|█████████ | 18/20 [00:00<00:00, 35.38it/s]100%|██████████| 20/20 [00:00<00:00, 36.09it/s]
+  0%|          | 0/20 [00:00<?, ?it/s] 35%|███▌      | 7/20 [00:00<00:00, 68.46it/s] 70%|███████   | 14/20 [00:00<00:00, 65.18it/s]100%|██████████| 20/20 [00:00<00:00, 65.11it/s]
 [4/4] Tính Top-K & Lưu DB...
-      Tổng rows: 428,450
+      Tổng rows: 428,650
 
-[DONE] CF_PURCHASE hoàn tất trong 103.9s
-[ 2:05:15.38] Step 2 done (start:  2:03:27.98 / end:  2:05:15.38). 
-[ 2:05:15.38] Step 3: rebuild_user_cf_batch... 
+[DONE] CF_PURCHASE hoàn tất trong 26.6s
+[15:47:07.90] Step 2 done (start: 15:46:40.47 / end: 15:47:07.90). 
+[15:47:07.91] Step 3: rebuild_user_cf_batch... 
 [BatchCF] active_days=30, history_days=90, topn=50
-[BatchCF] active users: 3
-[BatchCF] done. ok=3 fail=0 time=37.8s
-[ 2:05:54.44] Step 3 done (start:  2:05:15.38 / end:  2:05:54.44). 
+[BatchCF] active users: 4
+[BatchCF] done. ok=4 fail=0 time=15.3s
+[15:47:23.48] Step 3 done (start: 15:47:07.91 / end: 15:47:23.48). 
 ============================================= 
-TOTAL TIME: 352 seconds (5m 52s) 
-TOTAL: start= 2:00:02.23 / finish= 2:05:55.47 
-[ 2:05:55.48] ALL DONE. 
+TOTAL TIME: 104 seconds (1m 44s) 
+TOTAL: start=15:45:39.87 / finish=15:47:23.74 
+[15:47:23.74] ALL DONE. 
 ============================================= 

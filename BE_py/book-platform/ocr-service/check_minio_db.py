@@ -13,7 +13,7 @@ MINIO_BUCKET = os.getenv("MINIO_BUCKET", "bookstore")
 MYSQL_HOST = 'localhost'
 MYSQL_PORT = 3306
 MYSQL_USER = 'root'
-MYSQL_PASSWORD = '1900561275Nghia'
+MYSQL_PASSWORD = ''
 MYSQL_DB = 'bookstore'
 
 def get_minio_books():
