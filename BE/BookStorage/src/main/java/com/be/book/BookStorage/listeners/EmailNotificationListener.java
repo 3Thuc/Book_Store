@@ -48,7 +48,7 @@ public class EmailNotificationListener {
         this.verifyDuration = verifyDuration;
     }
 
-    @Async("email-async")
+    //@Async
     @EventListener
     public void handleUserRegistration(UserRegisteredEvent event) {
         log.info("Nhận được sự kiện đăng ký, gửi email tới: {}", event.getUser().getEmail());
@@ -115,7 +115,7 @@ public class EmailNotificationListener {
             throw new RuntimeException("Không thể tạo token xác thực", e);
         }
     }
-    @Async("email-async")
+    //@Async
     @EventListener
     public void handleGoogleUserCreated(GoogleUserCreatedEvent event) {
         log.info("Gửi email Google welcome tới: {}", event.getUser().getEmail());
@@ -138,7 +138,7 @@ public class EmailNotificationListener {
         sendHtmlMail(user.getEmail(), subject, htmlContent);
     }
 
-    @Async("email-async")
+    //@Async
     @EventListener
     public void handleGoogleUserForgotPassword(GoogleUserForgotPasswordEvent event) {
         log.info("Gửi email quên mật khẩu tới: {}", event.getUser().getEmail());
