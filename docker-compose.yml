@@ -61,6 +61,34 @@ services:
       retries: 3
 
   # ──────────────────────────────────────────────
+  # 2. MinIO Init – Tự động tạo bucket và set public policy
+  #    Chạy 1 lần rồi exit (restart: on-failure)
+  #    → Đảm bảo OCR pHash index tự động rebuild được khi khởi động
+  # ──────────────────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: bookstore_minio_init
+    restart: on-failure
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - bookstore_net
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123456789}
+      MINIO_BUCKET: ${MINIO_BUCKET:-bookstore}
+    entrypoint: >
+      /bin/sh -c "
+        echo '[minio-init] Connecting to MinIO...' &&
+        mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-admin} $${MINIO_ROOT_PASSWORD:-admin123456789} &&
+        mc mb --ignore-existing local/$${MINIO_BUCKET:-bookstore} &&
+        mc anonymous set public local/$${MINIO_BUCKET:-bookstore} &&
+        echo '[minio-init] Bucket $${MINIO_BUCKET:-bookstore} is now PUBLIC. OCR pHash will auto-rebuild.' &&
+        exit 0
+      "
+
+  # ──────────────────────────────────────────────
   # 3. OpenSearch – Full-text search tiếng Việt
   # ──────────────────────────────────────────────
   opensearch:
@@ -141,7 +169,7 @@ services:
       MYSQL_HOST: host.docker.internal
       MYSQL_PORT: "3306"
       MYSQL_USER: root
-      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-}
       MYSQL_DB: ${MYSQL_DB:-bookstore}
       # OpenSearch
       OPENSEARCH_HOST: opensearch
@@ -195,7 +223,7 @@ services:
       MYSQL_HOST: host.docker.internal
       MYSQL_PORT: "3306"
       MYSQL_USER: root
-      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-}
       MYSQL_DB: ${MYSQL_DB:-bookstore}
       # OpenSearch
       OPENSEARCH_HOST: opensearch
@@ -217,7 +245,7 @@ services:
     volumes:
       - ./BE_py/book-platform/chatbot-service:/app   # Hot reload
       - faiss_index:/app/faiss_index
-      - C:/Users/ADMIN/.cache/huggingface:/root/.cache/huggingface  # Bind mount HF cache từ host (1.2GB, không download lại)
+      - C:/Users/thuct/.cache/huggingface:/root/.cache/huggingface  # Bind mount HF cache từ host (1.2GB, không download lại)
     depends_on:
       opensearch:
         condition: service_healthy
@@ -255,7 +283,7 @@ services:
       MYSQL_HOST: host.docker.internal
       MYSQL_PORT: "3306"
       MYSQL_USER: root
-      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1900561275Nghia}
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-}
       MYSQL_DB: ${MYSQL_DB:-bookstore}
       # Google Books API (optional – để trống nếu không có key)
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
@@ -291,8 +319,10 @@ services:
       # → Container restart: load < 1s thay vì rebuild 30-60s từ MinIO
       - ocr_phash_cache:/app/tmp
     depends_on:
-      # Cần platform_api (:8000) đang chạy để gọi Search Service
-      - platform_api
+      platform_api:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     networks:
       - bookstore_net
     healthcheck:
