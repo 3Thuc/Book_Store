@@ -11,3 +11,7 @@ __pycache__/
 */node_modules/
 .env.docker
 .venv/
+
+# Ignore local properties files with credentials
+BE/BookStorage/src/main/resources/application.properties
+BE_py/book-platform/*/requirements.txt
