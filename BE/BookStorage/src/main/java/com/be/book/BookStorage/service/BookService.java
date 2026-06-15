@@ -97,11 +97,59 @@ public class BookService {
         return user;
     }
 
+    // private BookRes mapToBookRes(BookEntity entity) {
+    //     // getCachedPresignedUrl: first call hits MinIO SDK (slow), subsequent calls instant
+    //     String imageUrl = null;
+    //     if (entity.getImage() != null && entity.getImage().getImageUrl() != null) {
+    //         imageUrl = minioService.getCachedPresignedUrl(entity.getImage().getImageUrl());
+    //     }
+
+    //     BookRes res = new BookRes(
+    //             entity.getBookId(),
+    //             entity.getTitle(),
+    //             entity.getAuthor() != null ? entity.getAuthor().getAuthorName() : null,
+    //             entity.getPrice(),
+    //             entity.getPublicationYear(),
+    //             entity.getDescription(),
+    //             entity.getAvgRating(),
+    //             entity.getRatingCount(),
+    //             entity.getFormat(),
+    //             entity.getLanguage(),
+    //             entity.getStockQuantity(),
+    //             entity.getAvailableQuantity(),
+    //             entity.getStatus(),
+    //             imageUrl,
+    //             entity.getPublisher() != null ?
+    //                     new PublisherRes(
+    //                             entity.getPublisher().getPublisherId(),
+    //                             entity.getPublisher().getPublisherName()
+    //                     ) : null,
+    //             entity.getCategories() != null ?
+    //                     entity.getCategories().stream()
+    //                             .map(c -> CategoryRes.builder()
+    //                                     .categoryId(c.getCategoryId())
+    //                                     .categoryName(c.getCategoryName())
+    //                                     .status(c.getStatus())
+    //                                     .build())
+    //                             .toList() : List.of()
+    //     );
+
+    //     return res;
+    // }
+
+    // Đặt dòng này ở trên cùng của Class (ngay dưới các annotation như @Service hoặc @Component)
+@org.springframework.beans.factory.annotation.Value("${app.minio-public-url:http://localhost:9000}")
+private String minioPublicUrl;
+
     private BookRes mapToBookRes(BookEntity entity) {
-        // getCachedPresignedUrl: first call hits MinIO SDK (slow), subsequent calls instant
         String imageUrl = null;
+        
         if (entity.getImage() != null && entity.getImage().getImageUrl() != null) {
-            imageUrl = minioService.getCachedPresignedUrl(entity.getImage().getImageUrl());
+            String path = entity.getImage().getImageUrl();
+            
+            // 👉 Tự động nối chuỗi dựa trên cấu hình linh hoạt, loại bỏ hoàn toàn Token/Signature lỗi
+            // minioPublicUrl sẽ nhận giá trị từ Docker truyền vào (ví dụ: http://123.21.129.93:9000)
+            imageUrl = minioPublicUrl + "/bookstore/" + path;
         }
 
         BookRes res = new BookRes(
@@ -118,7 +166,7 @@ public class BookService {
                 entity.getStockQuantity(),
                 entity.getAvailableQuantity(),
                 entity.getStatus(),
-                imageUrl,
+                imageUrl, // Gán URL động đã được xử lý sạch sẽ vào đây
                 entity.getPublisher() != null ?
                         new PublisherRes(
                                 entity.getPublisher().getPublisherId(),

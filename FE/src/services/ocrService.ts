@@ -12,8 +12,9 @@
 
 import axios from 'axios';
 
-// OCR Service chạy tại port 8005 (độc lập với FastAPI :8000)
-export const OCR_BASE_URL = 'http://127.0.0.1:8005';
+// Gateway nginx public (Cloudflare) – route /api/ocr/* → ocr service.
+// Local dev cũ: 'http://127.0.0.1:8005'
+export const OCR_BASE_URL = 'https://book101.datateam.space';
 
 // Timeout 60s: OCR nặng, CPU có thể mất 5-8s cho ảnh phức tạp
 const OCR_TIMEOUT = 60_000;
@@ -59,6 +60,7 @@ export interface OcrReceiptItem {
   title: string;
   quantity: number | null;
   price: number | null;
+  matched_books: OcrBookResult[];
 }
 
 export interface OcrReceiptResponse {
@@ -69,6 +71,15 @@ export interface OcrReceiptResponse {
   total_amount: number | null;
   error: string | null;
 }
+
+export interface OcrBookReviewResponse {
+  success: boolean;
+  summary: string;
+  reasons: string[];
+  processing_time_ms: number;
+  error: string | null;
+}
+
 
 export interface OcrHealthResponse {
   status: string;
@@ -152,6 +163,21 @@ export class OcrService {
       '/api/ocr/scan-receipt',
       buildFormData(file),
       { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return resp.data;
+  }
+
+  /**
+   * Tạo tóm tắt và 3 lý do nên đọc sách qua Gemma 4.
+   *
+   * @param title   Tiêu đề sách
+   * @param author  Tác giả (tùy chọn)
+   * @returns       OcrBookReviewResponse
+   */
+  static async getBookReview(title: string, author?: string): Promise<OcrBookReviewResponse> {
+    const resp = await ocrClient.post<OcrBookReviewResponse>(
+      '/api/ocr/book-review',
+      { title, author }
     );
     return resp.data;
   }

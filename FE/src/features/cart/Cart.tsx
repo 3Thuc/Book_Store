@@ -20,6 +20,12 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems, clearCart } = useCart();
   const { isLoggedIn } = useAuth();
 
+  React.useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent('cart-open'));
+    }
+  }, [isOpen]);
+
   const handleQuantityChange = async (bookId: string, newQuantity: number) => {
     if (newQuantity < 1) {
       await removeFromCart(bookId);

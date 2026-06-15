@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { sendChatMessage, streamChatMessage, generateSessionId, ChatMessage, NavigateButton, prepareImageMessage } from '../../services/chatService';
 import { toast } from 'sonner';
+
 // ── Icons (inline SVG) ──────────────────────────────────────────────────────
 const SendIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -172,7 +173,7 @@ function getRoleConfig(role?: string, isGuest?: boolean) {
 
 // ── Message Bubble (no avatar icon) ─────────────────────────────────────────
 // React.memo: tránh re-render toàn bộ bubble khi user gõ phím (chỉ input thay đổi)
-const MessageBubble = React.memo<{ msg: ChatMessage & { _imagePreview?: string }; isBot: boolean; roleColor: string }>(({ msg, isBot, roleColor }) => {
+const MessageBubble = React.memo<{ msg: ChatMessage & { _imagePreview?: string }; isBot: boolean; roleColor: string; onImageClick?: (url: string) => void }>((({ msg, isBot, roleColor, onImageClick }) => {
   const timeStr = msg.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
   return (
@@ -192,6 +193,7 @@ const MessageBubble = React.memo<{ msg: ChatMessage & { _imagePreview?: string }
             <img
               src={(msg as any)._imagePreview}
               alt="Ảnh đã gửi"
+              onClick={() => onImageClick?.((msg as any)._imagePreview)}
               style={{
                 maxWidth: 220,
                 maxHeight: 200,
@@ -199,7 +201,11 @@ const MessageBubble = React.memo<{ msg: ChatMessage & { _imagePreview?: string }
                 objectFit: 'cover',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
                 border: '2px solid rgba(255,255,255,0.4)',
+                cursor: 'zoom-in',
+                transition: 'transform 0.15s',
               }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
             />
           </div>
         )}
@@ -233,7 +239,7 @@ const MessageBubble = React.memo<{ msg: ChatMessage & { _imagePreview?: string }
       </div>
     </div>
   );
-});
+}));
 MessageBubble.displayName = 'MessageBubble';
 
 // ── Main Chat Widget ─────────────────────────────────────────────────────────
@@ -270,6 +276,25 @@ const ChatWidget: React.FC = () => {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
 
+  // Tự động đóng chatbot khi giỏ hàng (Sheet) mở để tránh chồng lấn UI
+  useEffect(() => {
+    const checkOverlayAndClose = () => {
+      const isCartOpen = !!document.querySelector('[data-slot="sheet-content"]');
+      if (isCartOpen && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    checkOverlayAndClose();
+
+    const observer = new MutationObserver(checkOverlayAndClose);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isOpen]);
+
   // ── Message history navigation (ArrowUp / ArrowDown) ─────────────────────
   const [inputHistory, setInputHistory] = useState<string[]>([]);
   const historyIndexRef = useRef<number>(-1);  // -1 = not browsing history
@@ -280,6 +305,98 @@ const ChatWidget: React.FC = () => {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isOCRProcessing, setIsOCRProcessing] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  // ── Lightbox state ────────────────────────────────────────────────────
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxZoom, setLightboxZoom] = useState(1.0);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+
+  const openLightbox = (url: string) => { setLightboxUrl(url); setLightboxZoom(1.0); };
+  const closeLightbox = () => { setLightboxUrl(null); setLightboxZoom(1.0); };
+
+  // Khoá cuộn trang nền khi mở Lightbox (cả body và documentElement)
+  useEffect(() => {
+    if (lightboxUrl) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [lightboxUrl]);
+
+  // Tự động focus vào Lightbox khi được mở để bắt các sự kiện bàn phím (như phím ESC)
+  useEffect(() => {
+    if (lightboxUrl && lightboxRef.current) {
+      lightboxRef.current.focus();
+    }
+  }, [lightboxUrl]);
+
+  // Đóng Lightbox khi nhấn phím ESC (Escape)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      }
+    };
+    if (lightboxUrl) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lightboxUrl]);
+
+  // Chặn cuộn trang mặc định (passive: false) trên Lightbox và thực hiện zoom
+  useEffect(() => {
+    const handleNativeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setLightboxZoom(z => Math.min(5, Math.max(0.3, z - e.deltaY * 0.001)));
+    };
+    const el = lightboxRef.current;
+    if (el && lightboxUrl) {
+      el.addEventListener('wheel', handleNativeWheel, { passive: false });
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('wheel', handleNativeWheel);
+      }
+    };
+  }, [lightboxUrl]);
+
+  // Hỗ trợ dán ảnh từ clipboard (Ctrl+V) bất cứ lúc nào khi khung chat đang mở
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      if (!isOpen || isMinimized || isLoading) return;
+
+      // Nếu đang gõ ở input/textarea khác ngoài khung chat, không được chặn và tự động dán vào chat
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl.id !== 'chat-input') {
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          e.preventDefault();
+          const file = items[i].getAsFile();
+          if (file) {
+            const namedFile = new File([file], `clipboard_${Date.now()}.png`, { type: file.type });
+            handleImageAttach(namedFile);
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, [isOpen, isMinimized, isLoading]);
 
   // Tạo / huỷ object URL khi attach/detach ảnh
   useEffect(() => {
@@ -434,7 +551,7 @@ const ChatWidget: React.FC = () => {
         formData.append('role', user?.role ?? 'customer');
         if (user?.id) formData.append('user_id', user.id);
 
-        const response = await fetch('http://localhost:8004/api/chat/upload-image', {
+        const response = await fetch('https://book101.datateam.space/api/chat/upload-image', {
           method: 'POST',
           body: formData,
         });
@@ -653,7 +770,7 @@ const ChatWidget: React.FC = () => {
       if ((msg as any)._streamingId && !msg.content) return null;
       return (
         <div key={i}>
-          <MessageBubble msg={msg} isBot={msg.role === 'assistant'} roleColor={roleColor} />
+          <MessageBubble msg={msg} isBot={msg.role === 'assistant'} roleColor={roleColor} onImageClick={openLightbox} />
           {msg.role === 'assistant' && msg.navigate_buttons && msg.navigate_buttons.length > 0 && (
             <div style={{ marginTop: -8, marginBottom: 12, paddingLeft: 4 }}>
               {msg.navigate_buttons.filter(b => b.type === 'confirm_yes' || b.type === 'confirm_no').length > 0 && (
@@ -683,12 +800,30 @@ const ChatWidget: React.FC = () => {
               {msg.navigate_buttons.filter(b => b.type === 'book' || b.type === 'order' || b.type === 'page').length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {msg.navigate_buttons.filter(b => b.type === 'book' || b.type === 'order' || b.type === 'page').map((btn, bi) => {
-                    const ac = btn.type === 'book' ? '#6366f1' : btn.type === 'order' ? '#10b981' : '#94a3b8';
-                    const bg = btn.type === 'book' ? 'rgba(99,102,241,0.05)' : btn.type === 'order' ? 'rgba(16,185,129,0.05)' : 'rgba(0,0,0,0.02)';
-                    const tc = btn.type === 'book' ? '#3730a3' : btn.type === 'order' ? '#047857' : '#475569';
+                    const ac = btn.type === 'book'
+                      ? '#6366f1'
+                      : btn.type === 'order'
+                        ? '#10b981'
+                        : '#94a3b8';
+
+                    const bg = btn.type === 'book'
+                      ? 'rgba(99,102,241,0.05)'
+                      : btn.type === 'order'
+                        ? 'rgba(16,185,129,0.05)'
+                        : 'rgba(0,0,0,0.02)';
+
+                    const tc = btn.type === 'book'
+                      ? '#3730a3'
+                      : btn.type === 'order'
+                        ? '#047857'
+                        : '#475569';
+
                     const lbl = btn.label.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]\s*/u, '');
+
+                    const handleClick = () => navigate(btn.url);
+
                     return (
-                      <button key={`n${bi}`} onClick={() => navigate(btn.url)}
+                      <button key={`n${bi}`} onClick={handleClick}
                         style={{ display: 'block', textAlign: 'left', padding: '8px 12px 8px 14px', borderRadius: 8, border: `1px solid ${ac}22`, borderLeft: `3px solid ${ac}`, background: bg, color: tc, fontSize: 12.5, fontWeight: 500, cursor: 'pointer', transition: 'all .15s', width: '100%', lineHeight: 1.45 }}
                         onMouseEnter={e => { e.currentTarget.style.background = `${ac}14`; e.currentTarget.style.transform = 'translateX(2px)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = bg; e.currentTarget.style.transform = 'translateX(0)'; }}>
@@ -703,9 +838,27 @@ const ChatWidget: React.FC = () => {
         </div>
       );
     }),
-    [messages, roleColor, sendMessage]
+    [messages, roleColor, sendMessage, navigate]
   );
 
+
+  // ── Paste handler: detect ảnh từ clipboard (Ctrl+V) ────────────────────
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) {
+          // Đặt tên file mặc định nếu clipboard không có tên
+          const namedFile = new File([file], `clipboard_${Date.now()}.png`, { type: file.type });
+          handleImageAttach(namedFile);
+        }
+        break;
+      }
+    }
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); return; }
@@ -775,7 +928,7 @@ const ChatWidget: React.FC = () => {
           aria-label="Mở chatbot hỗ trợ"
           title={label}
           style={{
-            position: 'fixed', bottom: 28, right: 28, zIndex: 9998,
+            position: 'fixed', bottom: 28, right: 28, zIndex: 40,
             width: 56, height: 56, borderRadius: '50%', border: 'none',
             background: `linear-gradient(135deg, ${roleColor}, #8b5cf6)`,
             color: '#fff', cursor: 'pointer',
@@ -803,7 +956,7 @@ const ChatWidget: React.FC = () => {
         <div
           id="chat-widget-window"
           style={{
-            position: 'fixed', bottom: 28, right: 28, zIndex: 9999,
+            position: 'fixed', bottom: 28, right: 28, zIndex: 45,
             width: 390, borderRadius: 18,
             height: isMinimized ? 'auto' : 560,
             boxShadow: '0 24px 64px rgba(0,0,0,0.16), 0 4px 16px rgba(0,0,0,0.10)',
@@ -1045,7 +1198,8 @@ const ChatWidget: React.FC = () => {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Nhắn tin... (Nhấn Enter để gửi)"
+                    onPaste={handlePaste}
+                    placeholder="Nhắn tin hoặc dán ảnh (Ctrl+V)..."
                     rows={1}
                     disabled={isLoading}
                     style={{
@@ -1100,6 +1254,87 @@ const ChatWidget: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+      {/* ── Lightbox Modal ──────────────────────────────────────────────── */}
+      {lightboxUrl && (
+        <div
+          ref={lightboxRef}
+          onClick={closeLightbox}
+          tabIndex={0}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.82)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: lightboxZoom > 1 ? 'move' : 'zoom-out',
+            animation: 'chatSlideUp .15s ease',
+            userSelect: 'none',
+            outline: 'none',
+            touchAction: 'none',
+          }}
+        >
+          <img
+            src={lightboxUrl}
+            alt="Xem ảnh"
+            onClick={e => e.stopPropagation()}
+            onDoubleClick={() => setLightboxZoom(1.0)}
+            style={{
+              maxWidth: '90vw', maxHeight: '88vh',
+              borderRadius: lightboxZoom > 1 ? 0 : 14,
+              boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+              objectFit: 'contain',
+              userSelect: 'none',
+              transform: `scale(${lightboxZoom})`,
+              transformOrigin: 'center center',
+              transition: lightboxZoom === 1 ? 'transform 0.2s ease' : 'none',
+              cursor: lightboxZoom > 1 ? 'move' : 'zoom-in',
+            }}
+          />
+          {/* Điều khiển zoom */}
+          <div style={{
+            position: 'absolute', top: 18, left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'rgba(0,0,0,0.55)', borderRadius: 30,
+            padding: '5px 14px', backdropFilter: 'blur(6px)',
+          }}>
+            <button onClick={e => { e.stopPropagation(); setLightboxZoom(z => Math.max(0.3, z - 0.2)); }}
+              style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>−</button>
+            <span style={{ color: '#fff', fontSize: 12, fontWeight: 600, minWidth: 40, textAlign: 'center' }}>
+              {Math.round(lightboxZoom * 100)}%
+            </span>
+            <button onClick={e => { e.stopPropagation(); setLightboxZoom(z => Math.min(5, z + 0.2)); }}
+              style={{ background: 'none', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '0 4px' }}>+</button>
+            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.3)', margin: '0 4px' }} />
+            <button onClick={e => { e.stopPropagation(); setLightboxZoom(1.0); }}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 11, cursor: 'pointer', padding: '0 2px' }}>1:1</button>
+          </div>
+          <button
+            onClick={closeLightbox}
+            style={{
+              position: 'absolute', top: 18, right: 22,
+              background: 'rgba(255,255,255,0.12)',
+              border: '1.5px solid rgba(255,255,255,0.25)',
+              borderRadius: '50%', width: 40, height: 40,
+              color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 20, fontWeight: 300, lineHeight: 1,
+              backdropFilter: 'blur(4px)',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+            aria-label="Đóng ảnh"
+          >
+            ✕
+          </button>
+          <div style={{
+            position: 'absolute', bottom: 20,
+            color: 'rgba(255,255,255,0.45)', fontSize: 11.5,
+            pointerEvents: 'none',
+          }}>
+            Cuộn chuột để zoom • Double-click để về 100% • Click ngoài để đóng
+          </div>
         </div>
       )}
     </>

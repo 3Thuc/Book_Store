@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
-// Python Backend – đi qua Vite proxy /pyapi → http://localhost:8000
-// (giống /bookdb đi qua proxy → localhost:8443)
-export const PYTHON_API_BASE_URL = '/pyapi';
+// Python Backend – qua gateway nginx public (Cloudflare): route / → platform_api:8000.
+// Local dev cũ dùng Vite proxy: '/pyapi'. Đổi sang URL public để chạy trên render.
+export const PYTHON_API_BASE_URL = 'https://book101.datateam.space';
 
 const API_TIMEOUT = 30000;
 

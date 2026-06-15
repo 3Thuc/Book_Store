@@ -30,18 +30,17 @@ public class SecurityConfig {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
+        private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
-            "/users",
+            "/users/**",
             "/books/**",
-            "/categories",
+            "/categories/**",
             "/api/payment/**",
             "/img/**",
             "/ws/**",
             "/error",
-            "/admin/cache/evict"   // Internal: Python chatbot dùng X-Admin-Key, không cần JWT
+            "/admin/cache/evict"
     };
-
     private final CustomJwtDecoder customJwtDecoder;
     private final JwtTokenFilter jwtTokenFilter;
 
@@ -70,29 +69,34 @@ public class SecurityConfig {
     }
 
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        
-        // Build allowed origins list
-        List<String> allowedOrigins = new java.util.ArrayList<>();
-        allowedOrigins.add(frontendUrl);
-        allowedOrigins.add("http://localhost:3000");
-        allowedOrigins.add("http://localhost:5173");  // Vite dev server
-        
-        // Support Vercel deployments (*.vercel.app) + ngrok domains
-        corsConfiguration.setAllowedOriginPatterns(Arrays.asList(
-                "https?://localhost.*",
-                "https?://.*\\.vercel\\.app",
-                "https?://.*\\.ngrok.*",
-                "https://.*"  // Allow any https (cautious in production)
-        ));
-        
-        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
-        corsConfiguration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-        return source;
+    CorsConfiguration corsConfiguration = new CorsConfiguration();
+
+    corsConfiguration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://book-store-six-red.vercel.app"
+    ));
+
+    corsConfiguration.setAllowedMethods(Arrays.asList(
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+    ));
+
+    corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
+
+    corsConfiguration.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
+
+    source.registerCorsConfiguration("/**", corsConfiguration);
+
+    return source;
     }
 
     @Bean

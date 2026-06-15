@@ -13,7 +13,7 @@ import {
   X, Search, BookOpen, AlertCircle, Loader2, Camera,
   ChevronRight, Sparkles, Zap, CheckCircle, ScanLine,
 } from 'lucide-react';
-import { OcrBookResult, OcrResponse } from '../../services/ocrService';
+import { OcrBookResult, OcrResponse, OcrService } from '../../services/ocrService';
 import { ImageWithFallback } from '../fallbackimg/ImageWithFallback';
 import { toProxiedUrl } from '../../services/imageService';
 
@@ -108,6 +108,32 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
   const [preview, setPreview] = useState<string | null>(null);
   const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 });
   const retakeInputRef = React.useRef<HTMLInputElement>(null);
+
+  // States cho tính năng AI Review & Tóm tắt sách
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewData, setReviewData] = useState<{ summary: string; reasons: string[] } | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleOpenReview = async (title: string, author: string | null) => {
+    setReviewOpen(true);
+    setReviewLoading(true);
+    setReviewError(null);
+    setReviewData(null);
+    try {
+      const res = await OcrService.getBookReview(title, author || undefined);
+      if (res.success) {
+        setReviewData({ summary: res.summary, reasons: res.reasons });
+      } else {
+        setReviewError(res.error || 'Không thể tạo đánh giá cho sách.');
+      }
+    } catch (err: any) {
+      setReviewError(err.message || 'Lỗi kết nối tới hệ thống AI.');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (!imageFile) { setPreview(null); return; }
@@ -327,10 +353,19 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
               0%   { transform: scale(1);   opacity: 0.6; }
               100% { transform: scale(1.5); opacity: 0; }
             }
+            @keyframes fade-in {
+              from { opacity: 0; }
+              to   { opacity: 1; }
+            }
+            @keyframes slide-up {
+              from { transform: translateY(100%); }
+              to   { transform: translateY(0); }
+            }
             .ocr-book-row { transition: background 0.15s, transform 0.12s; }
             .ocr-book-row:hover { background: rgba(109,40,217,0.06); transform: translateX(2px); }
             .ocr-book-row:active { transform: scale(0.98); }
           `}</style>
+
 
           {/* ── HEADER ───────────────────────────────── */}
           <div style={{
@@ -572,6 +607,21 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
                           ISBN {info.isbn}
                         </p>
                       )}
+                      {displayTitle && (
+                        <button
+                          onClick={() => handleOpenReview(displayTitle, displayAuthor)}
+                          style={{
+                            marginTop: 8, display: 'flex', alignItems: 'center', gap: 4,
+                            padding: '4px 10px', borderRadius: 12, border: 'none',
+                            background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
+                            color: '#6d28d9', fontSize: 11, fontWeight: 700,
+                            cursor: 'pointer', transition: 'all 0.15s',
+                          }}
+                        >
+                          <Sparkles size={11} color="#6d28d9" fill="#6d28d9" />
+                          AI Review & Tóm tắt ✨
+                        </button>
+                      )}
                     </div>
                     {confidence > 0 && (
                       <div style={{
@@ -717,6 +767,96 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Review Drawer Overlay (WOW Feature) */}
+      {reviewOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          animation: 'fade-in 0.2s ease-out',
+        }}
+        onClick={() => setReviewOpen(false)}
+        >
+          <div style={{
+            width: '100%', maxWidth: '520px', background: 'white',
+            borderTopLeftRadius: 24, borderTopRightRadius: 24,
+            padding: '20px 16px 24px', boxShadow: '0 -8px 32px rgba(0,0,0,0.15)',
+            maxHeight: '80%', display: 'flex', flexDirection: 'column',
+            animation: 'slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+          }}
+          onClick={e => e.stopPropagation()}
+          >
+            {/* Header Drawer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Sparkles size={16} color="#7c3aed" fill="#7c3aed" />
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>AI Review & Tóm tắt sách</span>
+              </div>
+              <button
+                onClick={() => setReviewOpen(false)}
+                style={{
+                  width: 28, height: 28, borderRadius: '50%', border: 'none',
+                  background: '#f3f4f6', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#4b5563',
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+              {reviewLoading && (
+                <div style={{ padding: '32px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <Loader2 size={24} color="#7c3aed" style={{ animation: 'spin 1s linear infinite' }} />
+                  <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>Gemma 4 đang phân tích tác phẩm...</span>
+                </div>
+              )}
+
+              {reviewError && (
+                <div style={{ padding: '16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, color: '#b91c1c', fontSize: 12 }}>
+                  {reviewError}
+                </div>
+              )}
+
+              {reviewData && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Tóm tắt */}
+                  <div>
+                    <h4 style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 800, color: '#4b5563', letterSpacing: '0.05em' }}>TÓM TẮT SÁCH</h4>
+                    <p style={{ margin: 0, fontSize: 13, color: '#374151', lineHeight: 1.5, background: '#f9fafb', padding: '12px 14px', borderRadius: 14, border: '1px solid #f3f4f6' }}>
+                      {reviewData.summary}
+                    </p>
+                  </div>
+
+                  {/* Lý do nên đọc */}
+                  <div>
+                    <h4 style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 800, color: '#4b5563', letterSpacing: '0.05em' }}>3 LÝ DO NÊN ĐỌC</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {reviewData.reasons.map((r, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                          <div style={{
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: '#ecfdf5', border: '1px solid #a7f3d0',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, marginTop: 1,
+                          }}>
+                            <CheckCircle size={11} color="#059669" />
+                          </div>
+                          <span style={{ fontSize: 12.5, color: '#1f2937', lineHeight: 1.4 }}>{r}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 

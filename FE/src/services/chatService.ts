@@ -7,7 +7,9 @@
 
 import { getAuthToken } from '../lib/api-client';
 
-const CHATBOT_BASE = 'http://localhost:8004';
+// Gateway nginx public (Cloudflare) – route /api/chat,/api/staff/chat,/api/admin/chat → chatbot.
+// Local dev cũ: 'http://localhost:8004'
+const CHATBOT_BASE = 'https://book101.datateam.space';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -168,7 +170,7 @@ export async function extractTextFromImage(imageFile: File): Promise<{
     const formData = new FormData();
     formData.append('file', imageFile);
 
-    const response = await fetch('http://127.0.0.1:8005/api/ocr/search-by-cover', {
+    const response = await fetch('https://book101.datateam.space/api/ocr/search-by-cover', {
       method: 'POST',
       body: formData,
       signal: AbortSignal.timeout(60_000), // 60s timeout
