@@ -1,4 +1,3 @@
-export const API_BASE_URL = '/bookdb';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://123.21.129.93:8443/bookdb';
 
