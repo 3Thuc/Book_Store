@@ -1,8 +1,10 @@
-
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://123.21.129.93:8443/bookdb';
+// Environment-aware API configuration
+// Dev: use relative path (Vite proxy)
+// Prod: use absolute URL from env variable (set in Vercel dashboard)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://expenditure-ranges-karl-looked.trycloudflare.com/bookdb';
 
 // Direct backend URL - used only for OAuth (Google needs an absolute redirect URI)
-export const API_BASE_URL_ABSOLUTE = import.meta.env.VITE_API_BASE_URL_ABSOLUTE || 'https://123.21.129.93:8443/bookdb';
+export const API_BASE_URL_ABSOLUTE = import.meta.env.VITE_API_BASE_URL_ABSOLUTE || 'https://expenditure-ranges-karl-looked.trycloudflare.com/bookdb';
 
 
 export const API_VERSION = 'v1';
