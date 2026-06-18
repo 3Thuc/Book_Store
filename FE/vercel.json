@@ -15,6 +15,10 @@
     {
       "source": "/pyapi/:path*",
       "destination": "https://book101.datateam.space/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
