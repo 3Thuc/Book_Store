@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Package, Star, Calendar, Award, Edit3, User, Key, Eye, EyeOff, RotateCcw, CreditCard, ShoppingBag, Clock, CheckCircle2, DollarSign, MapPin, Phone, Mail, Settings, Plus, Trash2, Check, XCircle, Loader2 } from 'lucide-react';
-import { OrderWorkflowService } from '../utils/orderWorkflowService';
+import { Package, Star, Calendar, Edit3, User, Key, Eye, EyeOff, RotateCcw, ShoppingBag, Clock, CheckCircle2, DollarSign, MapPin, Phone, Mail, Plus, Trash2, Check, XCircle, Loader2 } from 'lucide-react';
 import { OrderService } from '../services/orderService';
-import { OrderStatus } from '../types/order';
+import { toProxiedUrl } from '../services/imageService';
+import { OrderStatus, OrderItem } from '../types/order';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -17,7 +17,6 @@ import { Separator } from '../components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Header } from '../layouts/Header';
 import { Footer } from '../layouts/Footer';
-import { BookRecommendations } from '../features/book/BookRecommendations';
 import { ReviewForm } from '../features/book/ReviewForm';
 import { ImageWithFallback } from '../components/fallbackimg/ImageWithFallback';
 import { useAuth } from '../context/AuthContext';
@@ -25,7 +24,6 @@ import PageLoader from '../components/PageLoader';
 import { useOrder } from '../context/OrderContext';
 import { books } from '../data/books';
 import { Book } from '../types/book';
-import { OrderItem } from '../types/order';
 import { toast } from 'sonner';
 import { formatVND } from '../lib/formatters';
 import { calculatePasswordStrength } from '../utils/passwordStrength';
@@ -49,7 +47,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   onLoginClick,
   onBookClick
 }) => {
-  const { user, addresses, orders, isLoadingOrders, changePass, updateProfile, addAddress, updateAddress, deleteAddress, setDefaultAddress, refreshOrders, updateOrderStatusLocal, initializing } = useAuth();
+  const { user, addresses, orders, changePass, updateProfile, addAddress, updateAddress, deleteAddress, setDefaultAddress, refreshOrders, updateOrderStatusLocal, initializing } = useAuth();
   const { getPurchasedBooks, reviews } = useOrder();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -133,6 +131,33 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     }
   }, [allOrders, orderFilter]);
   const purchasedBooks = getPurchasedBooks();
+
+  const getOrderItemImageUrl = (item: any): string => {
+    const rawImageUrl =
+      item.imageUrl ||
+      item.image_url ||
+      item.main_image ||
+      item.book?.imageUrl ||
+      item.book?.image_url ||
+      item.book?.main_image ||
+      item.book?.image ||
+      item.book?.cover ||
+      '';
+    return toProxiedUrl(rawImageUrl);
+  };
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const selectedOrderId = selectedOrder.id ?? selectedOrder.orderId;
+    if (!selectedOrderId) return;
+
+    const refreshedOrder = orders.find(
+      (o: any) => (o.id ?? o.orderId) === selectedOrderId
+    );
+    if (refreshedOrder && refreshedOrder !== selectedOrder) {
+      setSelectedOrder(refreshedOrder);
+    }
+  }, [orders, selectedOrder]);
 
   const newPasswordStrength = useMemo(
     () => calculatePasswordStrength(passwordData.newPassword),
@@ -1100,7 +1125,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Package className="h-5 w-5 text-primary" />
-                        Đơn hàng #{order.id.slice(-8)}
+                        Đơn hàng #{String(order.id ?? order.orderId).slice(-8)}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
                         Đặt ngày: {formatDate(order.orderDate)}
@@ -1116,7 +1141,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                         <div key={item.id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-accent transition-colors">
                           <div className="w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
                           <ImageWithFallback
-                            src={item.imageUrl}
+                            src={getOrderItemImageUrl(item)}
                             alt={item.title}
                             className="w-full h-full object-cover"
                           />
@@ -1489,7 +1514,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     <div key={item.id} className="flex items-start gap-4 p-3 border rounded-lg">
                       <div className="w-16 h-20 flex-shrink-0 rounded overflow-hidden">
                         <ImageWithFallback
-                          src={item.imageUrl}
+                          src={getOrderItemImageUrl(item)}
                           alt={item.title}
                           className="w-full h-full object-cover"
                         />
