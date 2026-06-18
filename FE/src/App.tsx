@@ -96,7 +96,7 @@ function HomePage() {
       rating:        item.avg_rating || 0,
       ratingCount:   item.rating_count || 0,
       stockQuantity: item.stock_quantity ?? 1,
-      imageUrl:      item.main_image || item.image_url || item.imageUrl || '',
+      imageUrl:      rewriteToProxy(item.main_image || item.image_url || item.imageUrl || ''),
       categories:    item.categories || [],
       reason:        item.reason,
     } as any));

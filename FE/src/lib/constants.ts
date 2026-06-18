@@ -1,11 +1,10 @@
-// Environment-aware API configuration
-// Dev: use relative path (Vite proxy)
-// Prod: use absolute URL from env variable (set in Vercel dashboard)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sims-succeed-garden-dryer.trycloudflare.com/bookdb/auth/login/google';
+export const API_BASE_URL = '/bookdb';
 
 // Direct backend URL - used only for OAuth (Google needs an absolute redirect URI)
-export const API_BASE_URL_ABSOLUTE = import.meta.env.VITE_API_BASE_URL_ABSOLUTE || 'https://sims-succeed-garden-dryer.trycloudflare.com/bookdb';
+export const API_BASE_URL_ABSOLUTE = 'https://localhost:8443/bookdb';
 
+// MinIO images are served through the Vite proxy at /minio
+export const MINIO_PROXY_BASE = '/minio/bookstore';
 
 export const API_VERSION = 'v1';
 

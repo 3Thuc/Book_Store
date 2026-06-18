@@ -1,0 +1,21 @@
+{
+  "$comment": "Tái tạo proxy của Vite (server.proxy) cho môi trường Vercel production. Browser gọi /minio,/bookdb,/pyapi (same-origin) → Vercel proxy tới backend thật → KHÔNG mixed-content, KHÔNG CORS. ⚠️ URL trycloudflare đổi khi restart → đổi tại đây + redeploy; dùng named tunnel (minio.datateam.space, api.datateam.space) để cố định.",
+  "rewrites": [
+    {
+      "source": "/bookdb/:path*",
+      "destination": "https://potentially-his-cheapest-trip.trycloudflare.com/bookdb/:path*"
+    },
+    {
+      "source": "/minio/:path*",
+      "destination": "https://pulling-baker-begins-hence.trycloudflare.com/:path*"
+    },
+    {
+      "source": "/bookstore/:path*",
+      "destination": "https://pulling-baker-begins-hence.trycloudflare.com/bookstore/:path*"
+    },
+    {
+      "source": "/pyapi/:path*",
+      "destination": "https://book101.datateam.space/:path*"
+    }
+  ]
+}
