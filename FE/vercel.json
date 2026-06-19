@@ -2,15 +2,15 @@
   "rewrites": [
     {
       "source": "/bookdb/:path*",
-      "destination": "https://potentially-his-cheapest-trip.trycloudflare.com/bookdb/:path*"
+      "destination": "https://success-fax-budgets-vatican.trycloudflare.com/bookdb/:path*"
     },
     {
       "source": "/minio/:path*",
-      "destination": "https://pulling-baker-begins-hence.trycloudflare.com/:path*"
+      "destination": "https://talk-book-complexity-font.trycloudflare.com/:path*"
     },
     {
       "source": "/bookstore/:path*",
-      "destination": "https://pulling-baker-begins-hence.trycloudflare.com/bookstore/:path*"
+      "destination": "https://talk-book-complexity-font.trycloudflare.com/bookstore/:path*"
     },
     {
       "source": "/pyapi/:path*",
