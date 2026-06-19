@@ -16,7 +16,7 @@ interface PaymentPageProps {
 export const PaymentPage: React.FC<PaymentPageProps> = ({ orderId }) => {
   const navigate = useNavigate();
   const { orders, updateOrderPaymentStatus } = useOrder();
-  const { user } = useAuth();
+  const { user, refreshOrders } = useAuth();
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,11 +79,16 @@ export const PaymentPage: React.FC<PaymentPageProps> = ({ orderId }) => {
     setIsProcessing(true);
     
     // Simulate payment processing
-    setTimeout(() => {
+    setTimeout(async () => {
       const success = Math.random() > 0.2; // 80% success rate for demo
       
       if (success) {
         updateOrderPaymentStatus(orderId, true);
+        try {
+          await refreshOrders();
+        } catch (err) {
+          console.warn('Failed to refresh orders after payment success:', err);
+        }
         setPaymentStatus('success');
         toast.success('Thanh toán thành công!');
       } else {

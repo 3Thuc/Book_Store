@@ -12,8 +12,6 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '../components/ui/dialog';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useOrder } from '../context/OrderContext';
-import adminService from '../services/adminService';
 import { apiRequest } from '../lib/api-client';
 import { API_ENDPOINTS } from '../lib/constants';
 import { Promotion } from '../features/admin/AdminContext';
@@ -75,8 +73,7 @@ const vietnamCities = [
 export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCart();
-  const { user, addresses, addAddress } = useAuth();
-  const { createOrder } = useOrder();
+  const { user, addresses, addAddress, refreshOrders } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false); // Prevent redirect during checkout
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -293,10 +290,11 @@ export const CheckoutPage: React.FC = () => {
           setIsCheckingOut(false);
         }
       } else {
-        // COD - clear cart and redirect to account page
+        // COD - clear cart, refresh order list and redirect to orders tab
         await clearCart();
+        await refreshOrders();
         setTimeout(() => {
-          navigate('/account');
+          navigate('/account?tab=orders');
         }, 1000);
       }
     } catch (error: any) {

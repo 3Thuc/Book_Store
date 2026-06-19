@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Payment Return Page
@@ -13,6 +14,7 @@ export const PaymentReturnPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { clearCart } = useCart();
+  const { refreshOrders } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const hasCheckedRef = useRef(false);
 
@@ -42,6 +44,11 @@ export const PaymentReturnPage = () => {
         } catch (error) {
           console.error('Failed to clear cart:', error);
           // Still show success even if clear fails (cart might already be empty)
+        }
+        try {
+          await refreshOrders();
+        } catch (err) {
+          console.warn('Failed to refresh orders after payment:', err);
         }
         setStatus('success');
       } else if (code || paymentStatus) {
@@ -98,7 +105,7 @@ export const PaymentReturnPage = () => {
               </Button>
               <Button
                 className="flex-1"
-                onClick={() => navigate('/account')}
+                onClick={() => navigate('/account?tab=orders')}
               >
                 Xem đơn hàng
               </Button>
