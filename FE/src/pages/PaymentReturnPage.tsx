@@ -14,7 +14,7 @@ export const PaymentReturnPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { clearCart } = useCart();
-  const { refreshOrders } = useAuth();
+  const { refreshOrders, initializing } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const hasCheckedRef = useRef(false);
 
@@ -25,20 +25,23 @@ export const PaymentReturnPage = () => {
   const code = searchParams.get('code');
 
   useEffect(() => {
-    // Prevent multiple executions (React strict mode runs useEffect twice)
-    if (hasCheckedRef.current) return;
-    hasCheckedRef.current = true;
+    if (hasCheckedRef.current || initializing) return;
 
-    // Check payment status and clear cart if successful
     const checkPayment = async () => {
+      hasCheckedRef.current = true;
+
       console.log('Payment params:', { code, paymentStatus, orderId });
       
       // Check if payment is successful
       // - code === '00' means success from PayOS
-      // - paymentStatus === 'PAID' means paid status from PayOS
+      // - paymentStatus === 'paid' means paid status from PayOS
       // - If orderId exists but no code/status, assume backend direct success redirect
-      if (code === '00' || paymentStatus === 'paid' || (orderId && !code && !paymentStatus)) {
-        // Clear cart after successful payment
+      const isSuccessfulPayment =
+        code === '00' ||
+        paymentStatus?.toLowerCase() === 'paid' ||
+        (orderId && !code && !paymentStatus);
+
+      if (isSuccessfulPayment) {
         try {
           await clearCart();
         } catch (error) {
@@ -59,12 +62,9 @@ export const PaymentReturnPage = () => {
         setStatus('failed');
       }
     };
-    
-    setTimeout(() => {
-      checkPayment();
-    }, 1500);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    checkPayment();
+  }, [initializing, code, paymentStatus, orderId, clearCart, refreshOrders]);
 
   if (status === 'loading') {
     return (
