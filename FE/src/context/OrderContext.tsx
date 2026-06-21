@@ -285,13 +285,25 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     if (!user) return undefined;
 
     const deliveredOrders = state.orders
-      .filter(order => order.userId === user.id && order.status === 'DELIVERED');
-
-    const matchingOrder = deliveredOrders
+      .filter(order => order.userId === user.id && order.status === 'DELIVERED')
       .filter(order => order.items.some(item => String(item.bookId) === String(bookId)))
-      .sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime())[0];
+      .sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
 
-    return matchingOrder?.id;
+    // Find first unreviewed order for this book
+    for (const order of deliveredOrders) {
+      const hasReview = state.reviews.some(
+        review => 
+          review.book_id === bookId && 
+          review.user_id === user.id && 
+          review.order_id === order.id
+      );
+      if (!hasReview) {
+        return order.id;
+      }
+    }
+
+    // If all orders are reviewed, return the latest one (will trigger duplicate review error)
+    return deliveredOrders[0]?.id;
   };
 
   const canReviewBook = (bookId: string): boolean => {
