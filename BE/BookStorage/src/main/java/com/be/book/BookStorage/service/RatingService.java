@@ -75,13 +75,15 @@ public class RatingService {
                 // Try to parse as Integer first
                 orderId = Integer.parseInt(req.getOrderId());
             } catch (NumberFormatException e) {
-                // If it's in format "ORD-123", extract the number part
+                // If it's in format "ORD-123" or timestamp string, try to extract number part
                 String orderIdStr = req.getOrderId().replaceAll("[^0-9]", "");
                 if (!orderIdStr.isEmpty()) {
                     try {
+                        // Try to parse extracted number as Integer
                         orderId = Integer.parseInt(orderIdStr);
                     } catch (NumberFormatException ex) {
-                        // Log and continue - orderId will be null, fallback to old check
+                        // If still fails (e.g., number too large), log and continue without order
+                        // This allows reviews without specific order association
                         orderId = null;
                     }
                 }
@@ -89,21 +91,28 @@ public class RatingService {
         }
 
         if (orderId != null) {
+            try {
                 com.be.book.BookStorage.entity.OrderEntity order = orderRepository.findById(orderId)
-                                        .orElseThrow(() -> new AppException(ErrorCode.DATABASE_ERROR));
+                        .orElseThrow(() -> new AppException(ErrorCode.DATABASE_ERROR));
                 builder.order(order);
-                        // Prevent duplicate review for same user+book+order
-                        if (ratingRepository.existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(user.getUserId(), bookId, orderId)) {
-                                throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
-                        }
-                } else {
-                        // If orderId not provided or invalid, fall back to existing uniqueness check
-                        if (ratingRepository.existsByUser_UserIdAndBook_BookId(user.getUserId(), bookId)) {
-                                throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
-                        }
+                // Prevent duplicate review for same user+book+order
+                if (ratingRepository.existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(user.getUserId(), book.getBookId(), orderId)) {
+                    throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
                 }
+            } catch (Exception ex) {
+                // If order lookup fails, fall back to user+book check
+                orderId = null;
+            }
+        }
 
-                RatingEntity entity = builder.build();
+        if (orderId == null) {
+            // If orderId not provided or invalid, fall back to existing uniqueness check
+            if (ratingRepository.existsByUser_UserIdAndBook_BookId(user.getUserId(), book.getBookId())) {
+                throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
+            }
+        }
+
+        RatingEntity entity = builder.build();
 
         RatingEntity saved = ratingRepository.save(entity);
         // Return complete DTO with all fields including orderId

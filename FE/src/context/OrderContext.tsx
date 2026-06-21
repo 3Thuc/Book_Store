@@ -215,12 +215,18 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   const createOrder = (items: OrderItem[], totalAmount: number, checkoutData?: CheckoutData): string => {
     if (!user) return '';
 
-
     const paymentMethod = checkoutData?.paymentMethod || 'COD';
     const needsOnlinePayment = paymentMethod === 'BANKING' || paymentMethod === 'MOMO' || paymentMethod === 'VNPAY';
 
+    // Generate numeric orderId that can be parsed as Integer (hash-based, fits in Integer range)
+    const numericId = Math.abs(
+      (Math.random().toString(36).substr(2, 9) + Date.now().toString()).split('').reduce(
+        (acc, char) => acc * 31 + char.charCodeAt(0), 0
+      )
+    ) % 2147483647; // Keep within Integer.MAX_VALUE
+
     const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
+      id: String(numericId),  // Store as numeric string for Integer parsing
       userId: user.id,
       items: items.map(item => ({ ...item, isReviewed: false })),
       totalAmount,
