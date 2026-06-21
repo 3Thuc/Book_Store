@@ -190,7 +190,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       if (savedReviews) {
         const reviews = JSON.parse(savedReviews).map((review: any) => ({
           ...review,
-          date: new Date(review.date)
+          created_at: review.created_at ? new Date(review.created_at) : new Date(),
+          updated_at: review.updated_at ? new Date(review.updated_at) : new Date()
         }));
         dispatch({ type: 'LOAD_REVIEWS', payload: reviews });
       }
@@ -280,6 +281,19 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     return purchasedBooks;
   };
 
+  const getLatestDeliveredOrderIdForBook = (bookId: string): string | undefined => {
+    if (!user) return undefined;
+
+    const deliveredOrders = state.orders
+      .filter(order => order.userId === user.id && order.status === 'DELIVERED');
+
+    const matchingOrder = deliveredOrders
+      .filter(order => order.items.some(item => String(item.bookId) === String(bookId)))
+      .sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime())[0];
+
+    return matchingOrder?.id;
+  };
+
   const canReviewBook = (bookId: string): boolean => {
     if (!user) return false;
     
@@ -296,12 +310,20 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       throw new Error('Bạn chỉ có thể đánh giá sách đã mua');
     }
 
+    const orderId = getLatestDeliveredOrderIdForBook(reviewData.book_id);
+    if (!orderId) {
+      throw new Error('Không tìm thấy đơn hàng phù hợp để gửi đánh giá');
+    }
+
     const existingReview = state.reviews.find(
-      review => review.book_id === reviewData.book_id && review.user_id === user.id
+      review =>
+        review.book_id === reviewData.book_id &&
+        review.user_id === user.id &&
+        review.order_id === orderId
     );
 
     if (existingReview) {
-      throw new Error('Bạn đã đánh giá cuốn sách này rồi');
+      throw new Error('Bạn đã đánh giá lần mua này rồi');
     }
 
     try {
@@ -310,11 +332,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         {
           rating: reviewData.rating,
           review: reviewData.review,
+          orderId,
         }
       );
 
       const newReview: Review = {
         rating_id: String(response.result.ratingId),
+        order_id: orderId,
         book_id: reviewData.book_id,
         user_id: user.id,
         rating: response.result.rating ?? reviewData.rating,
@@ -326,14 +350,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
       dispatch({ type: 'ADD_REVIEW', payload: newReview });
 
-      const userOrders = state.orders.filter(order => order.userId === user.id);
-      userOrders.forEach(order => {
-        if (order.items.some(item => item.bookId === reviewData.book_id)) {
-          dispatch({
-            type: 'UPDATE_ORDER_ITEM_REVIEWED',
-            payload: { orderId: order.id, bookId: reviewData.book_id }
-          });
-        }
+      dispatch({
+        type: 'UPDATE_ORDER_ITEM_REVIEWED',
+        payload: { orderId, bookId: reviewData.book_id }
       });
 
       toast.success('Đánh giá của bạn đã được gửi thành công!');
@@ -373,6 +392,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         {
           rating: reviewData.rating,
           review: reviewData.review,
+          orderId,
         }
       );
 

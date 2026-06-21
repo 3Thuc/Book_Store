@@ -203,6 +203,7 @@ export interface BookSearchRequest {
 export interface CreateReviewRequest {
   rating: number;
   review: string;  // Thêm field này
+  orderId?: string;
 }
 
 export interface UpdateReviewRequest {
