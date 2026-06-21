@@ -399,13 +399,6 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                       <ShoppingCart className="h-5 w-5 mr-2 opacity-50" />
                       Hết hàng - Không thể mua
                     </Button>
-                    <Button 
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => toast.info('Tính năng thông báo đang được phát triển')}
-                    >
-                      Thông báo khi có hàng
-                    </Button>
                   </div>
                 ) : (
                   <Button 
