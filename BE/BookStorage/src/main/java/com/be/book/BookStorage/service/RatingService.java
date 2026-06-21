@@ -141,6 +141,16 @@ public class RatingService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
+        // Validate orderId if provided (for per-order reviews)
+        if (req.getOrderId() != null && !req.getOrderId().isEmpty()) {
+            Integer orderId = extractOrderId(req.getOrderId());
+            
+            // Verify the review belongs to the specified order
+            if (rating.getOrder() != null && !rating.getOrder().getOrderId().equals(orderId)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+        }
+
         rating.setRating(req.getRating());
         rating.setReview(req.getReview());
         rating.setUpdatedAt(LocalDateTime.now());

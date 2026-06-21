@@ -209,6 +209,7 @@ export interface CreateReviewRequest {
 export interface UpdateReviewRequest {
   rating?: number;
   review?: string;
+  orderId?: string;
 }
 
 /**

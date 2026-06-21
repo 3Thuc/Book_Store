@@ -90,6 +90,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         console.log('=== Starting review update ===');
         console.log('Review ID:', editingReviewId);
         console.log('Book ID:', item.bookId);
+        console.log('Order ID:', orderId);
         console.log('Rating:', rating);
         console.log('Review:', review);
 
@@ -97,6 +98,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           book_id: item.bookId,
           rating,
           review: review.trim(),
+        }, orderId);
+        
+        toast.success('Cập nhật đánh giá thành công!', {
+          description: 'Cảm ơn bạn đã cập nhật trải nghiệm của mình.',
         });
       } else {
         // Create new review

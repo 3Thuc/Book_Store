@@ -494,7 +494,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     }
   };
 
-  const updateReview = async (reviewId: string, reviewData: Partial<ReviewData>): Promise<void> => {
+  const updateReview = async (reviewId: string, reviewData: Partial<ReviewData>, orderId?: string): Promise<void> => {
     if (!user) {
       throw new Error('Bạn cần đăng nhập');
     }
@@ -504,7 +504,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       throw new Error('Không tìm thấy đánh giá');
     }
 
-    if (review.user_id !== user.id) {
+    if (String(review.user_id) !== String(user.id)) {
       throw new Error('Bạn không có quyền sửa đánh giá này');
     }
 
@@ -515,6 +515,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         {
           rating: reviewData.rating,
           review: reviewData.review,
+          orderId: orderId || review.order_id,
         }
       );
 
@@ -522,12 +523,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         ...review,
         rating: response.result.rating ?? reviewData.rating ?? review.rating,
         review: response.result.review ?? reviewData.review ?? review.review,
+        order_id: response.result.orderId ? String(response.result.orderId) : review.order_id,
+        user_id: response.result.userId ? String(response.result.userId) : review.user_id,
         updated_at: new Date(response.result.updatedAt || Date.now()),
         status: response.result.status ?? review.status,
       };
 
       dispatch({ type: 'UPDATE_REVIEW', payload: updatedReview });
-      toast.success('Cập nhật đánh giá thành công!');
     } catch (error) {
       toast.error('Không thể cập nhật đánh giá');
       throw error;
