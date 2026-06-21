@@ -187,9 +187,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
     useEffect(() => {
       if (user && !initializing) {
-        refreshOrders();
+        // Check grace period before refreshing after user login
+        const timeSinceLastAction = Date.now() - lastActionTime;
+        if (timeSinceLastAction >= 15000) {
+          refreshOrders();
+        }
       }
-    }, [user, initializing]);
+    }, [user, initializing, lastActionTime]);
 
     // ── Auto-refresh đơn hàng khi đang ở tab "orders" ──────────────
     // Dùng ref để tránh stale closure trong setInterval
@@ -225,7 +229,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     useEffect(() => {
       if (!user || activeTab !== 'orders') return;
 
-      const handleFocus = () => refreshOrdersRef.current();
+      const handleFocus = () => {
+        // Check grace period before refreshing on focus
+        const timeSinceLastAction = Date.now() - lastActionTime;
+        if (timeSinceLastAction >= 15000) {
+          refreshOrdersRef.current();
+        }
+      };
 
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') handleFocus();
@@ -236,7 +246,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
         document.removeEventListener('visibilitychange', handleFocus);
         window.removeEventListener('focus', handleFocus);
       };
-    }, [user, activeTab]);
+    }, [user, activeTab, lastActionTime]);
 
 
   
@@ -1254,15 +1264,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                     onConfirm: async () => {
                                       setIsProcessingAction(true);
                                       try {
-                                        await OrderService.confirmDelivery(order.id);
-                                        updateOrderStatusLocal(order.id, 'DELIVERED');
-                                        setLastActionTime(Date.now()); // Pause polling for 5 seconds
-                                        setConfirmDialog({ ...confirmDialog, open: false });
-                                        toast.success('Xác nhận đã nhận hàng thành công');
+                                        const response = await OrderService.confirmDelivery(order.id);
+                                        if (response?.result?.status === 'DELIVERED') {
+                                          updateOrderStatusLocal(order.id, 'DELIVERED');
+                                          setLastActionTime(Date.now()); // Pause polling for 15 seconds
+                                          toast.success('Xác nhận đã nhận hàng thành công');
+                                        } else {
+                                          throw new Error('Unexpected response from server');
+                                        }
                                       } catch (error: any) {
+                                        console.error('confirmDelivery error:', error);
+                                        // Rollback local state if API fails - refetch from server
+                                        refreshOrders();
                                         toast.error(error?.response?.data?.message || 'Xác nhận thất bại');
-                                        setConfirmDialog({ ...confirmDialog, open: false });
                                       } finally {
+                                        setConfirmDialog({ ...confirmDialog, open: false });
                                         setIsProcessingAction(false);
                                       }
                                     }
@@ -1327,15 +1343,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                 onConfirm: async () => {
                                   setIsProcessingAction(true);
                                   try {
-                                    await OrderService.cancelOrder(order.id);
-                                    updateOrderStatusLocal(order.id, 'CANCELLED');
-                                    setLastActionTime(Date.now()); // Pause polling for 5 seconds
-                                    setConfirmDialog({ ...confirmDialog, open: false });
-                                    toast.success('Đã gửi yêu cầu hủy đơn hàng');
+                                    const response = await OrderService.cancelOrder(order.id);
+                                    if (response?.result?.status === 'CANCELLED') {
+                                      updateOrderStatusLocal(order.id, 'CANCELLED');
+                                      setLastActionTime(Date.now()); // Pause polling for 15 seconds
+                                      toast.success('Đã gửi yêu cầu hủy đơn hàng');
+                                    } else {
+                                      throw new Error('Unexpected response from server');
+                                    }
                                   } catch (error: any) {
+                                    console.error('cancelOrder error:', error);
+                                    // Rollback local state if API fails - refetch from server
+                                    refreshOrders();
                                     toast.error(error?.response?.data?.message || 'Hủy đơn hàng thất bại');
-                                    setConfirmDialog({ ...confirmDialog, open: false });
                                   } finally {
+                                    setConfirmDialog({ ...confirmDialog, open: false });
                                     setIsProcessingAction(false);
                                   }
                                 }
@@ -1767,13 +1789,20 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 }
                 setIsProcessingAction(true);
                 try {
-                  await OrderService.returnOrder(returnReasonDialog.orderId, { reason: returnReason });
-                  updateOrderStatusLocal(returnReasonDialog.orderId, 'RETURN_REQUESTED');
-                  setLastActionTime(Date.now()); // Pause polling for 5 seconds
-                  setReturnReasonDialog({ open: false, orderId: '' });
-                  setReturnReason('');
-                  toast.success('Đã gửi yêu cầu trả hàng');
+                  const response = await OrderService.returnOrder(returnReasonDialog.orderId, { reason: returnReason });
+                  if (response?.result?.status === 'RETURN_REQUESTED') {
+                    updateOrderStatusLocal(returnReasonDialog.orderId, 'RETURN_REQUESTED');
+                    setLastActionTime(Date.now()); // Pause polling for 15 seconds
+                    setReturnReasonDialog({ open: false, orderId: '' });
+                    setReturnReason('');
+                    toast.success('Đã gửi yêu cầu trả hàng');
+                  } else {
+                    throw new Error('Unexpected response from server');
+                  }
                 } catch (error: any) {
+                  console.error('returnOrder error:', error);
+                  // Rollback local state if API fails - refetch from server
+                  refreshOrders();
                   toast.error(error?.response?.data?.message || 'Gửi yêu cầu thất bại');
                 } finally {
                   setIsProcessingAction(false);

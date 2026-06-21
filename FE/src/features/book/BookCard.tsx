@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { Star, ShoppingCart } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Card, CardContent } from '../../components/ui/card';
@@ -26,6 +26,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
 
   // Tồn kho thực tế (đã trừ đơn đang chờ/xử lý/giao)
   const available = book.availableQuantity ?? book.stockQuantity ?? 0;
+  const outOfStock = available <= 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,7 +51,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
   if (variant === 'list') {
     return (
       <Card 
-        className="group cursor-pointer transition-all duration-300 hover:shadow-lg"
+        className={`group cursor-pointer transition-all duration-300 hover:shadow-lg ${outOfStock ? 'opacity-60 grayscale pointer-events-none' : ''}`}
         onClick={() => onClick?.(book)}
       >
         <CardContent className="p-4">
@@ -65,7 +66,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
               />
               
               {/* Stock Badge */}
-              {((book.availableQuantity ?? book.stockQuantity) === 0) && (
+              {outOfStock && (
                 <Badge variant="destructive" className="absolute top-1 left-1 text-xs">
                   Hết hàng
                 </Badge>
@@ -124,7 +125,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
 
   return (
     <Card 
-      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full"
+      className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full ${outOfStock ? 'opacity-60 grayscale pointer-events-none' : ''}`}
       onClick={() => onClick?.(book)}
     >
       <CardContent className="p-0 h-full flex flex-col">
@@ -138,7 +139,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
           />
           
           {/* Overlay Buttons — chỉ hiện khi còn hàng */}
-          {available > 0 && (
+          {!outOfStock && (
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <Button
                 size="sm"
@@ -152,7 +153,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
           )}
 
           {/* Stock Badge */}
-          {((book.availableQuantity ?? book.stockQuantity) === 0) && (
+          {outOfStock && (
             <Badge variant="destructive" className="absolute top-2 left-2">
               Hết hàng
             </Badge>
