@@ -13,12 +13,8 @@ export interface GetBooksParams {
 export const adminService = {
   // Books
   getBooks: (params?: GetBooksParams) => apiRequest.get(API_ENDPOINTS.ADMIN.BOOKS, { params }),
-  createBook: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_BOOK, payload, { 
-    headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {} 
-  }),
-  updateBook: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_BOOK(id), payload, { 
-    headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {} 
-  }),
+  createBook: (payload: any) => apiRequest.post(API_ENDPOINTS.ADMIN.CREATE_BOOK, payload),
+  updateBook: (id: string, payload: any) => apiRequest.patch(API_ENDPOINTS.ADMIN.UPDATE_BOOK(id), payload),
   deleteBook: (id: string) => apiRequest.delete(API_ENDPOINTS.ADMIN.DELETE_BOOK(id)),
 
   // Categories

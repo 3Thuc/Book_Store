@@ -8,6 +8,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { ImageWithFallback } from '../../components/fallbackimg/ImageWithFallback';
+import { toProxiedUrl } from '../../services/imageService';
 import { useOrder } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -171,7 +172,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           <div className="flex gap-4 p-4 bg-muted rounded-lg">
             <div className="relative w-20 h-28 flex-shrink-0 overflow-hidden rounded-md bg-background">
               <ImageWithFallback
-                src={item.imageUrl}
+                src={toProxiedUrl(item.imageUrl || item.image_url || item.main_image || item.book?.imageUrl || item.book?.image_url || item.book?.main_image || item.book?.image || '')}
                 alt={item.title}
                 className="w-full h-full object-cover"
               />

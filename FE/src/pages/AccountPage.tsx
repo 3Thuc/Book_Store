@@ -146,6 +146,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     return toProxiedUrl(rawImageUrl);
   };
 
+  const hasUserReviewedItem = (item: OrderItem): boolean => {
+    const bookId = String(item.bookId);
+    return !!reviews.find(
+      r => String(r.book_id) === bookId && r.user_id === user?.id
+    );
+  };
+
   useEffect(() => {
     if (!selectedOrder) return;
     const selectedOrderId = selectedOrder.id ?? selectedOrder.orderId;
@@ -1166,14 +1173,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                           {/* Review button - only show if order is completed */}
                           {order.status === 'DELIVERED' && (
                             <div className="mt-3">
-                            {item.isReviewed ? (
+                            {hasUserReviewedItem(item) ? (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const userReview = reviews.find(
-                                    r => r.book_id === item.bookId && r.user_id === user?.id
+                                    r => String(r.book_id) === String(item.bookId) && r.user_id === user?.id
                                   );
                                   if (userReview) {
                                     setSelectedReviewItem({ item, orderId: order.id });

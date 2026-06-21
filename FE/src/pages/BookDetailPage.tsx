@@ -67,9 +67,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
   const { isLoggedIn } = useAuth();
   const { canReviewBook, writeReview, getReviewsForBook } = useOrder();
 
-  const bookReviews = useMemo(() => {
-    return getReviewsForBook(book ? String(book.bookId) : '');
-  }, [book?.bookId, getReviewsForBook]);
+  const bookReviews = getReviewsForBook(book ? String(book.bookId) : '');
 
   useEffect(() => {
     if (!book?.bookId) return;

@@ -343,7 +343,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   };
 
   const getReviewsForBook = (bookId: string): Review[] => {
-    return state.reviews.filter(review => review.book_id === bookId);
+    const normalizedBookId = String(bookId);
+    return state.reviews.filter(review => String(review.book_id) === normalizedBookId);
   };
 
   const submitReview = async (orderId: string, reviewData: ReviewData): Promise<void> => {
@@ -351,8 +352,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       throw new Error('Bạn cần đăng nhập để viết đánh giá');
     }
 
+    const normalizedBookId = String(reviewData.book_id);
+
     const existingReview = state.reviews.find(
-      review => review.book_id === reviewData.book_id && review.user_id === user.id
+      review => String(review.book_id) === normalizedBookId && review.user_id === user.id
     );
 
     if (existingReview) {
@@ -361,7 +364,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
     try {
       const response = await ReviewService.createReview(
-        reviewData.book_id,
+        normalizedBookId,
         {
           rating: reviewData.rating,
           review: reviewData.review,
@@ -370,7 +373,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
       const newReview: Review = {
         rating_id: String(response.result.ratingId || `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
-        book_id: reviewData.book_id,
+        book_id: normalizedBookId,
         user_id: user.id,
         rating: reviewData.rating,
         review: reviewData.review,
@@ -382,7 +385,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       dispatch({ type: 'ADD_REVIEW', payload: newReview });
       dispatch({
         type: 'UPDATE_ORDER_ITEM_REVIEWED',
-        payload: { orderId, bookId: reviewData.book_id }
+        payload: { orderId, bookId: normalizedBookId }
       });
 
       // Lưu vào localStorage để persist
@@ -395,7 +398,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
           return {
             ...order,
             items: order.items.map(item =>
-              item.bookId === reviewData.book_id
+              String(item.bookId) === normalizedBookId
                 ? { ...item, isReviewed: true }
                 : item
             )
@@ -403,7 +406,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         }
         return order;
       });
-      localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      if (user) {
+        localStorage.setItem(`orders_${user.id}`, JSON.stringify(updatedOrders));
+      }
 
     } catch (error: any) {
       throw error;
