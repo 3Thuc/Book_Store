@@ -350,9 +350,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
       const newReview: Review = {
         rating_id: String(response.result.ratingId),
-        order_id: orderId,
-        book_id: reviewData.book_id,
-        user_id: user.id,
+        order_id: String(response.result.orderId || orderId),  // Use response orderId or fallback
+        book_id: String(response.result.bookId || reviewData.book_id),
+        user_id: String(response.result.userId || user.id),
         rating: response.result.rating ?? reviewData.rating,
         review: response.result.review ?? reviewData.review,
         created_at: new Date(response.result.createdAt || Date.now()),
@@ -410,9 +410,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
       const newReview: Review = {
         rating_id: String(response.result.ratingId || `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
-        order_id: orderId,  // Store order_id for per-order reviews
-        book_id: normalizedBookId,
-        user_id: user.id,
+        order_id: String(response.result.orderId || orderId),  // Use response orderId or fallback
+        book_id: String(response.result.bookId || normalizedBookId),
+        user_id: String(response.result.userId || user.id),
         rating: reviewData.rating,
         review: reviewData.review,
         created_at: new Date(response.result.createdAt || Date.now()),

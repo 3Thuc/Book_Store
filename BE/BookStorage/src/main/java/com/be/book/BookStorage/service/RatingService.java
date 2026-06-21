@@ -86,10 +86,8 @@ public class RatingService {
                 RatingEntity entity = builder.build();
 
         RatingEntity saved = ratingRepository.save(entity);
-        return RatingRes.builder()
-                .ratingId(saved.getRatingId())
-                .review(saved.getReview())
-                .build();
+        // Return complete DTO with all fields including orderId
+        return convertToDTO(saved);
     }
 
     @Transactional
@@ -112,9 +110,6 @@ public class RatingService {
         rating.setUpdatedAt(LocalDateTime.now());
 
         RatingEntity saved = ratingRepository.save(rating);
-        return RatingRes.builder()
-                .ratingId(saved.getRatingId())
-                .review(saved.getReview())
-                .build();
+        return convertToDTO(saved);
     }
 }
