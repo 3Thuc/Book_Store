@@ -95,7 +95,8 @@ function HomePage() {
       avgRating:     item.avg_rating || 0,
       rating:        item.avg_rating || 0,
       ratingCount:   item.rating_count || 0,
-      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
+      availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
+      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
       imageUrl:      rewriteToProxy(item.main_image || item.image_url || item.imageUrl || ''),
       categories:    item.categories || [],
       reason:        item.reason,
@@ -195,7 +196,8 @@ function HomePage() {
                     avgRating: item.avg_rating || 0,
                     rating: item.avg_rating || 0,
                     ratingCount: item.rating_count || 0,
-                    stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
+                    availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
+                    stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
                     imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
                     categories: item.categories || [],
                     score: item.score
@@ -239,7 +241,8 @@ function HomePage() {
           avgRating: item.avg_rating || 0,
           rating: item.avg_rating || 0,
           ratingCount: item.rating_count || 0,
-          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
+          availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
+          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
           imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
           categories: item.categories || [],
           score: item.score
@@ -337,7 +340,7 @@ function HomePage() {
   };
 
   const handleBookClick = (book: Book) => {
-    navigate(`/book/${book.bookId}`);
+    navigate(`/book/${book.bookId}`, { state: { book } });
   };
 
   const handleLogoClick = () => {
@@ -579,8 +582,15 @@ function BookDetailPageWrapper() {
 
         // Normalize fields so detail page matches listing logic
         if (raw) {
+          const stateBook: any = (location.state as any)?.book;
+          const stateBookMatches = String(stateBook?.bookId ?? stateBook?.id ?? '') === String(id);
           const available =
-            (raw.availableQuantity ?? raw.available_quantity ?? raw.available);
+            raw.availableQuantity ??
+            raw.available_quantity ??
+            raw.available ??
+            (stateBookMatches
+              ? stateBook.availableQuantity ?? stateBook.available_quantity ?? stateBook.available ?? stateBook.stockQuantity ?? stateBook.stock_quantity
+              : undefined);
           const normalized: any = {
             ...raw,
             // prefer availableQuantity when provided (0 must be preserved)
@@ -635,7 +645,7 @@ function BookDetailPageWrapper() {
       <BookDetailPage
         book={book}
         onBack={() => navigate('/')}
-        onBookClick={(book) => navigate(`/book/${book.bookId}`)}
+        onBookClick={(book) => navigate(`/book/${book.bookId}`, { state: { book } })}
         onCartClick={() => setIsCartOpen(true)}
         onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
         onLogoClick={handleLogoClick}
@@ -675,7 +685,7 @@ function SearchResultsPageWrapper() {
         onLogoClick={handleLogoClick}
         onLoginClick={() => navigate('/login')}
         onAccountClick={() => navigate('/account')}
-        onBookClick={(book) => navigate(`/book/${book.bookId}`)}
+        onBookClick={(book) => navigate(`/book/${book.bookId}`, { state: { book } })}
         onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
       />
       <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
@@ -708,7 +718,7 @@ function AccountPageWrapper() {
         onSearch={(query) => navigate(query.trim() ? `/search/${encodeURIComponent(query.trim())}` : '/search')}
         onLogoClick={handleLogoClick}
         onLoginClick={() => navigate('/login')}
-        onBookClick={(book) => navigate(`/book/${book.bookId}`)}
+        onBookClick={(book) => navigate(`/book/${book.bookId}`, { state: { book } })}
       />
       <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </Suspense>
