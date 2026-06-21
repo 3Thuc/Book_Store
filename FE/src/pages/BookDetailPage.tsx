@@ -71,6 +71,19 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
   const availableQuantity = Number(book?.availableQuantity ?? book?.stockQuantity ?? 0);
   const isOutOfStock = availableQuantity <= 0;
 
+  // Debug logging
+  React.useEffect(() => {
+    if (book) {
+      console.log('BookDetailPage - Stock Info:', {
+        bookId: book.bookId,
+        availableQuantity: book.availableQuantity,
+        stockQuantity: book.stockQuantity,
+        calculated: availableQuantity,
+        isOutOfStock
+      });
+    }
+  }, [book, availableQuantity, isOutOfStock]);
+
   useEffect(() => {
     if (!book?.bookId) return;
     const fetchRecommendations = async () => {
