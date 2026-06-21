@@ -205,11 +205,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       refreshOrdersRef.current();
 
       // Polling 15s để đồng bộ thay đổi trạng thái từ admin/staff
-      // Skip polling nếu vừa thực hiện action < 5 giây (để server kịp update)
+      // Skip polling nếu vừa thực hiện action < 15 giây (để server kịp persist)
       const interval = setInterval(() => {
         const timeSinceLastAction = Date.now() - lastActionTime;
-        // Nếu vừa thực hiện action < 5s, skip polling để tránh race condition
-        if (timeSinceLastAction < 5000) {
+        // Nếu vừa thực hiện action < 15s, skip polling để tránh race condition
+        if (timeSinceLastAction < 15000) {
           console.debug('Skip polling - waiting for server update after action');
           return;
         }
