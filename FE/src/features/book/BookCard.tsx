@@ -51,7 +51,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
   if (variant === 'list') {
     return (
       <Card 
-        className={`group cursor-pointer transition-all duration-300 hover:shadow-lg ${outOfStock ? 'opacity-60 grayscale pointer-events-none' : ''}`}
+        className={`group cursor-pointer transition-all duration-300 hover:shadow-lg ${outOfStock ? 'opacity-60 grayscale' : ''}`}
         onClick={() => onClick?.(book)}
       >
         <CardContent className="p-4">
@@ -125,7 +125,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
 
   return (
     <Card 
-      className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full ${outOfStock ? 'opacity-60 grayscale pointer-events-none' : ''}`}
+      className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full ${outOfStock ? 'opacity-60 grayscale' : ''}`}
       onClick={() => onClick?.(book)}
     >
       <CardContent className="p-0 h-full flex flex-col">

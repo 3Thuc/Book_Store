@@ -62,7 +62,8 @@ public interface RatingRepository extends JpaRepository<RatingEntity, Integer> {
         LEFT JOIN FETCH r.book b
         LEFT JOIN FETCH b.image
         LEFT JOIN FETCH b.author
-        LEFT JOIN FETCH r.user 
+        LEFT JOIN FETCH r.user
+        LEFT JOIN FETCH r.order
         WHERE r.book.bookId = :bookId 
         AND r.status = :status
         ORDER BY r.createdAt DESC

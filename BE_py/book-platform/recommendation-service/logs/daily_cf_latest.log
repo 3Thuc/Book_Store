@@ -1,144 +1,307 @@
 ============================================= 
-[Fri 05/29/2026 15:45:39.87] START CF RETRAIN 
+[Sat 06/20/2026  2:00:01.86] START CF RETRAIN 
 ============================================= 
-[15:45:40.31] Step 1: build_cf_implicit... 
-E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 12 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
-  check_blas_config()
+[ 2:00:02.41] Step 1: build_cf_implicit... 
+Traceback (most recent call last):
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 354, in _open_connection
+    self._cmysql.connect(**cnx_kwargs)
+_mysql_connector.MySQLInterfaceError: Access denied for user 'root'@'localhost' (using password: NO)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\pooling.py", line 322, in connect
+    return CMySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 142, in __init__
+    self.connect(**kwargs)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 360, in _open_connection
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_implicit.py", line 165, in <module>
+    main()
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_implicit.py", line 141, in main
+    df = load_implicit_interactions()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_implicit.py", line 56, in load_implicit_interactions
+    with engine.connect() as conn:
+         ^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\pooling.py", line 322, in connect
+    return CMySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 142, in __init__
+    self.connect(**kwargs)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 360, in _open_connection
+    raise get_mysql_exception(
+sqlalchemy.exc.ProgrammingError: (mysql.connector.errors.ProgrammingError) 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
+(Background on this error at: https://sqlalche.me/e/20/f405)
 [ALS-CF] factors=64 iter=20 alpha=5.0 topk=50
 [1/4] Tải Implicit Feedback từ MySQL...
-      Interactions: 73,761  |  Users: 304  |  Books: 19,995
-[2/4] Build Confidence Matrix...
-      Shape: (304, 19995)  |  Sparsity: 98.79%
-[3/4] Huấn luyện ALS...
-  0%|          | 0/20 [00:00<?, ?it/s] 15%|█▌        | 3/20 [00:00<00:00, 28.42it/s] 30%|███       | 6/20 [00:00<00:00, 27.67it/s] 45%|████▌     | 9/20 [00:00<00:00, 26.84it/s] 60%|██████    | 12/20 [00:00<00:00, 26.33it/s] 75%|███████▌  | 15/20 [00:00<00:00, 26.20it/s] 90%|█████████ | 18/20 [00:00<00:00, 26.31it/s]100%|██████████| 20/20 [00:00<00:00, 26.45it/s]
-      Item Factor Matrix: (19995, 64)
-[4/4] Tính Top-K & Lưu DB...
-      Tổng rows: 999,750
-  Saved 10000/999750 rows...
-  Saved 20000/999750 rows...
-  Saved 30000/999750 rows...
-  Saved 40000/999750 rows...
-  Saved 50000/999750 rows...
-  Saved 60000/999750 rows...
-  Saved 70000/999750 rows...
-  Saved 80000/999750 rows...
-  Saved 90000/999750 rows...
-  Saved 100000/999750 rows...
-  Saved 110000/999750 rows...
-  Saved 120000/999750 rows...
-  Saved 130000/999750 rows...
-  Saved 140000/999750 rows...
-  Saved 150000/999750 rows...
-  Saved 160000/999750 rows...
-  Saved 170000/999750 rows...
-  Saved 180000/999750 rows...
-  Saved 190000/999750 rows...
-  Saved 200000/999750 rows...
-  Saved 210000/999750 rows...
-  Saved 220000/999750 rows...
-  Saved 230000/999750 rows...
-  Saved 240000/999750 rows...
-  Saved 250000/999750 rows...
-  Saved 260000/999750 rows...
-  Saved 270000/999750 rows...
-  Saved 280000/999750 rows...
-  Saved 290000/999750 rows...
-  Saved 300000/999750 rows...
-  Saved 310000/999750 rows...
-  Saved 320000/999750 rows...
-  Saved 330000/999750 rows...
-  Saved 340000/999750 rows...
-  Saved 350000/999750 rows...
-  Saved 360000/999750 rows...
-  Saved 370000/999750 rows...
-  Saved 380000/999750 rows...
-  Saved 390000/999750 rows...
-  Saved 400000/999750 rows...
-  Saved 410000/999750 rows...
-  Saved 420000/999750 rows...
-  Saved 430000/999750 rows...
-  Saved 440000/999750 rows...
-  Saved 450000/999750 rows...
-  Saved 460000/999750 rows...
-  Saved 470000/999750 rows...
-  Saved 480000/999750 rows...
-  Saved 490000/999750 rows...
-  Saved 500000/999750 rows...
-  Saved 510000/999750 rows...
-  Saved 520000/999750 rows...
-  Saved 530000/999750 rows...
-  Saved 540000/999750 rows...
-  Saved 550000/999750 rows...
-  Saved 560000/999750 rows...
-  Saved 570000/999750 rows...
-  Saved 580000/999750 rows...
-  Saved 590000/999750 rows...
-  Saved 600000/999750 rows...
-  Saved 610000/999750 rows...
-  Saved 620000/999750 rows...
-  Saved 630000/999750 rows...
-  Saved 640000/999750 rows...
-  Saved 650000/999750 rows...
-  Saved 660000/999750 rows...
-  Saved 670000/999750 rows...
-  Saved 680000/999750 rows...
-  Saved 690000/999750 rows...
-  Saved 700000/999750 rows...
-  Saved 710000/999750 rows...
-  Saved 720000/999750 rows...
-  Saved 730000/999750 rows...
-  Saved 740000/999750 rows...
-  Saved 750000/999750 rows...
-  Saved 760000/999750 rows...
-  Saved 770000/999750 rows...
-  Saved 780000/999750 rows...
-  Saved 790000/999750 rows...
-  Saved 800000/999750 rows...
-  Saved 810000/999750 rows...
-  Saved 820000/999750 rows...
-  Saved 830000/999750 rows...
-  Saved 840000/999750 rows...
-  Saved 850000/999750 rows...
-  Saved 860000/999750 rows...
-  Saved 870000/999750 rows...
-  Saved 880000/999750 rows...
-  Saved 890000/999750 rows...
-  Saved 900000/999750 rows...
-  Saved 910000/999750 rows...
-  Saved 920000/999750 rows...
-  Saved 930000/999750 rows...
-  Saved 940000/999750 rows...
-  Saved 950000/999750 rows...
-  Saved 960000/999750 rows...
-  Saved 970000/999750 rows...
-  Saved 980000/999750 rows...
-  Saved 990000/999750 rows...
-  Saved 999750/999750 rows...
+[ 2:00:05.53] Step 1 done (start:  2:00:02.41 / end:  2:00:05.53). 
+[ 2:00:05.54] Step 2: build_cf_purchase... 
+Traceback (most recent call last):
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 354, in _open_connection
+    self._cmysql.connect(**cnx_kwargs)
+_mysql_connector.MySQLInterfaceError: Access denied for user 'root'@'localhost' (using password: NO)
 
-[DONE] CF_IMPLICIT hoàn tất trong 58.9s
-[15:46:40.46] Step 1 done (start: 15:45:40.31 / end: 15:46:40.46). 
-[15:46:40.47] Step 2: build_cf_purchase... 
-E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\implicit\cpu\als.py:95: RuntimeWarning: OpenBLAS is configured to use 12 threads. It is highly recommended to disable its internal threadpool by setting the environment variable 'OPENBLAS_NUM_THREADS=1' or by calling 'threadpoolctl.threadpool_limits(1, "blas")'. Having OpenBLAS use a threadpool can lead to severe performance issues here.
-  check_blas_config()
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\pooling.py", line 322, in connect
+    return CMySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 142, in __init__
+    self.connect(**kwargs)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 360, in _open_connection
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_purchase.py", line 185, in <module>
+    main()
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_purchase.py", line 161, in main
+    df = load_purchase_interactions()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\build_cf_purchase.py", line 61, in load_purchase_interactions
+    with engine.connect() as conn:
+         ^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\pooling.py", line 322, in connect
+    return CMySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 142, in __init__
+    self.connect(**kwargs)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 360, in _open_connection
+    raise get_mysql_exception(
+sqlalchemy.exc.ProgrammingError: (mysql.connector.errors.ProgrammingError) 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
+(Background on this error at: https://sqlalche.me/e/20/f405)
 [ALS-CF-PURCHASE] factors=64 iterations=20 alpha=10.0 topk=50
 [1/4] Tải Purchase data từ orders/order_details...
-      Interactions: 17,772  |  Users: 302  |  Books: 8,573
-[2/4] Build Confidence Matrix...
-      Shape: (302, 8573)  |  Sparsity: 99.31%
-[3/4] Huấn luyện ALS...
-  0%|          | 0/20 [00:00<?, ?it/s] 35%|███▌      | 7/20 [00:00<00:00, 68.46it/s] 70%|███████   | 14/20 [00:00<00:00, 65.18it/s]100%|██████████| 20/20 [00:00<00:00, 65.11it/s]
-[4/4] Tính Top-K & Lưu DB...
-      Tổng rows: 428,650
+[ 2:00:06.29] Step 2 done (start:  2:00:05.54 / end:  2:00:06.29). 
+[ 2:00:06.30] Step 3: rebuild_user_cf_batch... 
+Traceback (most recent call last):
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 354, in _open_connection
+    self._cmysql.connect(**cnx_kwargs)
+_mysql_connector.MySQLInterfaceError: Access denied for user 'root'@'localhost' (using password: NO)
 
-[DONE] CF_PURCHASE hoàn tất trong 26.6s
-[15:47:07.90] Step 2 done (start: 15:46:40.47 / end: 15:47:07.90). 
-[15:47:07.91] Step 3: rebuild_user_cf_batch... 
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\rebuild_user_cf_batch.py", line 95, in <module>
+    main()
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\rebuild_user_cf_batch.py", line 67, in main
+    conn = get_connection()
+           ^^^^^^^^^^^^^^^^
+  File "E:\KLTN_2\12_22110190_22110243_XayDungWebsiteBanSachTichHopHeThongGoiY\source-code\BE_py\book-platform\recommendation-service\recommend_app\services\collab_filtering\rebuild_user_cf_batch.py", line 17, in get_connection
+    return mysql.connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\pooling.py", line 322, in connect
+    return CMySQLConnection(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 142, in __init__
+    self.connect(**kwargs)
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\abstracts.py", line 1604, in connect
+    self._open_connection()
+  File "E:\TLCN\BE_py\book-platform\.venv\Lib\site-packages\mysql\connector\connection_cext.py", line 360, in _open_connection
+    raise get_mysql_exception(
+mysql.connector.errors.ProgrammingError: 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)
 [BatchCF] active_days=30, history_days=90, topn=50
-[BatchCF] active users: 4
-[BatchCF] done. ok=4 fail=0 time=15.3s
-[15:47:23.48] Step 3 done (start: 15:47:07.91 / end: 15:47:23.48). 
+[ 2:00:06.48] Step 3 done (start:  2:00:06.30 / end:  2:00:06.48). 
 ============================================= 
-TOTAL TIME: 104 seconds (1m 44s) 
-TOTAL: start=15:45:39.87 / finish=15:47:23.74 
-[15:47:23.74] ALL DONE. 
+TOTAL TIME: 5 seconds (0m 5s) 
+TOTAL: start= 2:00:01.86 / finish= 2:00:06.70 
+[ 2:00:06.72] ALL DONE. 
 ============================================= 

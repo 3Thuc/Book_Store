@@ -140,7 +140,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
           ? [{ categoryId: 0, categoryName: item.categories[0] }]
           : [{ categoryId: 0, categoryName: 'Khác' }],
         category:      item.categories?.[0] || 'Khác',
-        stockQuantity: item.stock_quantity ?? 1,
+        stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.available_quantity ?? item.availableQuantity ?? 0,
       }));
 
       // Hiển thị ngay để UI phản hồi tức thì
@@ -198,7 +198,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
                   imageUrl:      toProxiedUrl(en.main_image_url || en.image_url || b.imageUrl),
                   categories:    [{ categoryId: 0, categoryName }],
                   category:      categoryName,
-                  stockQuantity: en.stock_quantity ?? b.stockQuantity,
+                  stockQuantity: en.stock_quantity ?? en.stockQuantity ?? en.available_quantity ?? en.availableQuantity ?? b.stockQuantity,
                 };
               });
             } else {
@@ -219,7 +219,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
                   imageUrl: toProxiedUrl(item.main_image_url || item.image_url || ''),
                   categories: [{ categoryId: 0, categoryName }],
                   category: categoryName,
-                  stockQuantity: item.stock_quantity || 0,
+                  stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.available_quantity ?? item.availableQuantity ?? 0,
                 };
               });
             }
@@ -325,7 +325,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
               imageUrl: toProxiedUrl(item.main_image_url || item.image_url || ''),
               categories: [{ categoryId: 0, categoryName: categoryName }],
               category: categoryName,
-              stockQuantity: item.stock_quantity || 0,
+              stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.available_quantity ?? item.availableQuantity ?? 0,
               _score: item._score
             };
           });
@@ -453,7 +453,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
                       imageUrl: item.main_image_url || item.image_url || '',
                       categories: [{ categoryId: 0, categoryName: categoryName }],
                       category: categoryName,
-                      stockQuantity: item.stock_quantity || 0,
+                      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.available_quantity ?? item.availableQuantity ?? 0,
                       _score: item._score
                     };
                   });

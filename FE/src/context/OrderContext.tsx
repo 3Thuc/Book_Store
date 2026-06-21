@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 import { OrderStatus } from '../types/order';
@@ -68,9 +68,24 @@ type OrderAction =
   | { type: 'LOAD_ORDERS'; payload: Order[] }
   | { type: 'ADD_REVIEW'; payload: Review }
   | { type: 'LOAD_REVIEWS'; payload: Review[] }
+  | { type: 'UPSERT_REVIEWS'; payload: Review[] }
   | { type: 'UPDATE_ORDER_ITEM_REVIEWED'; payload: { orderId: string; bookId: string } }
   | { type: 'UPDATE_ORDER_PAYMENT_STATUS'; payload: { orderId: string; isPaid: boolean } }
   | { type: 'UPDATE_REVIEW'; payload: Review };
+
+const normalizeReview = (review: any, fallbackBookId?: string): Review => ({
+  rating_id: String(review.rating_id ?? review.ratingId ?? review.id ?? ''),
+  order_id: review.order_id !== undefined || review.orderId !== undefined
+    ? String(review.order_id ?? review.orderId)
+    : undefined,
+  book_id: String(review.book_id ?? review.bookId ?? review.book?.bookId ?? fallbackBookId ?? ''),
+  user_id: String(review.user_id ?? review.userId ?? review.user?.userId ?? ''),
+  rating: Number(review.rating ?? 0),
+  review: review.review ?? review.comment ?? review.content ?? '',
+  status: review.status || 'pending',
+  created_at: new Date(review.created_at ?? review.createdAt ?? Date.now()),
+  updated_at: new Date(review.updated_at ?? review.updatedAt ?? Date.now())
+});
 
 const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   switch (action.type) {
@@ -97,6 +112,23 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
         ...state,
         reviews: action.payload
       };
+
+    case 'UPSERT_REVIEWS': {
+      const reviewMap = new Map(
+        state.reviews.map(review => [String(review.rating_id), review])
+      );
+
+      action.payload.forEach(review => {
+        if (review.rating_id) {
+          reviewMap.set(String(review.rating_id), review);
+        }
+      });
+
+      return {
+        ...state,
+        reviews: Array.from(reviewMap.values())
+      };
+    }
     
     case 'UPDATE_ORDER_ITEM_REVIEWED':
       return {
@@ -155,6 +187,7 @@ interface OrderContextType {
   writeReview: (reviewData: ReviewData) => Promise<void>;
   submitReview: (orderId: string, reviewData: ReviewData) => Promise<void>;
   getReviewsForBook: (bookId: string) => Review[];
+  loadReviewsForBook: (bookId: string) => Promise<Review[]>;
   updateOrderPaymentStatus: (orderId: string, isPaid: boolean) => void;
   updateReview: (reviewId: string, reviewData: Partial<ReviewData>) => Promise<void>;
 }
@@ -188,11 +221,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       // Load reviews
       const savedReviews = localStorage.getItem('reviews');
       if (savedReviews) {
-        const reviews = JSON.parse(savedReviews).map((review: any) => ({
-          ...review,
-          created_at: review.created_at ? new Date(review.created_at) : new Date(),
-          updated_at: review.updated_at ? new Date(review.updated_at) : new Date()
-        }));
+        const reviews = JSON.parse(savedReviews).map((review: any) => normalizeReview(review));
         dispatch({ type: 'LOAD_REVIEWS', payload: reviews });
       }
     }
@@ -355,15 +384,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       );
 
       const newReview: Review = {
-        rating_id: String(response.result.ratingId),
-        order_id: String(response.result.orderId || orderId),  // Use response orderId or fallback
-        book_id: String(response.result.bookId || reviewData.book_id),
-        user_id: String(response.result.userId || user.id),
-        rating: response.result.rating ?? reviewData.rating,
-        review: response.result.review ?? reviewData.review,
-        created_at: new Date(response.result.createdAt || Date.now()),
-        updated_at: new Date(response.result.updatedAt || Date.now()),
-        status: response.result.status || 'pending'
+        ...normalizeReview(response.result, reviewData.book_id),
+        rating_id: String((response.result as any).ratingId ?? (response.result as any).rating_id),
+        order_id: String((response.result as any).orderId ?? (response.result as any).order_id ?? orderId),
+        book_id: String((response.result as any).bookId ?? (response.result as any).book_id ?? reviewData.book_id),
+        user_id: String((response.result as any).userId ?? (response.result as any).user_id ?? user.id),
+        rating: (response.result as any).rating ?? reviewData.rating,
+        review: (response.result as any).review ?? reviewData.review,
       };
 
       dispatch({ type: 'ADD_REVIEW', payload: newReview });
@@ -384,6 +411,16 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     const normalizedBookId = String(bookId);
     return state.reviews.filter(review => String(review.book_id) === normalizedBookId);
   };
+
+  const loadReviewsForBook = useCallback(async (bookId: string): Promise<Review[]> => {
+    const response = await ReviewService.getReviewsByBook(String(bookId));
+    const result = (response as any).result;
+    const rawReviews = Array.isArray(result) ? result : result?.reviews || [];
+    const normalizedReviews = rawReviews.map((review: any) => normalizeReview(review, String(bookId)));
+
+    dispatch({ type: 'UPSERT_REVIEWS', payload: normalizedReviews });
+    return normalizedReviews;
+  }, []);
 
   const submitReview = async (orderId: string, reviewData: ReviewData): Promise<void> => {
     if (!user) {
@@ -415,15 +452,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       );
 
       const newReview: Review = {
-        rating_id: String(response.result.ratingId || `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
-        order_id: String(response.result.orderId || orderId),  // Use response orderId or fallback
-        book_id: String(response.result.bookId || normalizedBookId),
-        user_id: String(response.result.userId || user.id),
-        rating: reviewData.rating,
-        review: reviewData.review,
-        created_at: new Date(response.result.createdAt || Date.now()),
-        updated_at: new Date(response.result.updatedAt || Date.now()),
-        status: response.result.status || 'pending'
+        ...normalizeReview(response.result, normalizedBookId),
+        rating_id: String((response.result as any).ratingId ?? (response.result as any).rating_id ?? `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+        order_id: String((response.result as any).orderId ?? (response.result as any).order_id ?? orderId),
+        book_id: String((response.result as any).bookId ?? (response.result as any).book_id ?? normalizedBookId),
+        user_id: String((response.result as any).userId ?? (response.result as any).user_id ?? user.id),
+        rating: (response.result as any).rating ?? reviewData.rating,
+        review: (response.result as any).review ?? reviewData.review,
       };
 
       dispatch({ type: 'ADD_REVIEW', payload: newReview });
@@ -508,6 +543,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     writeReview,
     submitReview,
     getReviewsForBook,
+    loadReviewsForBook,
     updateOrderPaymentStatus,
     updateReview
   };

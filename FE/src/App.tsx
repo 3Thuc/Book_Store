@@ -95,7 +95,7 @@ function HomePage() {
       avgRating:     item.avg_rating || 0,
       rating:        item.avg_rating || 0,
       ratingCount:   item.rating_count || 0,
-      stockQuantity: item.stock_quantity ?? 1,
+      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
       imageUrl:      rewriteToProxy(item.main_image || item.image_url || item.imageUrl || ''),
       categories:    item.categories || [],
       reason:        item.reason,
@@ -195,7 +195,7 @@ function HomePage() {
                     avgRating: item.avg_rating || 0,
                     rating: item.avg_rating || 0,
                     ratingCount: item.rating_count || 0,
-                    stockQuantity: item.stock_quantity || 1,
+                    stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
                     imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
                     categories: item.categories || [],
                     score: item.score
@@ -239,7 +239,7 @@ function HomePage() {
           avgRating: item.avg_rating || 0,
           rating: item.avg_rating || 0,
           ratingCount: item.rating_count || 0,
-          stockQuantity: item.stock_quantity || 1,
+          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
           imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
           categories: item.categories || [],
           score: item.score
@@ -585,6 +585,7 @@ function BookDetailPageWrapper() {
             ...raw,
             // prefer availableQuantity when provided (0 must be preserved)
             availableQuantity: available !== undefined ? available : raw.availableQuantity,
+            stockQuantity: raw.stockQuantity ?? raw.stock_quantity ?? raw.stock ?? 0,
             // unify author field
             author: raw.author ?? raw.authorName ?? raw.author_name,
             imageUrl: raw.imageUrl ?? raw.image_url ?? raw.main_image ?? '',

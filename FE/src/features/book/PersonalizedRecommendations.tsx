@@ -22,7 +22,6 @@ export const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsPr
   const forYou = useMemo(() => {
     // Use API data if available, otherwise use mock data
     return forYouBooks || books
-      .filter(book => book.stockQuantity)
       .sort((a, b) => b.ratingCount - a.ratingCount)
       .slice(0, 10);
   }, [books, forYouBooks]);

@@ -56,7 +56,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
 
     /**
      * B\u01b0\u1edbc 1/2: Paginate ch\u1ec9 tr\u00ean order IDs \u2014 kh\u00f4ng JOIN FETCH collection.
-     * LIMIT/OFFSET \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng \u0111\u00fang t\u1ea1i DB, kh\u00f4ng ph\u1ea3i in-memory.
+     * LIMIT/OFFSET \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng \u0111\u00fang t\u1ea1i D B, kh\u00f4ng ph\u1ea3i in-memory.
      * S\u1eeda l\u1ed7i Hibernate HHH90003004 g\u00e2y t\u1ea3i to\u00e0n b\u1ed9 orders v\u00e0o heap.
      */
     @Query(value = """

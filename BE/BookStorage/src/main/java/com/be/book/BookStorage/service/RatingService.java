@@ -33,12 +33,18 @@ public class RatingService {
                 .userId(entity.getUser().getUserId())
                 .userName(entity.getUser().getFullName())
                 .bookId(entity.getBook().getBookId())
-                                .orderId(entity.getOrder() != null ? entity.getOrder().getOrderId() : null)
+                .orderId(entity.getOrder() != null ? entity.getOrder().getOrderId() : null)
                 .rating(entity.getRating())
                 .review(entity.getReview())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    // Helper to fetch entity with eager-loaded relationships
+    private RatingEntity fetchRatingWithDetails(Integer ratingId) {
+        return ratingRepository.findById(ratingId)
+                .orElseThrow(() -> new AppException(ErrorCode.DATABASE_ERROR));
     }
 
     @Transactional(readOnly = true)
@@ -115,8 +121,9 @@ public class RatingService {
         RatingEntity entity = builder.build();
 
         RatingEntity saved = ratingRepository.save(entity);
-        // Return complete DTO with all fields including orderId
-        return convertToDTO(saved);
+        // Fetch with eager-loaded relationships before converting to DTO
+        RatingEntity savedWithDetails = fetchRatingWithDetails(saved.getRatingId());
+        return convertToDTO(savedWithDetails);
     }
 
     @Transactional
@@ -139,6 +146,8 @@ public class RatingService {
         rating.setUpdatedAt(LocalDateTime.now());
 
         RatingEntity saved = ratingRepository.save(rating);
-        return convertToDTO(saved);
+        // Fetch with eager-loaded relationships before converting to DTO
+        RatingEntity savedWithDetails = fetchRatingWithDetails(saved.getRatingId());
+        return convertToDTO(savedWithDetails);
     }
 }

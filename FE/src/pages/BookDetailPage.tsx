@@ -68,6 +68,8 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
   const { canReviewBook, writeReview, getReviewsForBook } = useOrder();
 
   const bookReviews = getReviewsForBook(book ? String(book.bookId) : '');
+  const availableQuantity = Number(book?.availableQuantity ?? book?.stockQuantity ?? 0);
+  const isOutOfStock = availableQuantity <= 0;
 
   useEffect(() => {
     if (!book?.bookId) return;
@@ -91,7 +93,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
           price:         item.price,
           avgRating:     item.avg_rating,
           ratingCount:   item.rating_count,
-          stockQuantity: item.stock_quantity ?? 1,
+          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? 0,
           imageUrl:      item.main_image || item.image_url || item.imageUrl || '',
           categories:    item.categories || [],
           reason:        item.reason,
@@ -223,8 +225,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
     }
 
     // Guard: kiểm tra tồn kho trước khi gọi API
-    const available = book.availableQuantity ?? book.stockQuantity ?? 0;
-    if (available <= 0) {
+    if (isOutOfStock) {
       toast.error('Sản phẩm hiện đã hết hàng');
       return;
     }
@@ -344,21 +345,24 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <p className="text-3xl font-bold text-primary">{formatPrice(book.price || 0)}</p>
-                    <p className={`text-sm ${(book.availableQuantity ?? book.stockQuantity) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {(book.availableQuantity ?? book.stockQuantity) > 0 ? 'Còn hàng' : 'Hết hàng'}
+                    <p className={`text-sm ${!isOutOfStock ? 'text-green-600' : 'text-red-600'}`}>
+                      {!isOutOfStock ? 'Còn hàng' : 'Hết hàng'}
                     </p>
                   </div>
                   
-                  {(book.availableQuantity ?? book.stockQuantity) > 0 && (
+                  {!isOutOfStock && (
                     <div className="flex items-center space-x-2">
                       <Label htmlFor="quantity">Số lượng:</Label>
                       <Input
                         id="quantity"
                         type="number"
                         min="1"
-                        max="10"
+                        max={Math.min(10, availableQuantity)}
                         value={quantity}
-                        onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                          const nextQuantity = parseInt(e.target.value, 10) || 1;
+                          setQuantity(Math.min(Math.max(nextQuantity, 1), Math.min(10, availableQuantity)));
+                        }}
                         className="w-20"
                       />
                     </div>
@@ -369,10 +373,10 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                   onClick={handleAddToCart} 
                   className="w-full" 
                   size="lg"
-                  disabled={(book.availableQuantity ?? book.stockQuantity) === 0}
+                  disabled={isOutOfStock}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  {(book.availableQuantity ?? book.stockQuantity) === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
+                  {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
                 </Button>
               </CardContent>
             </Card>
