@@ -25,6 +25,7 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+        private final com.be.book.BookStorage.repository.OrderRepository orderRepository;
 
     private RatingRes convertToDTO(RatingEntity entity) {
         return RatingRes.builder()
@@ -32,6 +33,7 @@ public class RatingService {
                 .userId(entity.getUser().getUserId())
                 .userName(entity.getUser().getFullName())
                 .bookId(entity.getBook().getBookId())
+                                .orderId(entity.getOrder() != null ? entity.getOrder().getOrderId() : null)
                 .rating(entity.getRating())
                 .review(entity.getReview())
                 .createdAt(entity.getCreatedAt())
@@ -57,15 +59,31 @@ public class RatingService {
         BookEntity book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_FOUND));
 
-        RatingEntity entity = RatingEntity.builder()
-                .user(user)
-                .book(book)
-                .rating(req.getRating())
-                .review(req.getReview())
-                .status(RatingStatus.approved)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+                RatingEntity.RatingEntityBuilder builder = RatingEntity.builder()
+                                .user(user)
+                                .book(book)
+                                .rating(req.getRating())
+                                .review(req.getReview())
+                                .status(RatingStatus.approved)
+                                .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now());
+
+                if (req.getOrderId() != null) {
+                        com.be.book.BookStorage.entity.OrderEntity order = orderRepository.findById(req.getOrderId())
+                                        .orElseThrow(() -> new AppException(ErrorCode.DATABASE_ERROR));
+                        builder.order(order);
+                        // Prevent duplicate review for same user+book+order
+                        if (ratingRepository.existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(user.getUserId(), bookId, req.getOrderId())) {
+                                throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
+                        }
+                } else {
+                        // If orderId not provided, fall back to existing uniqueness check
+                        if (ratingRepository.existsByUser_UserIdAndBook_BookId(user.getUserId(), bookId)) {
+                                throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
+                        }
+                }
+
+                RatingEntity entity = builder.build();
 
         RatingEntity saved = ratingRepository.save(entity);
         return RatingRes.builder()

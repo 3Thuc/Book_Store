@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class RatingReq {
     private Integer rating;
     private String review;
+    private Integer orderId;
 }

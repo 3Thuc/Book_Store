@@ -44,6 +44,16 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
     """)
     boolean hasUserReviewedBook(@Param("userId") Integer userId, @Param("bookId") Integer bookId);
 
+    @Query("""
+        SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END
+        FROM RatingEntity r
+        WHERE r.user.userId = :userId
+        AND r.book.bookId = :bookId
+        AND r.order.orderId = :orderId
+        AND r.review IS NOT NULL
+    """)
+    boolean hasUserReviewedBookInOrder(@Param("userId") Integer userId, @Param("bookId") Integer bookId, @Param("orderId") Integer orderId);
+
     /**
      * B\u01b0\u1edbc 1/2: Paginate ch\u1ec9 tr\u00ean order IDs \u2014 kh\u00f4ng JOIN FETCH collection.
      * LIMIT/OFFSET \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng \u0111\u00fang t\u1ea1i DB, kh\u00f4ng ph\u1ea3i in-memory.

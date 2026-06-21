@@ -376,10 +376,11 @@ public class UserService implements UserDetailsService {
 
         List<OrderItemRes> items = order.getDetails().stream()
                 .map(detail -> {
-                    boolean isReviewed = orderRepository.hasUserReviewedBook(
+                        boolean isReviewed = orderRepository.hasUserReviewedBookInOrder(
                             order.getUser().getUserId(),
-                            detail.getBook().getBookId()
-                    );
+                            detail.getBook().getBookId(),
+                            order.getOrderId()
+                        );
 
                     String rawImage = detail.getBook().getImage() != null
                             ? detail.getBook().getImage().getImageUrl()

@@ -37,11 +37,15 @@ public interface RatingRepository extends JpaRepository<RatingEntity, Integer> {
 
     Optional<RatingEntity> findByUser_UserIdAndBook_BookId(Integer userId, Integer bookId);
 
+    Optional<RatingEntity> findByUser_UserIdAndBook_BookIdAndOrder_OrderId(Integer userId, Integer bookId, Integer orderId);
+
     List<RatingEntity> findByBook_BookId(Integer bookId);
 
     List<RatingEntity> findByUser_UserId(Integer userId);
 
     boolean existsByUser_UserIdAndBook_BookId(Integer userId, Integer bookId);
+
+    boolean existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(Integer userId, Integer bookId, Integer orderId);
 
     @Query("""
         SELECT AVG(r.rating) 

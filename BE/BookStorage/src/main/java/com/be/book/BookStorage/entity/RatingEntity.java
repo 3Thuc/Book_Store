@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "ratings", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "book_id"}))
+@Table(name = "ratings", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "book_id", "order_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +26,10 @@ public class RatingEntity {
     @ManyToOne
     @JoinColumn(name = "book_id")
     private BookEntity book;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private com.be.book.BookStorage.entity.OrderEntity order;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

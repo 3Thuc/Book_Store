@@ -14,6 +14,7 @@ public class RatingRes {
     private Integer userId;
     private String userName;
     private Integer bookId;
+    private Integer orderId;
     private Integer rating;
     private String review;
     private LocalDateTime createdAt;
