@@ -346,9 +346,14 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <p className="text-3xl font-bold text-primary">{formatPrice(book.price || 0)}</p>
-                    <p className={`text-sm ${!isOutOfStock ? 'text-green-600' : 'text-red-600'}`}>
-                      {!isOutOfStock ? 'Còn hàng' : 'Hết hàng'}
-                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <p className={`text-sm font-medium ${!isOutOfStock ? 'text-green-600' : 'text-red-600'}`}>
+                        {!isOutOfStock ? '✓ Còn hàng' : '✗ Hết hàng'}
+                      </p>
+                      {isOutOfStock && (
+                        <Badge variant="destructive" className="animate-pulse">Hết hàng</Badge>
+                      )}
+                    </div>
                   </div>
                   
                   {!isOutOfStock && (
@@ -370,22 +375,43 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                   )}
                 </div>
 
-                <Button 
-                  onClick={handleAddToCart} 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isOutOfStock}
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
-                </Button>
+                {isOutOfStock ? (
+                  <div className="space-y-3">
+                    <Button 
+                      disabled 
+                      className="w-full" 
+                      size="lg"
+                      variant="outline"
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2 opacity-50" />
+                      Hết hàng - Không thể mua
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => toast.info('Tính năng thông báo đang được phát triển')}
+                    >
+                      Thông báo khi có hàng
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleAddToCart} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Thêm vào giỏ hàng
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
-            {/* Shipping Info */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Shipping Info - Only show when in stock */}
+            {!isOutOfStock && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center space-x-3">
                     <Package className="h-5 w-5 text-primary" />
                     <div>
@@ -410,6 +436,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
                 </div>
               </CardContent>
             </Card>
+            )}
           </div>
         </div>
 
