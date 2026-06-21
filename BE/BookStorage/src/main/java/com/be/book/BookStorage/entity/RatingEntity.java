@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "ratings", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "book_id", "order_id"}))
+@Table(name = "ratings", indexes = {
+    @Index(name = "idx_rating_user_book_order", columnList = "user_id,book_id,order_id", unique = true)
+})
 @Getter
 @Setter
 @NoArgsConstructor
