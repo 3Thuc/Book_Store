@@ -107,6 +107,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const [returnReason, setReturnReason] = useState('');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return'>('all');
   const [isProcessingAction, setIsProcessingAction] = useState<boolean>(false);
+  const [lastActionTime, setLastActionTime] = useState<number>(0);
 
   // Backend already filters orders by current user, no need to filter again
   const allOrders = orders;
@@ -204,12 +205,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       refreshOrdersRef.current();
 
       // Polling 15s để đồng bộ thay đổi trạng thái từ admin/staff
+      // Skip polling nếu vừa thực hiện action < 5 giây (để server kịp update)
       const interval = setInterval(() => {
+        const timeSinceLastAction = Date.now() - lastActionTime;
+        // Nếu vừa thực hiện action < 5s, skip polling để tránh race condition
+        if (timeSinceLastAction < 5000) {
+          console.debug('Skip polling - waiting for server update after action');
+          return;
+        }
         refreshOrdersRef.current();
       }, 15_000);
 
       return () => clearInterval(interval);
-    }, [user, initializing, activeTab]);
+    }, [user, initializing, activeTab, lastActionTime]);
 
     // Refresh khi: (1) tab trình duyệt được focus lại, (2) cửa sổ được focus lại
     // visibilitychange: đổi tab trong cùng cửa sổ
@@ -1248,6 +1256,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                       try {
                                         await OrderService.confirmDelivery(order.id);
                                         updateOrderStatusLocal(order.id, 'DELIVERED');
+                                        setLastActionTime(Date.now()); // Pause polling for 5 seconds
                                         setConfirmDialog({ ...confirmDialog, open: false });
                                         toast.success('Xác nhận đã nhận hàng thành công');
                                       } catch (error: any) {
@@ -1320,6 +1329,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                   try {
                                     await OrderService.cancelOrder(order.id);
                                     updateOrderStatusLocal(order.id, 'CANCELLED');
+                                    setLastActionTime(Date.now()); // Pause polling for 5 seconds
                                     setConfirmDialog({ ...confirmDialog, open: false });
                                     toast.success('Đã gửi yêu cầu hủy đơn hàng');
                                   } catch (error: any) {
@@ -1759,6 +1769,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 try {
                   await OrderService.returnOrder(returnReasonDialog.orderId, { reason: returnReason });
                   updateOrderStatusLocal(returnReasonDialog.orderId, 'RETURN_REQUESTED');
+                  setLastActionTime(Date.now()); // Pause polling for 5 seconds
                   setReturnReasonDialog({ open: false, orderId: '' });
                   setReturnReason('');
                   toast.success('Đã gửi yêu cầu trả hàng');
