@@ -59,7 +59,7 @@ public class RatingService {
         BookEntity book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_FOUND));
 
-                RatingEntity.RatingEntityBuilder builder = RatingEntity.builder()
+        RatingEntity.RatingEntityBuilder builder = RatingEntity.builder()
                                 .user(user)
                                 .book(book)
                                 .rating(req.getRating())
@@ -68,16 +68,36 @@ public class RatingService {
                                 .createdAt(LocalDateTime.now())
                                 .updatedAt(LocalDateTime.now());
 
-                if (req.getOrderId() != null) {
-                        com.be.book.BookStorage.entity.OrderEntity order = orderRepository.findById(req.getOrderId())
+        // Handle orderId - can be String (from FE) or Integer format
+        Integer orderId = null;
+        if (req.getOrderId() != null && !req.getOrderId().trim().isEmpty()) {
+            try {
+                // Try to parse as Integer first
+                orderId = Integer.parseInt(req.getOrderId());
+            } catch (NumberFormatException e) {
+                // If it's in format "ORD-123", extract the number part
+                String orderIdStr = req.getOrderId().replaceAll("[^0-9]", "");
+                if (!orderIdStr.isEmpty()) {
+                    try {
+                        orderId = Integer.parseInt(orderIdStr);
+                    } catch (NumberFormatException ex) {
+                        // Log and continue - orderId will be null, fallback to old check
+                        orderId = null;
+                    }
+                }
+            }
+        }
+
+        if (orderId != null) {
+                com.be.book.BookStorage.entity.OrderEntity order = orderRepository.findById(orderId)
                                         .orElseThrow(() -> new AppException(ErrorCode.DATABASE_ERROR));
-                        builder.order(order);
+                builder.order(order);
                         // Prevent duplicate review for same user+book+order
-                        if (ratingRepository.existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(user.getUserId(), bookId, req.getOrderId())) {
+                        if (ratingRepository.existsByUser_UserIdAndBook_BookIdAndOrder_OrderId(user.getUserId(), bookId, orderId)) {
                                 throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
                         }
                 } else {
-                        // If orderId not provided, fall back to existing uniqueness check
+                        // If orderId not provided or invalid, fall back to existing uniqueness check
                         if (ratingRepository.existsByUser_UserIdAndBook_BookId(user.getUserId(), bookId)) {
                                 throw new AppException(ErrorCode.REVIEW_ALREADY_EXISTS);
                         }

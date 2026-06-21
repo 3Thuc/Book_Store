@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class RatingReq {
     private Integer rating;
     private String review;
-    private Integer orderId;
+    // Accept as String to handle both Integer and String formats from FE
+    // Will be converted to Integer in service layer
+    private String orderId;
 }
