@@ -21,6 +21,7 @@ interface ReviewFormProps {
   isOpen: boolean;
   onClose: () => void;
   editingReviewId?: string;
+  onSubmitSuccess?: () => void;
 }
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({ 
@@ -28,7 +29,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   orderId, 
   isOpen, 
   onClose,
-  editingReviewId
+  editingReviewId,
+  onSubmitSuccess
 }) => {
   const { submitReview, updateReview, reviews } = useOrder();
   const { user } = useAuth();
@@ -128,6 +130,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       setHoveredRating(0);
       setReview('');
       setErrors({});
+      onSubmitSuccess?.();
       onClose();
     } catch (error: any) {
       console.error('=== Review submission error ===');

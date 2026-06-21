@@ -1454,6 +1454,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             setEditingReviewId(null);
           }}
           editingReviewId={editingReviewId || undefined}
+          onSubmitSuccess={() => {
+            // Reload reviews for this book to update UI
+            loadReviewsForBook(String(selectedReviewItem.item.bookId)).catch(error => {
+              console.warn(`Failed to reload reviews for book ${selectedReviewItem.item.bookId}:`, error);
+            });
+          }}
         />
       )}
 
