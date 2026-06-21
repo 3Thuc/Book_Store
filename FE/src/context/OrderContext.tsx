@@ -34,6 +34,7 @@ interface Order {
 
 interface Review {
   rating_id: string;                    
+  order_id?: string;  // Per-order review - allows multiple reviews for same book
   book_id: string;
   user_id: string;
   rating: number;
@@ -354,12 +355,16 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
     const normalizedBookId = String(reviewData.book_id);
 
-    const existingReview = state.reviews.find(
-      review => String(review.book_id) === normalizedBookId && review.user_id === user.id
+    // Check if already reviewed THIS order for this book
+    const existingReviewForThisOrder = state.reviews.find(
+      review => 
+        String(review.book_id) === normalizedBookId && 
+        review.user_id === user.id &&
+        review.order_id === orderId
     );
 
-    if (existingReview) {
-      throw new Error('Bạn đã đánh giá cuốn sách này rồi');
+    if (existingReviewForThisOrder) {
+      throw new Error('Bạn đã đánh giá lần mua này rồi');
     }
 
     try {
@@ -373,6 +378,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
 
       const newReview: Review = {
         rating_id: String(response.result.ratingId || `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`),
+        order_id: orderId,  // Store order_id for per-order reviews
         book_id: normalizedBookId,
         user_id: user.id,
         rating: reviewData.rating,
