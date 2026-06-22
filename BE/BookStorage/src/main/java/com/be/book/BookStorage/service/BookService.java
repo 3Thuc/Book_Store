@@ -221,7 +221,16 @@ private String minioPublicUrl;
                 .map(row -> {
                     BookEntity book = (BookEntity) row[0];
                     String imageUrl = (String) row[1];
-                    Integer available = ((Number) row[2]).intValue();
+                    
+                    // IMPORTANT: Calculate availableQuantity using the same logic as getBookDetail
+                    // to ensure consistency between list and detail views
+                    Integer available = bookRepository.getAvailableQuantity(book.getBookId());
+                    if (available == null) {
+                        // Fallback: if no pending/processing/shipped orders, available = stockQuantity
+                        available = book.getStockQuantity() != null ? book.getStockQuantity() : 0;
+                    }
+                    // Ensure non-negative
+                    available = Math.max(0, available);
 
                     book.setAvailableQuantity(available);
                     return mapToBookRes(book);
@@ -548,6 +557,7 @@ private String minioPublicUrl;
         if (bookReq.getTitle() != null) book.setTitle(bookReq.getTitle());
         if (bookReq.getDescription() != null) book.setDescription(bookReq.getDescription());
         if (bookReq.getPrice() != null) book.setPrice(bookReq.getPrice());
+        if (bookReq.getStock() != null) book.setStockQuantity(Math.max(0, bookReq.getStock()));
         if (bookReq.getPublishedYear() != null) book.setPublicationYear(bookReq.getPublishedYear());
         if (bookReq.getLanguage() != null) book.setLanguage(bookReq.getLanguage());
         if (bookReq.getFormat() != null) book.setFormat(BookFormat.valueOf(bookReq.getFormat().toLowerCase()));

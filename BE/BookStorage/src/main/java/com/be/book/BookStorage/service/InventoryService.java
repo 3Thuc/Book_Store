@@ -99,13 +99,24 @@ public class InventoryService {
         BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_FOUND));
 
-        book.setStockQuantity(inventoryReq.getStockQuantity());
+        int stockQuantity = Math.max(0, inventoryReq.getStockQuantity() != null ? inventoryReq.getStockQuantity() : 0);
+        book.setStockQuantity(stockQuantity);
         book.setUpdatedAt(LocalDateTime.now());
         BookEntity saved = bookRepository.save(book);
+        Integer orderedQuantity = bookRepository.getReservedQuantity(saved.getBookId());
+        if (orderedQuantity == null) {
+            orderedQuantity = 0;
+        }
+        int availableQuantity = Math.max(0, saved.getStockQuantity() - orderedQuantity);
+
         return InventoryRes.builder()
                 .bookId(saved.getBookId())
                 .title(saved.getTitle())
                 .stockQuantity(saved.getStockQuantity())
+                .orderedQuantity(orderedQuantity)
+                .availableQuantity(availableQuantity)
+                .threshold(5)
+                .status(availableQuantity <= 0 ? "Hết hàng" : availableQuantity <= 5 ? "Cần nhập thêm" : "Đầy đủ")
                 .build();
     }
 }

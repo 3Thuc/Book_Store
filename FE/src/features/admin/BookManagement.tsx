@@ -73,7 +73,8 @@ export const BookManagement: React.FC = () => {
         publisherName: b.publisher.publisherName ?? b.publisher.name ?? '' 
       } : undefined,
       price: b.price ?? b.priceAmount ?? 0,
-      stockQuantity: Number(b.stockQuantity ?? b.availableQuantity ?? b.stock ?? 0),
+      stockQuantity: Number(b.stockQuantity ?? b.stock ?? b.availableQuantity ?? 0),
+      availableQuantity: Number(b.availableQuantity ?? b.available ?? b.stockQuantity ?? b.stock ?? 0),
       description: b.description ?? b.summary ?? '',
       publicationYear: b.publicationYear ?? b.publishedYear ?? undefined,
       avgRating: b.avgRating ?? b.rating ?? 0,
@@ -466,7 +467,7 @@ export const BookManagement: React.FC = () => {
                               variant={book.stockQuantity > 0 ? 'secondary' : 'outline'} 
                               className="text-xs"
                             >
-                              {book.stockQuantity > 0 ? `Còn: ${book.stockQuantity}` : 'Hết hàng'}
+                              {book.stockQuantity > 0 ? `Kho: ${book.stockQuantity}` : 'Kho: 0'}
                             </Badge>
                           )}
                         </div>

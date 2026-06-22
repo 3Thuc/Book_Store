@@ -585,27 +585,30 @@ function BookDetailPageWrapper() {
           const stateBook: any = (location.state as any)?.book;
           const stateBookMatches = String(stateBook?.bookId ?? stateBook?.id ?? '') === String(id);
           
-          // IMPORTANT: Use the same stock field priority as BookCard
-          // Prefer availableQuantity (actual available after reserved orders)
-          // Fall back to stockQuantity (total stock in warehouse)
-          const available =
-            raw.availableQuantity ??
-            raw.available_quantity ??
-            raw.available ??
+          // Keep the two stock concepts separate:
+          // stockQuantity = total warehouse stock, availableQuantity = sellable stock after reserved orders.
+          const stock =
             raw.stockQuantity ??
             raw.stock_quantity ??
             raw.stock ??
             (stateBookMatches
-              ? stateBook.availableQuantity ?? stateBook.available_quantity ?? stateBook.available ?? stateBook.stockQuantity ?? stateBook.stock_quantity
+              ? stateBook.stockQuantity ?? stateBook.stock_quantity ?? stateBook.stock
               : undefined) ??
             0;
+
+          const available =
+            raw.availableQuantity ??
+            raw.available_quantity ??
+            raw.available ??
+            (stateBookMatches
+              ? stateBook.availableQuantity ?? stateBook.available_quantity ?? stateBook.available
+              : undefined) ??
+            stock;
           
           const normalized: any = {
             ...raw,
-            // Use availableQuantity for consistency with BookCard
-            // This represents actual available stock (not reserved/pending)
             availableQuantity: available,
-            stockQuantity: available,  // Keep in sync
+            stockQuantity: stock,
             // unify author field
             author: raw.author ?? raw.authorName ?? raw.author_name,
             imageUrl: raw.imageUrl ?? raw.image_url ?? raw.main_image ?? '',

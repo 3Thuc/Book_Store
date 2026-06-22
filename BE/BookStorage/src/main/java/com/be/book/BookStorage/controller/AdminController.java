@@ -513,6 +513,7 @@ public class AdminController {
 
         return ResponseEntity.ok(
                 ApiResponse.<InventoryRes>builder()
+                        .result(data)
                         .build()
         );
     }
