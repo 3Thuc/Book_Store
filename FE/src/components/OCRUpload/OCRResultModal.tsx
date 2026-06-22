@@ -153,16 +153,16 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
 
   if (!isOpen) return null;
 
-  const info     = ocrResult?.book_info;
-  const results  = ocrResult?.search_results ?? [];
-  const rawText  = ocrResult?.extracted_text ?? '';
-  const engine   = ocrResult?.engine_used ?? '';
+  const info = ocrResult?.book_info;
+  const results = ocrResult?.search_results ?? [];
+  const rawText = ocrResult?.extracted_text ?? '';
+  const engine = ocrResult?.engine_used ?? '';
   const matchMethod = (ocrResult as any)?.match_method ?? '';
-  const confidence  = info?.confidence ?? 0;
+  const confidence = info?.confidence ?? 0;
 
   // ✔️ Ưu tiên title từ DB chỉ khi kết quả THỰC SỰ đáng tin
   const topResult = results.length > 0 ? results[0] : null;
-  const topScore  = topResult?.score ?? 0;
+  const topScore = topResult?.score ?? 0;
 
   // v2: yêu cầu ≥2 từ có nghĩa trùng nhau HOẶC Jaccard ≥ 30%
   // Tránh false-positive khi chỉ có 1 từ chung như "sales", "marketing", "100"
@@ -171,11 +171,11 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
 
     // Từ phổ biến không đủ để phân biệt sách (EN + VI thường gặp trên bìa)
     const STOPWORDS = new Set([
-      'the','and','for','with','from','into','that','this','all','are','was',
-      'hay','nhat','cua','cho','mot','trong','nguoi','khi','ban','cac','bai',
-      'tat','cả','va','ve','co','la','sau','truoc','theo','dau','cuoc','nhung',
-      'ideas','idea','stories','story','great','greatest','best','top','new',
-      'kiem','toan','hoc','sach','viet','nam','khoa',
+      'the', 'and', 'for', 'with', 'from', 'into', 'that', 'this', 'all', 'are', 'was',
+      'hay', 'nhat', 'cua', 'cho', 'mot', 'trong', 'nguoi', 'khi', 'ban', 'cac', 'bai',
+      'tat', 'cả', 'va', 've', 'co', 'la', 'sau', 'truoc', 'theo', 'dau', 'cuoc', 'nhung',
+      'ideas', 'idea', 'stories', 'story', 'great', 'greatest', 'best', 'top', 'new',
+      'kiem', 'toan', 'hoc', 'sach', 'viet', 'nam', 'khoa',
     ]);
 
     const normalize = (s: string) =>
@@ -210,18 +210,18 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
   // 1. Visual match (pHash) = chắc chắn 100%
   // 2. score > 50 (tăng từ 30 để tránh false-positive) VÀ ≥2 từ title trùng
   const ocrTitleRaw = info?.title ?? rawText;
-  const dbTitleRaw  = topResult?.title ?? '';
+  const dbTitleRaw = topResult?.title ?? '';
   const titleOverlap = _hasOverlap(ocrTitleRaw, dbTitleRaw) ||
-                       _hasOverlap(dbTitleRaw, ocrTitleRaw);
+    _hasOverlap(dbTitleRaw, ocrTitleRaw);
 
   const isReliableResult = matchMethod === 'visual_match' ||
     // Cần cả 3: score cao + title trùng + confidence đủ tốt
     // confidence < 0.35 ("Không chắc") → không bao giờ là reliable dù title có trùng
     (topResult !== null && topResult.book_id > 0 && topScore > 50 && titleOverlap && confidence >= 0.35);
 
-  const dbTopTitle   = isReliableResult && topResult ? sanitizeBookTitle(topResult.title) : null;
-  const dbTopAuthor  = isReliableResult && topResult ? topResult.author_name : null;
-  const ocrTitle     = getDisplayTitle(info, rawText);
+  const dbTopTitle = isReliableResult && topResult ? sanitizeBookTitle(topResult.title) : null;
+  const dbTopAuthor = isReliableResult && topResult ? topResult.author_name : null;
+  const ocrTitle = getDisplayTitle(info, rawText);
   const displayTitle = dbTopTitle || ocrTitle;
   const displayAuthor = dbTopAuthor || (info?.authors?.[0] ?? null);
 
@@ -271,8 +271,8 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
   const confBadge = confidence >= 0.75
     ? { label: 'Độ chính xác cao', color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)' }
     : confidence >= 0.4
-    ? { label: 'Có thể đúng', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' }
-    : { label: 'Không chắc', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)' };
+      ? { label: 'Có thể đúng', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' }
+      : { label: 'Không chắc', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)' };
 
   const showHighConf = isReliableResult;
   const isVisualMatch = matchMethod === 'visual_match';
@@ -482,7 +482,7 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
                   borderRadius: 2, boxShadow: '0 0 12px rgba(167,139,250,0.8)',
                 }} />
                 {/* Corner brackets */}
-                {(['TL','TR','BL','BR'] as const).map(pos => (
+                {(['TL', 'TR', 'BL', 'BR'] as const).map(pos => (
                   <span key={pos} style={{
                     position: 'absolute',
                     top: pos.startsWith('T') ? 10 : undefined,
@@ -748,7 +748,7 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
                   }}
                 >
                   <Search size={15} />
-                   Tìm: &ldquo;{(viewAllQuery || query).slice(0, 32)}{(viewAllQuery || query).length > 32 ? '…' : ''}&rdquo;
+                  Tìm: &ldquo;{(viewAllQuery || query).slice(0, 32)}{(viewAllQuery || query).length > 32 ? '…' : ''}&rdquo;
                 </button>
               ) : (
                 <button
@@ -773,20 +773,21 @@ export const OCRResultModal: React.FC<OCRResultModalProps> = ({
         <div style={{
           position: 'fixed', inset: 0, zIndex: 10000,
           background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
           animation: 'fade-in 0.2s ease-out',
         }}
-        onClick={() => setReviewOpen(false)}
+          onClick={() => setReviewOpen(false)}
         >
           <div style={{
             width: '100%', maxWidth: '520px', background: 'white',
-            borderTopLeftRadius: 24, borderTopRightRadius: 24,
-            padding: '20px 16px 24px', boxShadow: '0 -8px 32px rgba(0,0,0,0.15)',
-            maxHeight: '80%', display: 'flex', flexDirection: 'column',
-            animation: 'slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            borderRadius: 24,
+            padding: '20px 16px 24px', boxShadow: '0 12px 48px rgba(0,0,0,0.25)',
+            maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+            animation: 'fade-in 0.2s ease-out',
             fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
           }}
-          onClick={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {/* Header Drawer */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
