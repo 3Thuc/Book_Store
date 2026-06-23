@@ -582,27 +582,19 @@ function BookDetailPageWrapper() {
 
         // Normalize fields so detail page matches listing logic
         if (raw) {
-          const stateBook: any = (location.state as any)?.book;
-          const stateBookMatches = String(stateBook?.bookId ?? stateBook?.id ?? '') === String(id);
-          
           // Keep the two stock concepts separate:
           // stockQuantity = total warehouse stock, availableQuantity = sellable stock after reserved orders.
+          // IMPORTANT: Always use fresh API data, never fallback to stale state.book to ensure stock accuracy
           const stock =
             raw.stockQuantity ??
             raw.stock_quantity ??
             raw.stock ??
-            (stateBookMatches
-              ? stateBook.stockQuantity ?? stateBook.stock_quantity ?? stateBook.stock
-              : undefined) ??
             0;
 
           const available =
             raw.availableQuantity ??
             raw.available_quantity ??
             raw.available ??
-            (stateBookMatches
-              ? stateBook.availableQuantity ?? stateBook.available_quantity ?? stateBook.available
-              : undefined) ??
             stock;
           
           const normalized: any = {
