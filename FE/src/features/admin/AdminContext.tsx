@@ -362,10 +362,6 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       (b.inStock !== undefined ? (b.inStock ? 1 : 0) : undefined) ??
       existing?.stockQuantity ?? 0
     );
-    const availableQuantity = (
-      b.availableQuantity ?? b.available ?? b.available_quantity ??
-      existing?.availableQuantity ?? stockQuantity
-    );
     // Map publisher shape
     const publisher = b.publisher
       ? { publisherId: b.publisher.publisherId ?? b.publisher.id ?? 0, publisherName: b.publisher.publisherName ?? b.publisher.name ?? '' }
@@ -390,7 +386,6 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       publisher,
       price: b.price ?? b.priceAmount ?? 0,
       stockQuantity: Number(stockQuantity),
-      availableQuantity: Number(availableQuantity),
       description: b.description ?? b.summary ?? '',
       publicationYear: publicationYear,
       avgRating: b.avgRating ?? b.rating ?? 0,
@@ -877,16 +872,51 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
 
   const uiToCreatePayload = (ui: any) => {
+    // Normalize categories/authors/publishers: UI may provide names or full objects.
     const categoryObjects = Array.isArray(ui.categories)
-      ? ui.categories.map((c: any) => (typeof c === 'object' ? { categoryId: Number(c.categoryId ?? c.categoryId ?? c.id ?? c) || 0, categoryName: c.categoryName ?? c.name ?? '' } : { categoryId: Number(c) || 0, categoryName: '' }))
+      ? ui.categories.map((c: any) => {
+          if (typeof c === 'object') return { categoryId: Number(c.categoryId ?? c.id ?? 0), categoryName: c.categoryName ?? c.name ?? '' };
+          // if string (name) or numeric id-like string
+          const n = Number(c);
+          if (!Number.isNaN(n) && String(c).trim() !== '') return { categoryId: n, categoryName: '' };
+          // treat as name -> try to find id from categoriesRef
+          const found = categoriesRef.current.find(cat => String(cat.categoryName).toLowerCase() === String(c).toLowerCase());
+          return { categoryId: found ? Number(found.id) : 0, categoryName: String(c) };
+        })
       : [];
-    const categoryIds = categoryObjects.map((c: any) => c.categoryId);
+    const categoryIds = categoryObjects.map((c: any) => c.categoryId).filter((id: number) => id && id > 0);
 
     // Always create FormData (backend expects multipart/form-data with @ModelAttribute)
     const formData = new FormData();
     formData.append('title', ui.title || '');
-    formData.append('authorId', ui.selectedAuthorId ? String(ui.selectedAuthorId) : (ui.authorId ? String(ui.authorId) : ''));
-    formData.append('publisherId', ui.selectedPublisherId ? String(ui.selectedPublisherId) : (ui.publisherId ? String(ui.publisherId) : ''));
+    // Resolve authorId: accept selectedAuthorId, authorId, or author name/string
+    let resolvedAuthorId = '';
+    if (ui.selectedAuthorId) resolvedAuthorId = String(ui.selectedAuthorId);
+    else if (ui.authorId) resolvedAuthorId = String(ui.authorId);
+    else if (ui.author) {
+      // if author is object with id
+      if (typeof ui.author === 'object' && (ui.author.authorId || ui.author.id)) resolvedAuthorId = String(ui.author.authorId ?? ui.author.id);
+      else {
+        const aName = String(ui.author).toLowerCase();
+        const found = authorsRef.current.find(a => String(a.authorName).toLowerCase() === aName);
+        if (found) resolvedAuthorId = String(found.id ?? found.authorId);
+      }
+    }
+    formData.append('authorId', resolvedAuthorId);
+
+    // Resolve publisherId similarly
+    let resolvedPublisherId = '';
+    if (ui.selectedPublisherId) resolvedPublisherId = String(ui.selectedPublisherId);
+    else if (ui.publisherId) resolvedPublisherId = String(ui.publisherId);
+    else if (ui.publisher) {
+      if (typeof ui.publisher === 'object' && (ui.publisher.publisherId || ui.publisher.id)) resolvedPublisherId = String(ui.publisher.publisherId ?? ui.publisher.id);
+      else {
+        const pName = String(ui.publisher).toLowerCase();
+        const found = publishersRef.current.find(p => String(p.publisherName).toLowerCase() === pName);
+        if (found) resolvedPublisherId = String(found.id ?? found.publisherId);
+      }
+    }
+    formData.append('publisherId', resolvedPublisherId);
     formData.append('description', ui.description || '');
     formData.append('price', String(ui.price || 0));
     formData.append('stock', String(ui.inStock ? (typeof ui.stock === 'number' ? ui.stock : 1) : 0));
@@ -1482,47 +1512,11 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
   const updateStock = async (bookId: string | number, payload: { stockQuantity?: number; threshold?: number }) => {
     const prev = inventory;
-    const prevBooks = booksRef.current;
-    const targetBookId = String(bookId);
-    const nextStock = payload.stockQuantity;
     // optimistic update locally
-    setInventory(prevList => prevList.map(i => {
-      if (String(i.bookId) !== targetBookId) return i;
-
-      const stock = nextStock ?? i.quantity;
-      const reserved = Number((i as any).reserved ?? i.orderedQuantity ?? 0);
-      const available = Math.max(0, Number(stock) - reserved);
-      const threshold = payload.threshold ?? i.reorderLevel;
-
-      return {
-        ...i,
-        quantity: stock,
-        stock,
-        stockQuantity: stock,
-        available,
-        availableQuantity: available,
-        reorderLevel: threshold,
-        threshold,
-        status: available <= 0 ? 'Hết hàng' : available <= Number(threshold ?? 0) ? 'Cần nhập thêm' : 'Đầy đủ',
-        lastRestocked: new Date().toISOString(),
-      } as any;
-    }));
-
-    if (nextStock !== undefined) {
-      setBooks(prevList => prevList.map(book =>
-        String(book.bookId) === targetBookId
-          ? { ...book, stockQuantity: nextStock }
-          : book
-      ));
-    }
+    setInventory(prevList => prevList.map(i => i.bookId === String(bookId) ? { ...i, quantity: payload.stockQuantity ?? i.quantity, reorderLevel: payload.threshold ?? i.reorderLevel } : i));
     try {
-      const updateRes = await adminService.updateStock(bookId, payload);
+      await adminService.updateStock(bookId, payload);
       toast.success('Cập nhật tồn kho thành công!');
-      const saved = (updateRes as any)?.result ?? (updateRes as any)?.data?.result;
-      if (saved) {
-        const savedItem = mapServerInventoryToUi(saved);
-        setInventory(prevList => prevList.map(i => String(i.bookId) === targetBookId ? { ...i, ...savedItem } : i));
-      }
       // refresh authoritative list
       try {
         const res = await adminService.getInventory();
@@ -1532,11 +1526,10 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
           : (inventoryData && Array.isArray((inventoryData as any).items) ? (inventoryData as any).items.map(mapServerInventoryToUi) : []);
         setInventory(uiInventory);
       } catch (e) {
-        // Keep the optimistic update if the follow-up refresh fails.
+        // ignore
       }
     } catch (err) {
       setInventory(prev);
-      setBooks(prevBooks);
       console.error('Failed to update stock', err);
       toast.error('Cập nhật kho thất bại');
     }
