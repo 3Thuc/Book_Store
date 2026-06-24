@@ -1388,8 +1388,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                                   setIsProcessingAction(true);
                                   try {
                                     const response = await OrderService.cancelOrder(order.id);
-                                    if (response?.result?.status === 'CANCELLED') {
-                                      updateOrderStatusLocal(order.id, 'CANCELLED');
+                                    if (response?.result?.status === 'CANCELLED' || response?.result?.status === 'CANCEL_REQUESTED') {
+                                      updateOrderStatusLocal(order.id, response.result.status);
                                       setLastActionTime(Date.now()); // Pause polling for 15 seconds
                                       toast.success('Đã gửi yêu cầu hủy đơn hàng');
                                     } else {
