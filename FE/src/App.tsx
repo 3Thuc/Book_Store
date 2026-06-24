@@ -95,8 +95,9 @@ function HomePage() {
       avgRating:     item.avg_rating || 0,
       rating:        item.avg_rating || 0,
       ratingCount:   item.rating_count || 0,
+      // BE recommend không trả tồn kho → để undefined (không ép về 0) để FE không hiểu nhầm là hết hàng.
       availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
-      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
+      stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity,
       imageUrl:      rewriteToProxy(item.main_image || item.image_url || item.imageUrl || ''),
       categories:    item.categories || [],
       reason:        item.reason,
@@ -197,7 +198,7 @@ function HomePage() {
                     rating: item.avg_rating || 0,
                     ratingCount: item.rating_count || 0,
                     availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
-                    stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
+                    stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity,
                     imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
                     categories: item.categories || [],
                     score: item.score
@@ -242,7 +243,7 @@ function HomePage() {
           rating: item.avg_rating || 0,
           ratingCount: item.rating_count || 0,
           availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
-          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
+          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity,
           imageUrl: rewriteToProxy(item.main_image || item.image_url || ''),
           categories: item.categories || [],
           score: item.score

@@ -24,9 +24,13 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onClick, variant = 'gr
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
 
-  // Tồn kho thực tế (đã trừ đơn đang chờ/xử lý/giao)
-  const available = book.availableQuantity ?? book.stockQuantity ?? 0;
-  const outOfStock = available <= 0;
+  // Tồn kho thực tế (đã trừ đơn đang chờ/xử lý/giao).
+  // CHỈ coi là hết hàng khi BE trả về một con số ≤ 0. Nếu thiếu thông tin tồn kho
+  // (vd: sách từ API gợi ý AI – vốn đã lọc sẵn stock_quantity > 0) thì coi là còn hàng;
+  // tồn kho thật vẫn được Java kiểm tra lại khi thêm giỏ/đặt đơn.
+  const knownStock = book.availableQuantity ?? book.stockQuantity;
+  const outOfStock = knownStock != null && knownStock <= 0;
+  const available = knownStock ?? Infinity;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();

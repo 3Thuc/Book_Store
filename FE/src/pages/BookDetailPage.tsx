@@ -107,7 +107,7 @@ export const BookDetailPage: React.FC<BookDetailPageProps> = ({
           avgRating:     item.avg_rating,
           ratingCount:   item.rating_count,
           availableQuantity: item.availableQuantity ?? item.available_quantity ?? item.available,
-          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity ?? 0,
+          stockQuantity: item.stock_quantity ?? item.stockQuantity ?? item.availableQuantity ?? item.available_quantity,
           imageUrl:      item.main_image || item.image_url || item.imageUrl || '',
           categories:    item.categories || [],
           reason:        item.reason,

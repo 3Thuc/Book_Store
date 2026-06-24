@@ -16,7 +16,7 @@ export interface Book {
   authorName?: string; // Backend uses authorName
   publisher?: Publisher;
   price?: number;
-  stockQuantity: number; // Total stock in warehouse
+  stockQuantity?: number; // Total stock in warehouse (undefined nếu nguồn dữ liệu không cung cấp, vd: API gợi ý AI)
   availableQuantity?: number; // Available for sale (stockQuantity - reserved orders)
   description?: string;
   publicationYear?: number;
