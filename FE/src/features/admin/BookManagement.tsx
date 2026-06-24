@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useAdmin } from './AdminContext';
+import React, { useState, useRef, useEffect } from 'react';
+import { useAdmin, Author, Publisher, Category } from './AdminContext';
 import adminService from '../../services/adminService';
 import { Book } from '../../types/book';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
@@ -10,24 +10,15 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '../../components/ui/pagination';
 import PaginationControls from '../../components/admin/PaginationControls';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { BookOpen, Plus, Edit, Trash2, Search, ChevronsUpDown, Check } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
+import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { ImageWithFallback } from '../../components/fallbackimg/ImageWithFallback';
 import { toast } from 'sonner';
 
 export const BookManagement: React.FC = () => {
-  const { books, addBook, updateBook, deleteBook, categories, publishers, authors } = useAdmin();
+  const admin = useAdmin() as any;
+  const { books, addBook, updateBook, deleteBook, categories, publishers, authors } = admin;
   const [searchTerm, setSearchTerm] = useState('');
   // store category id ('all' = all)
   const [filterCategory, setFilterCategory] = useState('all');
@@ -59,11 +50,12 @@ export const BookManagement: React.FC = () => {
 
   // Helper to map server book shape to UI Book with status
   const mapServerBook = (b: any): Book => {
-    const status = b.status === null || b.status === undefined
-      ? 'active'
-      : (typeof b.status === 'string'
-        ? (String(b.status).toLowerCase() === 'active' ? 'active' : 'deleted')
-        : (typeof b.status === 'boolean' ? (b.status ? 'active' : 'deleted') : 'active'));
+    const normalizeStatus = (status: any): 'active' | 'deleted' => {
+      if (status === null || status === undefined) return 'active';
+      if (typeof status === 'string') return String(status).toLowerCase() === 'active' ? 'active' : 'deleted';
+      return typeof status === 'boolean' ? (status ? 'active' : 'deleted') : 'active';
+    };
+
     return {
       bookId: Number(b.bookId ?? b.id ?? 0),
       title: b.title ?? b.name ?? '',
@@ -84,7 +76,7 @@ export const BookManagement: React.FC = () => {
       })) : (b.category ? [{ categoryId: 0, categoryName: b.category }] : []),
       imageUrl: b.imageUrl ?? b.images ?? undefined, 
       images: b.imageUrl ?? b.images ?? undefined, 
-      status: status as any,
+      status: normalizeStatus(b.status) as any,
     } as Book;
   };
 
@@ -186,7 +178,7 @@ export const BookManagement: React.FC = () => {
       
       // Resolve author ID: try matching by name, then fallback to book's authorId if available
       const authorId = (() => {
-        const found = authors.find(a => a.authorName === (book.author ?? ''));
+        const found = authors.find((a: Author) => a.authorName === (book.author ?? ''));
         if (found) return String(found.id);
         // Fallback: extract authorId from book object if available (for editing)
         if ((book as any).authorId) return String((book as any).authorId);
@@ -198,7 +190,7 @@ export const BookManagement: React.FC = () => {
         if (!(book as any).publisher) return '';
         const pub = (book as any).publisher;
         if (typeof pub === 'object' && (pub.publisherId || pub.id)) return String(pub.publisherId ?? pub.id);
-        const found = publishers.find(p => p.publisherName === pub);
+        const found = publishers.find((p: Publisher) => p.publisherName === pub);
         return found ? String(found.id) : '';
       })();
       
@@ -238,46 +230,44 @@ export const BookManagement: React.FC = () => {
     const publishedYearNum = parseInt(formData.publishedYear || new Date().getFullYear().toString(), 10);
 
     const selectedCategoryIds = (formData as any).selectedCategoryIds as string[];
-    // map selected ids to backend category payload
-    const categoriesPayload = (selectedCategoryIds || []).map(id => {
-      const found = categories.find(c => c.id === id);
-      return { categoryId: Number(id) || 0, categoryName: found ? found.categoryName : '' };
-    });
+    const resolvedAuthorId = formData.selectedAuthorId
+      || String(authors.find((a: Author) => String(a.authorName).toLowerCase() === String(formData.author).toLowerCase())?.id ?? '');
+    const resolvedPublisherId = (formData as any).selectedPublisherId || '';
 
-    const bookData = {
+    if (!resolvedAuthorId || Number.isNaN(Number(resolvedAuthorId)) || Number(resolvedAuthorId) <= 0) {
+      toast.error('Vui lòng chọn một tác giả hợp lệ từ danh sách.');
+      return;
+    }
+
+    // Build minimal payload for AdminContext - will be converted to FormData by uiToCreatePayload
+    const bookPayload = {
       title: formData.title,
       author: formData.author,
-      selectedAuthorId: formData.selectedAuthorId,
-      status: formData.status,
-      selectedPublisherId: (formData as any).selectedPublisherId || '',
-      selectedCategoryIds: (formData as any).selectedCategoryIds || [],
-      category: categoriesPayload[0]?.categoryName ?? '',
-      categories: categoriesPayload.length ? categoriesPayload : [],
-      price: priceNum,
+      authorId: Number(resolvedAuthorId),
+      selectedAuthorId: String(resolvedAuthorId),
+      publisherId: resolvedPublisherId ? Number(resolvedPublisherId) : undefined,
+      selectedPublisherId: resolvedPublisherId,
+      selectedCategoryIds: selectedCategoryIds,
       description: formData.description,
-      imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop',
-      imageFile: formData.imageFile,
+      price: priceNum,
       publishedYear: publishedYearNum,
       language: formData.language,
       format: 'paperback',
-      stock: editingBook ? (editingBook.stockQuantity ?? 0) : 0,
-      stockQuantity: editingBook ? (editingBook.stockQuantity ?? 0) : 0,
-      bookId: Date.now(),
+      status: formData.status,
+      imageFile: formData.imageFile,
     };
-
-    console.log('[BookManagement] handleSubmit bookData:', bookData);
 
     (async () => {
       try {
         if (editingBook) {
-          console.log('[BookManagement] Updating book:', editingBook.bookId, 'with data:', bookData);
-          await updateBook({ ...bookData, bookId: editingBook.bookId ?? bookData.bookId });
+          console.log('[BookManagement] Updating book:', editingBook.bookId);
+          await updateBook(editingBook.bookId, bookPayload);
           toast.success('Cập nhật sách thành công!', {
             description: `"${formData.title}" đã được cập nhật.`,
           });
         } else {
           console.log('[BookManagement] Adding new book');
-          await addBook(bookData);
+          await addBook(bookPayload);
           toast.success('Thêm sách thành công!', {
             description: `"${formData.title}" đã được thêm vào hệ thống.`,
           });
@@ -363,7 +353,7 @@ export const BookManagement: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả</SelectItem>
-                  {categories.filter(c => c.status).map(category => (
+                  {categories.filter((c: Category) => c.status).map((category: Category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.categoryName}
                     </SelectItem>
@@ -581,7 +571,7 @@ export const BookManagement: React.FC = () => {
                       onClick={() => setAuthorOpen(prev => !prev)}
                     >
                       {(() => {
-                        const selected = authors.find(a => String(a.id) === String(formData.selectedAuthorId));
+                        const selected = authors.find((a: Author) => String(a.id) === String(formData.selectedAuthorId));
                         return selected?.authorName || 'Chọn tác giả';
                       })()}
                     </Button>
@@ -598,9 +588,9 @@ export const BookManagement: React.FC = () => {
                         </div>
                         <div className="max-h-48 overflow-y-auto p-2">
                           {authors
-                            .filter(a => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase()))
+                            .filter((a: Author) => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase()))
                             .slice(0, 15)
-                            .map(author => {
+                            .map((author: Author) => {
                             const checked = String(formData.selectedAuthorId || '') === String(author.id || '');
                             return (
                               <label key={author.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
@@ -622,9 +612,9 @@ export const BookManagement: React.FC = () => {
                               </label>
                             );
                           })}
-                          {authors.filter(a => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase())).length > 15 && (
+                          {authors.filter((a: Author) => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase())).length > 15 && (
                             <div className="px-2 py-2 text-xs text-muted-foreground text-center border-t mt-2">
-                              Hiển thị 15/{authors.filter(a => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase())).length} tác giả. Hãy tìm kiếm để thu hẹp kết quả.
+                              Hiển thị 15/{authors.filter((a: Author) => a.authorName && a.authorName.toLowerCase().includes(authorQuery.toLowerCase())).length} tác giả. Hãy tìm kiếm để thu hẹp kết quả.
                             </div>
                           )}
                         </div>
@@ -649,7 +639,7 @@ export const BookManagement: React.FC = () => {
                       onClick={() => setPublisherOpen(prev => !prev)}
                     >
                       {(() => {
-                        const selected = publishers.find(p => String(p.id) === String((formData as any).selectedPublisherId));
+                        const selected = publishers.find((p: Publisher) => String(p.id) === String((formData as any).selectedPublisherId));
                         return selected?.publisherName || 'Chọn nhà xuất bản (tùy chọn)';
                       })()}
                     </Button>
@@ -679,9 +669,9 @@ export const BookManagement: React.FC = () => {
                             <span className="text-sm">Không chọn</span>
                           </label>
                           {publishers
-                            .filter(p => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase()))
+                            .filter((p: Publisher) => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase()))
                             .slice(0, 15)
-                            .map(publisher => {
+                            .map((publisher: Publisher) => {
                             const checked = String(formData.selectedPublisherId || '') === String(publisher.id || '');
                             return (
                               <label key={publisher.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
@@ -704,9 +694,9 @@ export const BookManagement: React.FC = () => {
                               </label>
                             );
                           })}
-                          {publishers.filter(p => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase())).length > 15 && (
+                          {publishers.filter((p: Publisher) => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase())).length > 15 && (
                             <div className="px-2 py-2 text-xs text-muted-foreground text-center border-t mt-2">
-                              Hiển thị 15/{publishers.filter(p => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase())).length} nhà xuất bản. Hãy tìm kiếm để thu hẹp kết quả.
+                              Hiển thị 15/{publishers.filter((p: Publisher) => p.publisherName && p.publisherName.toLowerCase().includes(publisherQuery.toLowerCase())).length} nhà xuất bản. Hãy tìm kiếm để thu hẹp kết quả.
                             </div>
                           )}
                         </div>
@@ -745,10 +735,10 @@ export const BookManagement: React.FC = () => {
                         </div>
                         <div className="max-h-48 overflow-y-auto p-2">
                           {categories
-                            .filter(c => c.status)
-                            .filter(c => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase()))
+                            .filter((c: Category) => c.status)
+                            .filter((c: Category) => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase()))
                             .slice(0, 15)
-                            .map(category => {
+                            .map((category: Category) => {
                             const checked = (formData as any).selectedCategoryIds.includes(category.id);
                             return (
                               <label key={category.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md cursor-pointer">
@@ -767,7 +757,6 @@ export const BookManagement: React.FC = () => {
                                       console.log('[BookManagement] Remove category, new selectedCategoryIds:', updated);
                                       setFormData({ ...formData, selectedCategoryIds: updated });
                                     }
-                                    }
                                   }}
                                   className="rounded"
                                 />
@@ -775,9 +764,9 @@ export const BookManagement: React.FC = () => {
                               </label>
                             );
                           })}
-                          {categories.filter(c => c.status).filter(c => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase())).length > 15 && (
+                          {categories.filter((c: Category) => c.status).filter((c: Category) => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase())).length > 15 && (
                             <div className="px-2 py-2 text-xs text-muted-foreground text-center border-t mt-2">
-                              Hiển thị 30/{categories.filter(c => c.status).filter(c => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase())).length} danh mục. Hãy tìm kiếm để thu hẹp kết quả.
+                              Hiển thị 30/{categories.filter((c: Category) => c.status).filter((c: Category) => c.categoryName.toLowerCase().includes(categoryQuery.toLowerCase())).length} danh mục. Hãy tìm kiếm để thu hẹp kết quả.
                             </div>
                           )}
                         </div>
@@ -958,7 +947,7 @@ export const BookManagement: React.FC = () => {
             </Button>
             <Button 
               onClick={handleSubmit}
-              disabled={!formData.title || !formData.author || !formData.price || !formData.description}
+              disabled={!formData.title || !formData.author || !formData.price || !formData.description || !(formData.selectedAuthorId || formData.author)}
             >
               {editingBook ? 'Cập nhật' : 'Thêm sách'}
             </Button>

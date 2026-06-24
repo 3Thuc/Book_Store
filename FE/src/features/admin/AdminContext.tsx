@@ -138,8 +138,8 @@ const mapServerInventoryToUi = (it: any): InventoryItem => {
 interface AdminContextType {
   // Books
   books: Book[];
-  addBook: (book: Omit<Book, 'id'>) => Promise<void>;
-  updateBook: (idOrBook: any, updates?: Partial<Book>) => Promise<void>;
+  addBook: (book: any) => Promise<void>;
+  updateBook: (idOrBook: any, updates?: any) => Promise<void>;
   deleteBook: (id: string) => Promise<void>;
   isDelete?: boolean;
 
@@ -903,10 +903,15 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       if (typeof ui.author === 'object' && (ui.author.authorId || ui.author.id)) {
         resolvedAuthorId = String(ui.author.authorId ?? ui.author.id);
       } else {
-        // Try to find author by name
-        const aName = String(ui.author).toLowerCase();
-        const found = authorsRef.current.find(a => String(a.authorName).toLowerCase() === aName);
-        if (found) resolvedAuthorId = String(found.id ?? found.authorId);
+        const authorTerm = String(ui.author).trim();
+        const parsedAuthorId = Number(authorTerm);
+        if (!Number.isNaN(parsedAuthorId) && authorTerm !== '') {
+          resolvedAuthorId = String(parsedAuthorId);
+        } else {
+          const aName = authorTerm.toLowerCase();
+          const found = authorsRef.current.find(a => String(a.authorName).toLowerCase() === aName);
+          if (found) resolvedAuthorId = String(found.id ?? found.authorId);
+        }
       }
     }
     // Only append authorId if it's a valid integer ID
@@ -923,10 +928,15 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       if (typeof ui.publisher === 'object' && (ui.publisher.publisherId || ui.publisher.id)) {
         resolvedPublisherId = String(ui.publisher.publisherId ?? ui.publisher.id);
       } else {
-        // Try to find publisher by name
-        const pName = String(ui.publisher).toLowerCase();
-        const found = publishersRef.current.find(p => String(p.publisherName).toLowerCase() === pName);
-        if (found) resolvedPublisherId = String(found.id ?? found.publisherId);
+        const publisherTerm = String(ui.publisher).trim();
+        const parsedPublisherId = Number(publisherTerm);
+        if (!Number.isNaN(parsedPublisherId) && publisherTerm !== '') {
+          resolvedPublisherId = String(parsedPublisherId);
+        } else {
+          const pName = publisherTerm.toLowerCase();
+          const found = publishersRef.current.find(p => String(p.publisherName).toLowerCase() === pName);
+          if (found) resolvedPublisherId = String(found.id ?? found.publisherId);
+        }
       }
     }
     // Only append publisherId if it's a valid integer ID
@@ -1169,7 +1179,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     return null;
   };
 
-  const addBook = (book: Omit<Book, 'id'>) => {
+  const addBook = (book: any) => {
     return (async () => {
       const tempId = -Date.now();
       const tempBook: Book = { ...book, bookId: tempId } as Book;
@@ -1187,16 +1197,19 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     })();
   };
 
-  const updateBook = (idOrBook: any, updates?: Partial<Book>) => {
-    const rawId = typeof idOrBook === 'string' ? idOrBook : idOrBook?.bookId;
-    const payload = typeof idOrBook === 'string' ? updates : { ...idOrBook };
+  const updateBook = (idOrBook: any, updates?: any) => {
+    // Support both: updateBook(id, payload) or updateBook(book_with_id)
+    const isIdFirst = typeof idOrBook === 'string' || typeof idOrBook === 'number';
+    const bookId = isIdFirst ? idOrBook : idOrBook?.bookId;
+    const payload = isIdFirst ? updates : idOrBook;
 
-    if (!rawId) return Promise.resolve();
+    if (!bookId || !payload) return Promise.resolve();
 
-    const idNum = parseUiId(rawId);
+    const idNum = parseUiId(bookId);
     const idStr = String(idNum);
 
     const prevBooks = booksRef.current;
+    // Optimistic update - merge payload into existing book
     setBooks(prev => prev.map(book => book.bookId === idNum ? { ...book, ...payload } : book));
 
     return (async () => {
