@@ -147,6 +147,7 @@ export const BookManagement: React.FC = () => {
     publishedYear: new Date().getFullYear().toString(),
     language: 'vi',
     status: 'active' as 'active' | 'deleted',
+    stock: '',
   });
 
   const resetForm = () => {
@@ -163,6 +164,7 @@ export const BookManagement: React.FC = () => {
       publishedYear: new Date().getFullYear().toString(),
       language: 'vi',
       status: 'active',
+      stock: '',
     });
     setEditingBook(null);
   };
@@ -216,6 +218,7 @@ export const BookManagement: React.FC = () => {
         publishedYear: book.publicationYear != null ? book.publicationYear.toString() : new Date().getFullYear().toString(),
         language: (book as any).language || 'vi',
         status: (book as any).status === 'deleted' ? 'deleted' : 'active',
+        stock: book.stockQuantity != null ? book.stockQuantity.toString() : '',
       });
     } else {
       resetForm();
@@ -240,6 +243,7 @@ export const BookManagement: React.FC = () => {
     }
 
     // Build minimal payload for AdminContext - will be converted to FormData by uiToCreatePayload
+    const stockNum = Number.parseInt(formData.stock || '0', 10);
     const bookPayload = {
       title: formData.title,
       author: formData.author,
@@ -254,6 +258,7 @@ export const BookManagement: React.FC = () => {
       language: formData.language,
       format: 'paperback',
       status: formData.status,
+      stock: stockNum,
       imageFile: formData.imageFile,
     };
 
@@ -784,7 +789,7 @@ export const BookManagement: React.FC = () => {
             {/* Pricing & Publishing Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium border-b pb-2">Thông tin xuất bản & giá cả</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="price" className="text-sm font-medium">Giá bán (VNĐ) *</Label>
                   <Input
@@ -794,6 +799,19 @@ export const BookManagement: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="189,000"
                     className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stock" className="text-sm font-medium">Số lượng (kho)</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    placeholder="0"
+                    className="h-10"
+                    min="0"
                   />
                 </div>
                 
