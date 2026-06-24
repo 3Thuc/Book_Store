@@ -872,56 +872,77 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
 
   const uiToCreatePayload = (ui: any) => {
-    // Normalize categories/authors/publishers: UI may provide names or full objects.
-    const categoryObjects = Array.isArray(ui.categories)
-      ? ui.categories.map((c: any) => {
-          if (typeof c === 'object') return { categoryId: Number(c.categoryId ?? c.id ?? 0), categoryName: c.categoryName ?? c.name ?? '' };
-          // if string (name) or numeric id-like string
-          const n = Number(c);
-          if (!Number.isNaN(n) && String(c).trim() !== '') return { categoryId: n, categoryName: '' };
-          // treat as name -> try to find id from categoriesRef
-          const found = categoriesRef.current.find(cat => String(cat.categoryName).toLowerCase() === String(c).toLowerCase());
-          return { categoryId: found ? Number(found.id) : 0, categoryName: String(c) };
-        })
-      : [];
-    const categoryIds = categoryObjects.map((c: any) => c.categoryId).filter((id: number) => id && id > 0);
+    // Normalize categories: support both selectedCategoryIds and categories array
+    let categoryIds: number[] = [];
+    if (Array.isArray(ui.selectedCategoryIds)) {
+      categoryIds = ui.selectedCategoryIds.map((id: any) => {
+        const n = Number(id);
+        return !Number.isNaN(n) && n > 0 ? n : 0;
+      }).filter((n: number) => n > 0);
+    } else if (Array.isArray(ui.categories)) {
+      const categoryObjects = ui.categories.map((c: any) => {
+        if (typeof c === 'object') return Number(c.categoryId ?? c.id ?? 0);
+        const n = Number(c);
+        if (!Number.isNaN(n) && String(c).trim() !== '') return n;
+        const found = categoriesRef.current.find(cat => String(cat.categoryName).toLowerCase() === String(c).toLowerCase());
+        return found ? Number(found.id) : 0;
+      });
+      categoryIds = categoryObjects.filter((n: number) => n > 0);
+    }
 
     // Always create FormData (backend expects multipart/form-data with @ModelAttribute)
     const formData = new FormData();
     formData.append('title', ui.title || '');
+    
     // Resolve authorId: accept selectedAuthorId, authorId, or author name/string
     let resolvedAuthorId = '';
     if (ui.selectedAuthorId) resolvedAuthorId = String(ui.selectedAuthorId);
     else if (ui.authorId) resolvedAuthorId = String(ui.authorId);
     else if (ui.author) {
       // if author is object with id
-      if (typeof ui.author === 'object' && (ui.author.authorId || ui.author.id)) resolvedAuthorId = String(ui.author.authorId ?? ui.author.id);
-      else {
+      if (typeof ui.author === 'object' && (ui.author.authorId || ui.author.id)) {
+        resolvedAuthorId = String(ui.author.authorId ?? ui.author.id);
+      } else {
+        // Try to find author by name
         const aName = String(ui.author).toLowerCase();
         const found = authorsRef.current.find(a => String(a.authorName).toLowerCase() === aName);
         if (found) resolvedAuthorId = String(found.id ?? found.authorId);
       }
     }
-    formData.append('authorId', resolvedAuthorId);
+    // Only append authorId if it's a valid integer ID
+    const authorIdNum = Number(resolvedAuthorId);
+    if (!Number.isNaN(authorIdNum) && authorIdNum > 0) {
+      formData.append('authorId', String(authorIdNum));
+    }
 
-    // Resolve publisherId similarly
+    // Resolve publisherId: accept selectedPublisherId, publisherId, or publisher name/string
     let resolvedPublisherId = '';
     if (ui.selectedPublisherId) resolvedPublisherId = String(ui.selectedPublisherId);
     else if (ui.publisherId) resolvedPublisherId = String(ui.publisherId);
     else if (ui.publisher) {
-      if (typeof ui.publisher === 'object' && (ui.publisher.publisherId || ui.publisher.id)) resolvedPublisherId = String(ui.publisher.publisherId ?? ui.publisher.id);
-      else {
+      if (typeof ui.publisher === 'object' && (ui.publisher.publisherId || ui.publisher.id)) {
+        resolvedPublisherId = String(ui.publisher.publisherId ?? ui.publisher.id);
+      } else {
+        // Try to find publisher by name
         const pName = String(ui.publisher).toLowerCase();
         const found = publishersRef.current.find(p => String(p.publisherName).toLowerCase() === pName);
         if (found) resolvedPublisherId = String(found.id ?? found.publisherId);
       }
     }
-    formData.append('publisherId', resolvedPublisherId);
+    // Only append publisherId if it's a valid integer ID
+    const publisherIdNum = Number(resolvedPublisherId);
+    if (!Number.isNaN(publisherIdNum) && publisherIdNum > 0) {
+      formData.append('publisherId', String(publisherIdNum));
+    }
+    
     formData.append('description', ui.description || '');
     formData.append('price', String(ui.price || 0));
-    formData.append('stock', String(ui.inStock ? (typeof ui.stock === 'number' ? ui.stock : 1) : 0));
+    
+    // Resolve stock: support both inStock/stock and stockQuantity
+    const stockValue = ui.stock !== undefined ? ui.stock : (ui.stockQuantity !== undefined ? ui.stockQuantity : 0);
+    formData.append('stock', String(stockValue || 0));
     formData.append('publishedYear', String(ui.publishedYear || new Date().getFullYear()));
-    formData.append('language', ui.language || 'Vietnamese');
+    formData.append('language', ui.language || 'vi');
     formData.append('format', ui.format || 'paperback');
     if (ui.status !== undefined) {
       formData.append('status', ui.status);
@@ -930,8 +951,8 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       formData.append('categoryIds', String(id));
     });
     
-    // Only append imageFile if present
-    if (ui.imageFile) {
+    // Only append imageFile if present and is a File object
+    if (ui.imageFile instanceof File) {
       formData.append('imageFile', ui.imageFile);
     }
     

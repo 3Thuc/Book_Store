@@ -187,15 +187,37 @@ export const getAuthToken = (): string | null => localStorage.getItem("token");
 export const apiRequest = {
   get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     apiClient.get<T>(url, config).then((res) => res.data),
+  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    // If sending FormData, don't set Content-Type so axios auto-detects and sets boundary
+    if (data instanceof FormData) {
+      const cfg = { ...(config || {}) } as AxiosRequestConfig;
+      cfg.headers = { ...(cfg.headers || {}) } as any;
+      // Don't explicitly set Content-Type; let axios handle it
+      if (cfg.headers['Content-Type']) delete cfg.headers['Content-Type'];
+      return apiClient.post<T>(url, data, cfg).then((res) => res.data);
+    }
+    return apiClient.post<T>(url, data, config).then((res) => res.data);
+  },
 
-  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiClient.post<T>(url, data, config).then((res) => res.data),
+  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    if (data instanceof FormData) {
+      const cfg = { ...(config || {}) } as AxiosRequestConfig;
+      cfg.headers = { ...(cfg.headers || {}) } as any;
+      if (cfg.headers['Content-Type']) delete cfg.headers['Content-Type'];
+      return apiClient.put<T>(url, data, cfg).then((res) => res.data);
+    }
+    return apiClient.put<T>(url, data, config).then((res) => res.data);
+  },
 
-  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiClient.put<T>(url, data, config).then((res) => res.data),
-
-  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiClient.patch<T>(url, data, config).then((res) => res.data),
+  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    if (data instanceof FormData) {
+      const cfg = { ...(config || {}) } as AxiosRequestConfig;
+      cfg.headers = { ...(cfg.headers || {}) } as any;
+      if (cfg.headers['Content-Type']) delete cfg.headers['Content-Type'];
+      return apiClient.patch<T>(url, data, cfg).then((res) => res.data);
+    }
+    return apiClient.patch<T>(url, data, config).then((res) => res.data);
+  },
 
   delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     apiClient.delete<T>(url, config).then((res) => res.data),

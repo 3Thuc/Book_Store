@@ -73,8 +73,7 @@ export const BookManagement: React.FC = () => {
         publisherName: b.publisher.publisherName ?? b.publisher.name ?? '' 
       } : undefined,
       price: b.price ?? b.priceAmount ?? 0,
-      stockQuantity: Number(b.stockQuantity ?? b.stock ?? b.availableQuantity ?? 0),
-      availableQuantity: Number(b.availableQuantity ?? b.available ?? b.stockQuantity ?? b.stock ?? 0),
+      stockQuantity: Number(b.stockQuantity ?? b.availableQuantity ?? b.stock ?? 0),
       description: b.description ?? b.summary ?? '',
       publicationYear: b.publicationYear ?? b.publishedYear ?? undefined,
       avgRating: b.avgRating ?? b.rating ?? 0,
@@ -184,16 +183,40 @@ export const BookManagement: React.FC = () => {
     
     if (book) {
       setEditingBook(book);
+      
+      // Resolve author ID: try matching by name, then fallback to book's authorId if available
+      const authorId = (() => {
+        const found = authors.find(a => a.authorName === (book.author ?? ''));
+        if (found) return String(found.id);
+        // Fallback: extract authorId from book object if available (for editing)
+        if ((book as any).authorId) return String((book as any).authorId);
+        return '';
+      })();
+      
+      // Resolve publisher ID: try matching by name, then fallback to book's publisherId
+      const publisherId = (() => {
+        if (!(book as any).publisher) return '';
+        const pub = (book as any).publisher;
+        if (typeof pub === 'object' && (pub.publisherId || pub.id)) return String(pub.publisherId ?? pub.id);
+        const found = publishers.find(p => p.publisherName === pub);
+        return found ? String(found.id) : '';
+      })();
+      
+      // Resolve category IDs from current book
+      const categoryIds = (book as any).categories ? (book as any).categories.map((c: any) => String(c.categoryId ?? c.id ?? '')) : [];
+      
+      console.log('[BookManagement] EditDialog - current book:', { 
+        authorId, publisherId, categoryIds, 
+        book_categories: (book as any).categories,
+        book_publisher: (book as any).publisher
+      });
+      
       setFormData({
         title: book.title,
         author: book.author ?? '',
-        selectedAuthorId: (() => {
-          const found = authors.find(a => a.authorName === (book.author ?? ''));
-          return found ? String(found.id) : '';
-        })(),
-        // populate selectedCategoryIds from book.categories if available
-        selectedCategoryIds: (book as any).categories ? (book as any).categories.map((c: any) => String(c.categoryId ?? c.id ?? '')) : [],
-        selectedPublisherId: (book as any).publisher ? (String((book as any).publisher.publisherId ?? (book as any).publisher.id ?? publishers.find(p => p.publisherName === ((book as any).publisher.publisherName ?? (book as any).publisher.name ?? (book as any).publisher))?.id ?? '')) : '',
+        selectedAuthorId: authorId,
+        selectedCategoryIds: categoryIds,
+        selectedPublisherId: publisherId,
         price: book.price != null ? book.price.toString() : '',
         description: book.description ?? '',
         imageUrl: book.imageUrl ?? '',
@@ -226,32 +249,34 @@ export const BookManagement: React.FC = () => {
       author: formData.author,
       selectedAuthorId: formData.selectedAuthorId,
       status: formData.status,
-      // include selected publisher id (if any)
-      publisherId: (formData as any).selectedPublisherId ? Number((formData as any).selectedPublisherId) : undefined,
-      // keep a top-level category for compatibility (first selected)
+      selectedPublisherId: (formData as any).selectedPublisherId || '',
+      selectedCategoryIds: (formData as any).selectedCategoryIds || [],
       category: categoriesPayload[0]?.categoryName ?? '',
-  categories: categoriesPayload.length ? categoriesPayload : [{ categoryId: 0, categoryName: '' }],
-  price: priceNum,
-  avgRating: 0,
-  ratingCount: 0,
-  description: formData.description,
-  imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop',
-  imageFile: formData.imageFile,
-  publishedYear: publishedYearNum,
-  language: formData.language,
-  // default new books to out-of-stock (0). When editing, preserve existing stockQuantity if available.
-  stockQuantity: editingBook ? (editingBook.stockQuantity ?? 0) : 0,
+      categories: categoriesPayload.length ? categoriesPayload : [],
+      price: priceNum,
+      description: formData.description,
+      imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop',
+      imageFile: formData.imageFile,
+      publishedYear: publishedYearNum,
+      language: formData.language,
+      format: 'paperback',
+      stock: editingBook ? (editingBook.stockQuantity ?? 0) : 0,
+      stockQuantity: editingBook ? (editingBook.stockQuantity ?? 0) : 0,
       bookId: Date.now(),
     };
+
+    console.log('[BookManagement] handleSubmit bookData:', bookData);
 
     (async () => {
       try {
         if (editingBook) {
+          console.log('[BookManagement] Updating book:', editingBook.bookId, 'with data:', bookData);
           await updateBook({ ...bookData, bookId: editingBook.bookId ?? bookData.bookId });
           toast.success('Cập nhật sách thành công!', {
             description: `"${formData.title}" đã được cập nhật.`,
           });
         } else {
+          console.log('[BookManagement] Adding new book');
           await addBook(bookData);
           toast.success('Thêm sách thành công!', {
             description: `"${formData.title}" đã được thêm vào hệ thống.`,
@@ -467,7 +492,7 @@ export const BookManagement: React.FC = () => {
                               variant={book.stockQuantity > 0 ? 'secondary' : 'outline'} 
                               className="text-xs"
                             >
-                              {book.stockQuantity > 0 ? `Kho: ${book.stockQuantity}` : 'Kho: 0'}
+                              {book.stockQuantity > 0 ? `Còn: ${book.stockQuantity}` : 'Hết hàng'}
                             </Badge>
                           )}
                         </div>
@@ -584,8 +609,10 @@ export const BookManagement: React.FC = () => {
                                   checked={checked}
                                   onChange={() => {
                                     if (checked) {
+                                      console.log('[BookManagement] Deselect author');
                                       setFormData({ ...formData, selectedAuthorId: '', author: '' });
                                     } else {
+                                      console.log('[BookManagement] Select author:', author.id, author.authorName);
                                       setFormData({ ...formData, selectedAuthorId: String(author.id), author: author.authorName });
                                     }
                                   }}
@@ -643,6 +670,7 @@ export const BookManagement: React.FC = () => {
                               type="checkbox"
                               checked={!formData.selectedPublisherId || formData.selectedPublisherId === ''}
                               onChange={() => {
+                                console.log('[BookManagement] Clear publisher selection');
                                 setFormData({ ...formData, selectedPublisherId: '' });
                                 setPublisherOpen(false);
                               }}
@@ -662,8 +690,10 @@ export const BookManagement: React.FC = () => {
                                   checked={checked}
                                   onChange={() => {
                                     if (checked) {
+                                      console.log('[BookManagement] Deselect publisher');
                                       setFormData({ ...formData, selectedPublisherId: '' });
                                     } else {
+                                      console.log('[BookManagement] Select publisher:', publisher.id, publisher.publisherName);
                                       setFormData({ ...formData, selectedPublisherId: String(publisher.id) });
                                     }
                                     setPublisherOpen(false);
@@ -726,11 +756,17 @@ export const BookManagement: React.FC = () => {
                                   type="checkbox"
                                   checked={checked}
                                   onChange={(e) => {
+                                    console.log('[BookManagement] Category checkbox:', category.id, 'checked:', e.target.checked);
                                     const current = (formData as any).selectedCategoryIds as string[];
                                     if (e.target.checked) {
-                                      setFormData({ ...formData, selectedCategoryIds: [...current, category.id] });
+                                      const updated = [...current, category.id];
+                                      console.log('[BookManagement] Add category, new selectedCategoryIds:', updated);
+                                      setFormData({ ...formData, selectedCategoryIds: updated });
                                     } else {
-                                      setFormData({ ...formData, selectedCategoryIds: current.filter(id => id !== category.id) });
+                                      const updated = current.filter(id => id !== category.id);
+                                      console.log('[BookManagement] Remove category, new selectedCategoryIds:', updated);
+                                      setFormData({ ...formData, selectedCategoryIds: updated });
+                                    }
                                     }
                                   }}
                                   className="rounded"
