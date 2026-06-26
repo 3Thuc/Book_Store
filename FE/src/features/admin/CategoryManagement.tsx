@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
-import { Plus, Edit, Trash2, Tag, PowerOff, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, PowerOff, RotateCcw, AlertTriangle, Search } from 'lucide-react';
 import PaginationControls from '../../components/admin/PaginationControls';
 
 export const CategoryManagement: React.FC = () => {
@@ -16,6 +16,7 @@ export const CategoryManagement: React.FC = () => {
   const [formData, setFormData] = useState({ categoryName: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Confirm dialog state
   type ConfirmAction = 'deactivate' | 'restore' | 'hardDelete';
@@ -103,7 +104,11 @@ export const CategoryManagement: React.FC = () => {
     },
   };
 
-  const sorted = [...categories].sort((a, b) => {
+  const filteredCategories = categories.filter((category) =>
+    category.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const sorted = [...filteredCategories].sort((a, b) => {
     const aActive = a.status === ItemStatus.Active;
     const bActive = b.status === ItemStatus.Active;
     if (aActive === bActive) return a.categoryName.localeCompare(b.categoryName, 'vi');
@@ -125,6 +130,16 @@ export const CategoryManagement: React.FC = () => {
               <Plus className="h-4 w-4 mr-2" />
               Thêm danh mục
             </Button>
+          </div>
+          {/* Search bar */}
+          <div className="relative mt-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9 h-9 text-xs"
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -203,22 +218,26 @@ export const CategoryManagement: React.FC = () => {
             })}
           </div>
 
-          <PaginationControls
-            totalItems={categories.length}
-            currentPage={currentPage}
-            totalPages={Math.max(1, Math.ceil(categories.length / pageSize))}
-            pageSize={pageSize}
-            onPageChange={(p: number) => setCurrentPage(p)}
-            onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
-            loading={false}
-            pageSizeOptions={[6, 9, 12, 15]}
-          />
+          {filteredCategories.length > 0 && (
+            <PaginationControls
+              totalItems={filteredCategories.length}
+              currentPage={currentPage}
+              totalPages={Math.max(1, Math.ceil(filteredCategories.length / pageSize))}
+              pageSize={pageSize}
+              onPageChange={(p: number) => setCurrentPage(p)}
+              onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
+              loading={false}
+              pageSizeOptions={[6, 9, 12, 15]}
+            />
+          )}
 
-          {categories.filter(cat => cat.status === ItemStatus.Active).length === 0 && (
+          {filteredCategories.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <Tag className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>Chưa có danh mục nào</p>
-              <p className="text-sm">Nhấn nút "Thêm danh mục" để bắt đầu</p>
+              <p>{searchTerm ? 'Không tìm thấy danh mục nào phù hợp' : 'Chưa có danh mục nào'}</p>
+              <p className="text-sm">
+                {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Nhấn nút "Thêm danh mục" để bắt đầu'}
+              </p>
             </div>
           )}
         </CardContent>
