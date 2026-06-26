@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 export const PaymentReturnPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { clearCart } = useCart();
+  const { clearSelectedItems } = useCart();
   const { refreshOrders, initializing } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const hasCheckedRef = useRef(false);
@@ -43,9 +43,9 @@ export const PaymentReturnPage = () => {
 
       if (isSuccessfulPayment) {
         try {
-          await clearCart();
+          await clearSelectedItems();
         } catch (error) {
-          console.error('Failed to clear cart:', error);
+          console.error('Failed to clear selected items from cart:', error);
           // Still show success even if clear fails (cart might already be empty)
         }
         try {
@@ -64,7 +64,7 @@ export const PaymentReturnPage = () => {
     };
 
     checkPayment();
-  }, [initializing, code, paymentStatus, orderId, clearCart, refreshOrders]);
+  }, [initializing, code, paymentStatus, orderId, clearSelectedItems, refreshOrders]);
 
   if (status === 'loading') {
     return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Check } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../../components/ui/sheet';
@@ -17,7 +17,7 @@ interface CartProps {
 
 export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, clearCart, toggleSelectItem, deselectAllItems, getSelectedTotalPrice, getSelectedTotalItems, getTotalItems } = useCart();
   const { isLoggedIn } = useAuth();
 
   React.useEffect(() => {
@@ -42,6 +42,10 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
     await clearCart();
   };
 
+  const handleDeselectAll = () => {
+    deselectAllItems();
+  };
+
   const handleContinueShopping = () => {
     onClose();
   };
@@ -54,8 +58,9 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    if (items.length === 0) {
-      toast.error('Giỏ hàng trống');
+    const selectedCount = items.filter(item => item.selected).length;
+    if (selectedCount === 0) {
+      toast.error('Vui lòng chọn ít nhất một sản phẩm để đặt hàng');
       return;
     }
 
@@ -66,8 +71,9 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
 
   const formatPrice = (price: number) => formatVND(price);
 
-  const totalPrice = getTotalPrice();
+  const totalPrice = getSelectedTotalPrice();
   const totalItems = getTotalItems();
+  const selectedCount = items.filter(item => item.selected).length;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -118,7 +124,22 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                   const imageUrl = b.imageUrl ?? b.image ?? '';
 
                   return (
-                    <div key={bookId} className="flex gap-4">
+                    <div key={bookId} className="flex items-center gap-4">
+                      {/* Selection Checkbox */}
+                      <button
+                        type="button"
+                        onClick={() => toggleSelectItem(bookId)}
+                        className="flex-shrink-0 focus:outline-none"
+                      >
+                        {item.selected ? (
+                          <div className="w-5 h-5 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center border border-black dark:border-white">
+                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500" />
+                        )}
+                      </button>
+
                       {/* Book Image */}
                       <div className="flex-shrink-0">
                         <ImageWithFallback
@@ -190,26 +211,37 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             <div className="border-t px-6 py-4 space-y-4">
               {/* Clear All */}
               <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={handleClearCart}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Xóa tất cả
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                  >
+                    Xóa tất cả
+                  </button>
+                  {selectedCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleDeselectAll}
+                      className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                    >
+                      Bỏ chọn tất cả
+                    </button>
+                  )}
+                </div>
                 <div className="text-right">
-                  <p className="text-muted-foreground mb-1">Tổng cộng</p>
-                  <p className="text-2xl">{formatPrice(totalPrice)}</p>
+                  <p className="text-muted-foreground mb-1 text-sm">Tổng cộng</p>
+                  <p className="text-2xl font-semibold">{formatPrice(totalPrice)}</p>
                 </div>
               </div>
               
               {/* Checkout Button */}
               <Button
                 onClick={handleCheckout}
-                disabled={!isLoggedIn}
+                disabled={!isLoggedIn || selectedCount === 0}
                 className="w-full h-12 bg-black hover:bg-black/90 text-white"
               >
-                Thanh toán
+                Thanh toán {selectedCount > 0 && `(${selectedCount})`}
               </Button>
               
               {/* Continue Shopping Link */}

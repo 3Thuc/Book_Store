@@ -8,6 +8,7 @@ type CartItem = {
   book: Book;
   quantity: number;
   cartItemId?: string; // Backend cart item ID
+  selected: boolean;
 };
 
 interface OrderItem {
@@ -26,7 +27,11 @@ type CartAction =
   | { type: 'REMOVE_FROM_CART'; bookId: string }
   | { type: 'UPDATE_QUANTITY'; bookId: string; quantity: number }
   | { type: 'CLEAR_CART' }
-  | { type: 'LOAD_CART'; items: CartItem[] };
+  | { type: 'LOAD_CART'; items: CartItem[] }
+  | { type: 'TOGGLE_SELECT_ITEM'; bookId: string }
+  | { type: 'SELECT_ALL_ITEMS' }
+  | { type: 'DESELECT_ALL_ITEMS' }
+  | { type: 'REMOVE_SELECTED_ITEMS' };
 
 const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
   switch (action.type) {
@@ -36,11 +41,11 @@ const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
       if (existingItem) {
         return state.map(item =>
           String((item.book as any).bookId) === String((action.book as any).bookId)
-            ? { ...item, quantity: item.quantity + quantityToAdd }
+            ? { ...item, quantity: item.quantity + quantityToAdd, selected: true }
             : item
         );
       }
-      return [...state, { book: action.book, quantity: quantityToAdd }];
+      return [...state, { book: action.book, quantity: quantityToAdd, selected: true }];
 
     case 'REMOVE_FROM_CART':
       return state.filter(item => String((item.book as any).bookId) !== action.bookId);
@@ -59,7 +64,26 @@ const cartReducer = (state: CartItem[], action: CartAction): CartItem[] => {
       return [];
 
     case 'LOAD_CART':
-      return action.items;
+      return action.items.map(item => ({
+        ...item,
+        selected: item.selected ?? true,
+      }));
+
+    case 'TOGGLE_SELECT_ITEM':
+      return state.map(item =>
+        String((item.book as any).bookId) === action.bookId
+          ? { ...item, selected: !item.selected }
+          : item
+      );
+
+    case 'SELECT_ALL_ITEMS':
+      return state.map(item => ({ ...item, selected: true }));
+
+    case 'DESELECT_ALL_ITEMS':
+      return state.map(item => ({ ...item, selected: false }));
+
+    case 'REMOVE_SELECTED_ITEMS':
+      return state.filter(item => !item.selected);
 
     default:
       return state;
@@ -76,6 +100,12 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   checkout: () => Promise<void>;
   isLoading?: boolean;
+  toggleSelectItem: (bookId: string) => void;
+  selectAllItems: () => void;
+  deselectAllItems: () => void;
+  clearSelectedItems: () => Promise<void>;
+  getSelectedTotalPrice: () => number;
+  getSelectedTotalItems: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -251,6 +281,53 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children, createOrde
     return items.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const getSelectedTotalPrice = () => {
+    return items.reduce((total, item) => total + (item.selected ? ((item.book.price ?? 0) * item.quantity) : 0), 0);
+  };
+
+  const getSelectedTotalItems = () => {
+    return items.reduce((total, item) => total + (item.selected ? item.quantity : 0), 0);
+  };
+
+  const toggleSelectItem = (bookId: string) => {
+    dispatch({ type: 'TOGGLE_SELECT_ITEM', bookId });
+  };
+
+  const selectAllItems = () => {
+    dispatch({ type: 'SELECT_ALL_ITEMS' });
+  };
+
+  const deselectAllItems = () => {
+    dispatch({ type: 'DESELECT_ALL_ITEMS' });
+  };
+
+  const clearSelectedItems = async () => {
+    const selectedItems = items.filter(item => item.selected);
+    if (selectedItems.length === 0) return;
+
+    // Optimistic update
+    const previousItems = items;
+    dispatch({ type: 'REMOVE_SELECTED_ITEMS' });
+
+    if (!isLoggedIn) {
+      return;
+    }
+
+    try {
+      // Delete selected items parallelly on backend
+      const deletePromises = selectedItems.map(item => {
+        const cartItemId = item.cartItemId || String((item.book as any).bookId);
+        return cartService.removeItem(cartItemId);
+      });
+      await Promise.all(deletePromises);
+    } catch (error: any) {
+      console.error('Failed to clear selected items from cart:', error);
+      // Rollback on error
+      dispatch({ type: 'LOAD_CART', items: previousItems });
+      toast.error(error?.response?.data?.message || 'Không thể xóa các sản phẩm đã chọn khỏi giỏ hàng');
+    }
+  };
+
   const clearCart = async () => {
     // Optimistic update
     const previousItems = items;
@@ -308,6 +385,12 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children, createOrde
     clearCart,
     checkout,
     isLoading,
+    toggleSelectItem,
+    selectAllItems,
+    deselectAllItems,
+    clearSelectedItems,
+    getSelectedTotalPrice,
+    getSelectedTotalItems,
   };
 
   return (

@@ -72,7 +72,8 @@ const vietnamCities = [
 
 export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
-  const { items, getTotalPrice, clearCart } = useCart();
+  const { items, getSelectedTotalPrice, clearSelectedItems } = useCart();
+  const selectedItems = React.useMemo(() => items.filter(item => item.selected), [items]);
   const { user, addresses, addAddress, refreshOrders } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false); // Prevent redirect during checkout
@@ -111,13 +112,13 @@ export const CheckoutPage: React.FC = () => {
     paymentMethod: 'COD',
   });
 
-  // Redirect if cart is empty (but not during checkout process)
+  // Redirect if no items are selected for checkout (but not during checkout process)
   React.useEffect(() => {
-    if (items.length === 0 && !isCheckingOut) {
-      toast.error('Giỏ hàng trống!');
+    if (selectedItems.length === 0 && !isCheckingOut) {
+      toast.error('Không có sản phẩm nào được chọn để thanh toán!');
       navigate('/');
     }
-  }, [items.length, isCheckingOut, navigate]);
+  }, [selectedItems.length, isCheckingOut, navigate]);
 
   // Redirect if not logged in
   React.useEffect(() => {
@@ -223,7 +224,7 @@ export const CheckoutPage: React.FC = () => {
 
     try {
       // Validate và build orderDetails
-      const orderDetails = items.map(item => {
+      const orderDetails = selectedItems.map(item => {
         const book = item.book as any;
         const bookId = Number(book.bookId ?? book.id);
         if (!bookId || isNaN(bookId)) {
@@ -290,8 +291,8 @@ export const CheckoutPage: React.FC = () => {
           setIsCheckingOut(false);
         }
       } else {
-        // COD - clear cart, refresh order list and redirect to orders tab
-        await clearCart();
+        // COD - clear selected items, refresh order list and redirect to orders tab
+        await clearSelectedItems();
         await refreshOrders();
         setTimeout(() => {
           navigate('/account?tab=orders');
@@ -395,7 +396,7 @@ export const CheckoutPage: React.FC = () => {
     setDiscountAmount(0);
   };
 
-  const totalAmount = getTotalPrice();
+  const totalAmount = getSelectedTotalPrice();
   const discountedSubtotal = Math.max(0, totalAmount - discountAmount);
   const finalTotal = discountedSubtotal ;
 
@@ -674,7 +675,7 @@ export const CheckoutPage: React.FC = () => {
               <CardContent className="space-y-4">
                 {/* Order Items */}
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {items.map((item) => {
+                  {selectedItems.map((item) => {
                     const b: any = item.book;
                     const bookId = String(b.bookId ?? b.id ?? '');
                     const title = b.title ?? '';
