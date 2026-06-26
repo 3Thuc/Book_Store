@@ -17,8 +17,18 @@ interface CartProps {
 
 export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, clearCart, toggleSelectItem, deselectAllItems, getSelectedTotalPrice, getSelectedTotalItems, getTotalItems } = useCart();
+  const { items, updateQuantity, removeFromCart, clearCart, toggleSelectItem, selectAllItems, deselectAllItems, getSelectedTotalPrice, getSelectedTotalItems, getTotalItems } = useCart();
   const { isLoggedIn } = useAuth();
+
+  const isAllSelected = items.length > 0 && items.every(item => item.selected);
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      deselectAllItems();
+    } else {
+      selectAllItems();
+    }
+  };
 
   React.useEffect(() => {
     if (isOpen) {
@@ -84,7 +94,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             Giỏ hàng {items.length > 0 && `(${totalItems} sản phẩm)`}
           </SheetTitle>
           <SheetDescription>
-            {items.length > 0 
+            {items.length > 0
               ? 'Xem lại và chỉnh sửa các sản phẩm trong giỏ hàng của bạn'
               : 'Giỏ hàng hiện tại của bạn đang trống'
             }
@@ -102,7 +112,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             <p className="text-muted-foreground mb-6 max-w-xs">
               Hãy thêm một vài cuốn sách yêu thích vào giỏ hàng nhé!
             </p>
-            <Button 
+            <Button
               onClick={handleContinueShopping}
               className="bg-black hover:bg-black/90 text-white px-8"
             >
@@ -114,6 +124,29 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
           <>
             {/* Cart Items */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
+              {/* Chọn tất cả */}
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b select-none">
+                <button
+                  type="button"
+                  onClick={handleToggleSelectAll}
+                  className="flex-shrink-0 focus:outline-none"
+                >
+                  {isAllSelected ? (
+                    <div className="w-5 h-5 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center border border-black dark:border-white">
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-full border border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500" />
+                  )}
+                </button>
+                <span
+                  className="text-sm font-medium text-foreground cursor-pointer"
+                  onClick={handleToggleSelectAll}
+                >
+                  Chọn tất cả ({items.length} sản phẩm)
+                </span>
+              </div>
+
               <div className="space-y-4">
                 {items.map((item) => {
                   const b: any = item.book;
@@ -234,7 +267,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                   <p className="text-2xl font-semibold">{formatPrice(totalPrice)}</p>
                 </div>
               </div>
-              
+
               {/* Checkout Button */}
               <Button
                 onClick={handleCheckout}
@@ -243,7 +276,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
               >
                 Thanh toán {selectedCount > 0 && `(${selectedCount})`}
               </Button>
-              
+
               {/* Continue Shopping Link */}
               <button
                 type="button"
@@ -252,7 +285,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
               >
                 Tiếp tục mua sắm
               </button>
-              
+
               {!isLoggedIn && (
                 <p className="text-sm text-muted-foreground text-center">
                   Bạn cần đăng nhập để đặt hàng

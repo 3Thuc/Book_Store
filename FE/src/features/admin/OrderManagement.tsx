@@ -756,8 +756,8 @@ export const OrderManagement: React.FC = () => {
               </TableBody>
             </Table>
           </div>
-          <PaginationControls
-            totalItems={totalItems}
+           <PaginationControls
+            totalItems={filteredTotalItems}
             currentPage={currentPage}
             totalPages={totalPages}
             pageSize={pageSize}
