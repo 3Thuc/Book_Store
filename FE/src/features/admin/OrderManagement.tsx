@@ -10,11 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
-import { 
-  ShoppingCart, 
-  Package, 
-  CheckCircle, 
-  XCircle, 
+import {
+  ShoppingCart,
+  Package,
+  CheckCircle,
+  XCircle,
   Clock,
   CreditCard,
   PackageCheck,
@@ -35,7 +35,7 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 export const OrderManagement: React.FC = () => {
-  const { orders, updateOrderStatus, refreshOrders, prefetchedOrdersPage } = useAdmin();
+  const { orders, updateOrderStatus, refreshOrders } = useAdmin();
   const { promotions } = useAdmin();
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -48,118 +48,17 @@ export const OrderManagement: React.FC = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  // Khởi tạo từ prefetch nếu có — hiển thị ngay, không chờ API
-  const [totalPages, setTotalPages] = useState<number>(prefetchedOrdersPage?.totalPages ?? 1);
-  const [totalItems, setTotalItems] = useState<number>(prefetchedOrdersPage?.totalElements ?? 0);
-  const [paginatedOrders, setPaginatedOrders] = useState<Order[]>(prefetchedOrdersPage?.data ?? []);
-  const [isLoadingPage, setIsLoadingPage] = useState<boolean>(!prefetchedOrdersPage);
-  const prevOrdersLength = useRef(orders.length);
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
-  // Cờ kiểm tra đã dude prefetch import vào state chưa
-  const prefetchConsumedRef = useRef(!!prefetchedOrdersPage);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(orders.length === 0);
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
 
-  // Debounce search: chứ 400ms sau khi gõ xong mới fetch lại
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  // Fetch orders on mount
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Check for new orders and show notification
-  useEffect(() => {
-    if (orders.length > prevOrdersLength.current) {
-      const newOrdersCount = orders.length - prevOrdersLength.current;
-    }
-    prevOrdersLength.current = orders.length;
-  }, [orders.length]);
-
-  // Fetch orders khi page, pageSize, filter, hoặc search thay đổi
-  useEffect(() => {
-    const fetchOrders = async () => {
-      // Nếu đây là lần render đầu tiên và đã có dữ liệu prefetch (trang 1, không filter)
-      // → hiển thị prefetch ngay, refresh im lặng phía sau
-      const isDefaultView = currentPage === 1 && filterStatus === 'all' && !debouncedSearch.trim();
-      if (prefetchConsumedRef.current && isDefaultView) {
-        prefetchConsumedRef.current = false; // chỉ dùng prefetch 1 lần
-        // Silent refresh: không show loading, cập nhật data trong nền
-        try {
-          const res = await adminService.getOrders({ page: 1, size: pageSize });
-          const data = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
-          const meta = res?.result;
-          if (Array.isArray(data)) {
-            setPaginatedOrders(data);
-            if (meta?.totalPages) setTotalPages(meta.totalPages);
-            if (meta?.totalElements !== undefined) setTotalItems(meta.totalElements);
-          }
-        } catch (e) { /* silent */ }
-        return;
-      }
-
-      setIsLoadingPage(true);
-      try {
-        const params: any = {
-          page: currentPage,
-          size: pageSize
-        };
-        if (filterStatus !== 'all') params.status = filterStatus;
-        if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
-
-        const response = await adminService.getOrders(params);
-        const data = response?.result?.books ?? response?.result?.data ?? response?.result ?? [];
-        const pagination = response?.result;
-
-        if (Array.isArray(data)) {
-          setPaginatedOrders(data);
-          if (pagination?.totalPages) setTotalPages(pagination.totalPages);
-          if (pagination?.totalElements !== undefined) setTotalItems(pagination.totalElements);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        setPaginatedOrders([]);
-      } finally {
-        setIsLoadingPage(false);
-      }
-    };
-
-    fetchOrders();
-  }, [currentPage, pageSize, filterStatus, debouncedSearch]);
-
-  // Auto refresh orders every 30 seconds — dùng smart merge để giữ optimistic overrides
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const params: any = { page: currentPage, size: pageSize };
-      if (filterStatus !== 'all') params.status = filterStatus;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-
-      adminService.getOrders(params).then(res => {
-        const data: Order[] = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
-        if (!Array.isArray(data)) return;
-
-        const overrides = optimisticOverridesRef.current;
-        if (overrides.size === 0) {
-          // Không có override → cập nhật bình thường
-          setPaginatedOrders(data);
-          return;
-        }
-        // Có override → merge để giữ lại
-        const merged = data.map(order => {
-          const sid = String(order.id);
-          const override = overrides.get(sid);
-          if (!override) return order;
-          if (order.status === override) { overrides.delete(sid); return order; }
-          return { ...order, status: override };
-        });
-        setPaginatedOrders(merged);
-      }).catch(() => {});
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [currentPage, pageSize, filterStatus, searchQuery]);
+    refreshOrders().finally(() => setIsInitialLoading(false));
+  }, []);
 
   // Lắng nghe sự kiện từ Chatbot (Optimistic Update)
-  // Dùng ref để track các override đang "pending" — tránh bị background fetch xóa mất
-  const optimisticOverridesRef = useRef<Map<string, OrderStatus>>(new Map());
-
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as {
@@ -168,14 +67,12 @@ export const OrderManagement: React.FC = () => {
       };
 
       if (detail.orderId && detail.newStatus) {
-        // Phase 1: Cập nhật ngay lập tức UI trên bảng (0ms)
         const id = String(detail.orderId);
         const newSt = detail.newStatus as OrderStatus;
 
-        // Lưu override vào ref để background fetch biết mà giữ lại
-        optimisticOverridesRef.current.set(id, newSt);
+        // Cập nhật trạng thái thông qua context
+        updateOrderStatus(id, newSt);
 
-        // Map status code → label tiếng Việt để hiển thị toast
         const statusLabels: Record<string, string> = {
           pending: 'Chờ xử lý', processing: 'Đang xử lý',
           shipped: 'Đang giao hàng', delivered: 'Đã giao',
@@ -185,62 +82,27 @@ export const OrderManagement: React.FC = () => {
         };
         const statusLabel = statusLabels[detail.newStatus] ?? detail.newStatus;
 
-        setPaginatedOrders(prev => prev.map(order =>
-          String(order.id) === id ? { ...order, status: newSt } : order
-        ));
-
         // 🔔 Hiển thị toast thành công ngay lập tức
         toast.success(`✅ Đơn #${id} → ${statusLabel}`, {
           description: 'Cập nhật từ Staff AI Chatbot',
           duration: 4000,
         });
       } else if (detail.source === 'chatbot') {
-        // Mutation detected nhưng không parse được order/status → toast generic
         toast.info('🤖 Staff AI đã cập nhật dữ liệu', { duration: 3000 });
       }
 
-      // Phase 2: Delay 2s để Java cache kịp evict trước khi fetch lại
-      // Sau khi fetch, MERGE với optimistic overrides thay vì replace hoàn toàn
+      // Delay 2s để Java cache kịp evict trước khi fetch lại
       setTimeout(() => {
-        const params: any = { page: currentPage, size: pageSize };
-        if (filterStatus !== 'all') params.status = filterStatus;
-        if (searchQuery.trim()) params.search = searchQuery.trim();
-
-        adminService.getOrders(params).then(res => {
-          const data: Order[] = res?.result?.books ?? res?.result?.data ?? res?.result ?? [];
-          if (!Array.isArray(data)) return;
-
-          const overrides = optimisticOverridesRef.current;
-
-          // Smart merge: áp dụng lại optimistic overrides lên data server
-          // Nếu server đã có status mới → xóa override (server đã catch up)
-          const merged = data.map(order => {
-            const sid = String(order.id);
-            const override = overrides.get(sid);
-            if (!override) return order;
-
-            if (order.status === override) {
-              // Server đã catch up → xóa override khỏi tracking
-              overrides.delete(sid);
-              return order;
-            }
-            // Server vẫn trả status cũ → giữ optimistic override
-            return { ...order, status: override };
-          });
-
-          setPaginatedOrders(merged);
-        }).catch(() => {});
+        refreshOrders();
       }, 2000);
     };
 
     window.addEventListener('bookstore:data-changed', handler);
     return () => window.removeEventListener('bookstore:data-changed', handler);
-  }, [currentPage, pageSize, filterStatus, searchQuery]);
-
+  }, []);
 
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
-    // reset promo UI when opening a different order
     setPromoCode('');
     setAppliedPromo(null);
     setDiscountAmount(0);
@@ -248,11 +110,11 @@ export const OrderManagement: React.FC = () => {
     setDetailDialogOpen(true);
   };
 
-  // Reset to page 1 when filter changes
+  // Reset to page 1 and clear selection when filters change
   useEffect(() => {
     setCurrentPage(1);
-    setSelectedOrderIds(new Set()); // Clear selection when filter changes
-  }, [filterStatus, debouncedSearch]);
+    setSelectedOrderIds(new Set());
+  }, [filterStatus, searchQuery, filterStartDate, filterEndDate]);
 
   // Clear selection when changing page
   useEffect(() => {
@@ -280,64 +142,64 @@ export const OrderManagement: React.FC = () => {
 
   const getStatusConfig = (status: OrderStatus) => {
     const configs: Record<string, any> = {
-      PENDING: { 
-        label: 'Chờ xử lý', 
-        variant: 'secondary' as const, 
+      PENDING: {
+        label: 'Chờ xử lý',
+        variant: 'secondary' as const,
         icon: Clock,
         color: 'text-yellow-600 bg-yellow-100'
       },
-      PROCESSING: { 
-        label: 'Đang xử lý', 
-        variant: 'default' as const, 
+      PROCESSING: {
+        label: 'Đang xử lý',
+        variant: 'default' as const,
         icon: Package,
         color: 'text-blue-600 bg-blue-100'
       },
-      SHIPPED: { 
-        label: 'Đang giao hàng', 
-        variant: 'default' as const, 
+      SHIPPED: {
+        label: 'Đang giao hàng',
+        variant: 'default' as const,
         icon: Truck,
         color: 'text-indigo-600 bg-indigo-100'
       },
-      DELIVERED: { 
-        label: 'Đã giao hàng', 
-        variant: 'default' as const, 
+      DELIVERED: {
+        label: 'Đã giao hàng',
+        variant: 'default' as const,
         icon: Home,
         color: 'text-green-700 bg-green-200'
       },
-      CANCEL_REQUESTED: { 
-        label: 'Yêu cầu hủy', 
-        variant: 'secondary' as const, 
+      CANCEL_REQUESTED: {
+        label: 'Yêu cầu hủy',
+        variant: 'secondary' as const,
         icon: XCircle,
         color: 'text-orange-600 bg-orange-100'
       },
-      CANCELLED: { 
-        label: 'Đã hủy', 
-        variant: 'destructive' as const, 
+      CANCELLED: {
+        label: 'Đã hủy',
+        variant: 'destructive' as const,
         icon: XCircle,
         color: 'text-red-600 bg-red-100'
       },
-      RETURN_REQUESTED: { 
-        label: 'Yêu cầu trả hàng', 
-        variant: 'secondary' as const, 
+      RETURN_REQUESTED: {
+        label: 'Yêu cầu trả hàng',
+        variant: 'secondary' as const,
         icon: RotateCcw,
         color: 'text-orange-600 bg-orange-100'
       },
-      RETURNED: { 
-        label: 'Đã trả hàng', 
-        variant: 'destructive' as const, 
+      RETURNED: {
+        label: 'Đã trả hàng',
+        variant: 'destructive' as const,
         icon: RotateCcw,
         color: 'text-orange-700 bg-orange-200'
       },
-      FAILED: { 
-        label: 'Thất bại', 
-        variant: 'destructive' as const, 
+      FAILED: {
+        label: 'Thất bại',
+        variant: 'destructive' as const,
         icon: XCircle,
         color: 'text-red-700 bg-red-200'
       },
     };
-    return configs[String(status).toUpperCase() as OrderStatus] || { 
-      label: status, 
-      variant: 'secondary' as const, 
+    return configs[String(status).toUpperCase() as OrderStatus] || {
+      label: status,
+      variant: 'secondary' as const,
       icon: Clock,
       color: 'text-gray-600 bg-gray-100'
     };
@@ -357,15 +219,15 @@ export const OrderManagement: React.FC = () => {
   // Workflow: Các trạng thái tiếp theo có thể chuyển đến
   const getNextStatuses = (currentStatus: OrderStatus, order?: Order): OrderStatus[] => {
     const workflow: Partial<Record<string, OrderStatus[]>> = {
-      PENDING:          ['PROCESSING', 'CANCEL_REQUESTED'],
-      PROCESSING:       ['SHIPPED', 'CANCEL_REQUESTED'],
-      SHIPPED:          ['FAILED'],
-      DELIVERED:        [],
+      PENDING: ['PROCESSING', 'CANCEL_REQUESTED'],
+      PROCESSING: ['SHIPPED', 'CANCEL_REQUESTED'],
+      SHIPPED: ['FAILED'],
+      DELIVERED: [],
       CANCEL_REQUESTED: ['CANCELLED'],
       RETURN_REQUESTED: ['RETURNED'],
-      CANCELLED:        [],
-      RETURNED:         [],
-      FAILED:           ['PENDING'],   // Staff có thể re-queue để giao lại
+      CANCELLED: [],
+      RETURNED: [],
+      FAILED: ['PENDING'],   // Staff có thể re-queue để giao lại
     };
 
     // Normalize: Python chatbot trả lowercase ('processing'), Java trả UPPERCASE ('PROCESSING')
@@ -406,22 +268,19 @@ export const OrderManagement: React.FC = () => {
     try {
       // Gửi API để cập nhật trạng thái
       await adminService.updateOrderStatus(order.id, { status: newStatus });
-      
-      // Fetch lại dữ liệu từ API ngay lập tức (chỉ 1 call, bỏ qua double-fetch)
-      const params: any = { page: currentPage, size: pageSize };
-      if (filterStatus !== 'all') params.status = filterStatus;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
 
-      const response = await adminService.getOrders(params);
-      const data = response?.result?.books ?? response?.result?.data ?? response?.result ?? [];
+      // Cập nhật trong global context
+      updateOrderStatus(order.id, newStatus);
 
-      if (Array.isArray(data)) {
-        setPaginatedOrders(data);
-        const updatedOrder = data.find((o: any) => String(o.id) === String(order.id));
-        if (updatedOrder) setSelectedOrder(updatedOrder);
+      // Cập nhật selectedOrder nếu đang xem chi tiết đơn này
+      if (selectedOrder && String(selectedOrder.id) === String(order.id)) {
+        setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
       }
 
       toast.success('Cập nhật trạng thái thành công', { id: toastId });
+
+      // Làm mới dữ liệu trong nền
+      refreshOrders();
     } catch (err) {
       toast.error('Lỗi khi cập nhật trạng thái', { id: toastId });
     } finally {
@@ -450,22 +309,22 @@ export const OrderManagement: React.FC = () => {
 
   const getBulkActions = (): { status: OrderStatus; label: string; icon: any }[] => {
     if (selectedOrderIds.size === 0) return [];
-    
+
     const selectedOrders = pagedOrders.filter(o => selectedOrderIds.has(String(o.id)));
     const statuses = new Set(selectedOrders.map(o => o.status));
-    
+
     if (statuses.size !== 1) return [];
-    
+
     const currentStatus = Array.from(statuses)[0];
-    
+
     const allowedBulkActions: Partial<Record<OrderStatus, OrderStatus[]>> = {
       PENDING: ['PROCESSING'],
       PROCESSING: ['SHIPPED'],
     };
-    
+
     const allowedStatuses = allowedBulkActions[currentStatus] || [];
     if (allowedStatuses.length === 0) return [];
-    
+
     return allowedStatuses.map(status => {
       const config = getStatusConfig(status);
       return {
@@ -478,34 +337,23 @@ export const OrderManagement: React.FC = () => {
 
   const handleBulkAction = async (newStatus: OrderStatus) => {
     if (selectedOrderIds.size === 0) return;
-    
+
     setUpdatingOrderId('bulk');
     const toastId = toast.loading(`Đang cập nhật ${selectedOrderIds.size} đơn hàng...`);
     try {
       const selectedOrders = pagedOrders.filter(o => selectedOrderIds.has(String(o.id)));
-      
-      // Cập nhật tuần tự từng đơn
+
+      // Cập nhật trạng thái từng đơn hàng
       for (const order of selectedOrders) {
         await adminService.updateOrderStatus(order.id, { status: newStatus });
+        updateOrderStatus(order.id, newStatus);
       }
-      
-      // Fetch lại dữ liệu từ API ngay lập tức
-      const params: any = { page: currentPage, size: pageSize };
-      if (filterStatus !== 'all') params.status = filterStatus;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      
-      const response = await adminService.getOrders(params);
-      const data = response?.result?.books ?? response?.result?.data ?? response?.result ?? [];
-      
-      if (Array.isArray(data)) {
-        setPaginatedOrders(data);
-      }
-      
-      // Cũng refresh context orders
-      await refreshOrders(params);
-      
+
       toast.success(`Đã cập nhật ${selectedOrderIds.size} đơn hàng thành công`, { id: toastId });
       setSelectedOrderIds(new Set());
+
+      // Làm mới dữ liệu trong nền
+      refreshOrders();
     } catch (err) {
       console.error('Error bulk updating orders:', err);
       toast.error('Lỗi khi cập nhật hàng loạt', { id: toastId });
@@ -535,10 +383,10 @@ export const OrderManagement: React.FC = () => {
         const data = res?.result ?? res?.data ?? res;
         if (data) {
           setStatistics({
-            totalOrders:           data.totalOrders          ?? data.total          ?? 0,
-            pendingOrders:         data.pendingOrders         ?? data.pending        ?? 0,
+            totalOrders: data.totalOrders ?? data.total ?? 0,
+            pendingOrders: data.pendingOrders ?? data.pending ?? 0,
             returnRequestedOrders: data.returnRequestedOrders ?? data.returnRequested ?? 0,
-            totalRevenue:          data.totalRevenue          ?? data.revenue        ?? 0,
+            totalRevenue: data.totalRevenue ?? data.revenue ?? 0,
           });
           return; // API thành công → dùng luôn
         }
@@ -552,8 +400,8 @@ export const OrderManagement: React.FC = () => {
           .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED')
           .reduce((sum, o) => sum + o.totalAmount, 0);
         setStatistics({
-          totalOrders:           orders.length,
-          pendingOrders:         orders.filter(o => o.status === 'PENDING').length,
+          totalOrders: orders.length,
+          pendingOrders: orders.filter(o => o.status === 'PENDING').length,
           returnRequestedOrders: orders.filter(o => o.status === 'RETURN_REQUESTED').length,
           totalRevenue,
         });
@@ -635,7 +483,7 @@ export const OrderManagement: React.FC = () => {
             <div>
               <CardTitle>Danh sách đơn hàng</CardTitle>
               <CardDescription>
-                {totalItems > 0 ? `${totalItems} đơn hàng` : `${orders.length} đơn hàng`}
+                {filteredTotalItems} đơn hàng - Tổng doanh thu {formatCurrency(filteredRevenue)}
                 {selectedOrderIds.size > 0 && (
                   <span className="ml-2 text-primary font-medium">
                     • Đã chọn {selectedOrderIds.size}
@@ -643,14 +491,42 @@ export const OrderManagement: React.FC = () => {
                 )}
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Date Filters */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Từ:</span>
                 <Input
-                  placeholder="Tìm theo mã đơn hàng..."
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  className="h-9 w-[130px] text-xs px-2"
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Đến:</span>
+                <Input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  className="h-9 w-[130px] text-xs px-2"
+                />
+                {(filterStartDate || filterEndDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setFilterStartDate(''); setFilterEndDate(''); }}
+                    className="h-9 px-2 text-xs"
+                  >
+                    Xóa ngày
+                  </Button>
+                )}
+              </div>
+
+              <div className="relative w-48">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Tìm kiếm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-8 h-9 text-xs"
                 />
               </div>
               {selectedOrderIds.size > 0 && getBulkActions().length > 0 && (
@@ -664,7 +540,7 @@ export const OrderManagement: React.FC = () => {
                         disabled={isBulkUpdating}
                         size="sm"
                         variant="default"
-                        className="gap-1"
+                        className="gap-1 text-xs h-9"
                       >
                         {isBulkUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Icon className="h-3 w-3" />}
                         {isBulkUpdating ? 'Đang xử lý...' : `${label} (${selectedOrderIds.size})`}
@@ -676,6 +552,7 @@ export const OrderManagement: React.FC = () => {
                     size="sm"
                     variant="outline"
                     disabled={updatingOrderId === 'bulk'}
+                    className="text-xs h-9"
                   >
                     Bỏ chọn
                   </Button>
@@ -685,11 +562,11 @@ export const OrderManagement: React.FC = () => {
                 value={filterStatus}
                 onValueChange={(value) => setFilterStatus(value as any)}
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[150px] h-9 text-xs">
                   <SelectValue placeholder="Lọc theo trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   <SelectItem value="PENDING">Chờ xử lý</SelectItem>
                   <SelectItem value="PROCESSING">Đang xử lý</SelectItem>
                   <SelectItem value="SHIPPED">Đang giao hàng</SelectItem>
@@ -726,9 +603,18 @@ export const OrderManagement: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pagedOrders.length === 0 ? (
+                {isInitialLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <span>Đang tải danh sách đơn hàng...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : pagedOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       Không có đơn hàng nào
                     </TableCell>
                   </TableRow>
@@ -737,7 +623,7 @@ export const OrderManagement: React.FC = () => {
                     const nextStatuses = getNextStatuses(order.status, order);
                     const isSelected = selectedOrderIds.has(String(order.id));
                     return (
-                      <TableRow 
+                      <TableRow
                         key={order.id}
                         className={isSelected ? 'bg-muted/50' : ''}
                       >
@@ -886,7 +772,7 @@ export const OrderManagement: React.FC = () => {
                               }}
                             />
                           ) : null}
-                          <div 
+                          <div
                             className="absolute inset-0 w-full h-full bg-gray-100 rounded border flex items-center justify-center"
                             style={{ display: item.imageUrl ? 'none' : 'flex' }}
                           >
@@ -896,14 +782,14 @@ export const OrderManagement: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate text-sm">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.author}</p>
-                      </div>
-                      <div className="text-right whitespace-nowrap">
-                        <p className="font-medium text-sm">{formatCurrency(item.price / item.quantity)}</p>
-                        <p className="text-xs text-muted-foreground">x{item.quantity}</p>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate text-sm">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.author}</p>
+                        </div>
+                        <div className="text-right whitespace-nowrap">
+                          <p className="font-medium text-sm">{formatCurrency(item.price / item.quantity)}</p>
+                          <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                        </div>
                         <div className="font-medium text-sm">
                           {formatCurrency(item.price)}
                         </div>
@@ -944,19 +830,19 @@ export const OrderManagement: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-1">
                   {(() => {
                     const workflowArray: OrderStatus[] = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-                    
+
                     return workflowArray.map((status, index, arr) => {
                       const config = getStatusConfig(status);
                       const Icon = config.icon;
                       const isCurrent = selectedOrder.status === status;
-                      
+
                       // Logic để xác định trạng thái đã qua (past)
                       let isPast = false;
                       const currentStatusIndex = arr.indexOf(selectedOrder.status);
                       if (currentStatusIndex > -1 && index < currentStatusIndex) {
                         isPast = true;
                       }
-                      
+
                       return (
                         <React.Fragment key={status}>
                           <div
@@ -994,7 +880,7 @@ export const OrderManagement: React.FC = () => {
                         const config = getStatusConfig(status);
                         const Icon = config.icon;
                         const isAutoTransition = isAutoStatus(selectedOrder.status, status);
-                        
+
                         const isUpdating = updatingOrderId === selectedOrder.id;
                         return (
                           <Button

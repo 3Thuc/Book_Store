@@ -1485,7 +1485,8 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
   const refreshOrders = async (params?: { page?: number; size?: number }) => {
     try {
-      const ordersRes = await adminService.getOrders(params);
+      const actualParams = params || { page: 1, size: 999999 };
+      const ordersRes = await adminService.getOrders(actualParams);
       const ordersData = ordersRes?.result?.books ?? ordersRes?.result?.data ?? ordersRes?.result ?? ordersRes ?? [];
       
       if (Array.isArray(ordersData)) {
