@@ -121,8 +121,70 @@ export const OrderManagement: React.FC = () => {
     setSelectedOrderIds(new Set());
   }, [currentPage]);
 
-  // Use paginated orders from API response (not full context orders)
-  const pagedOrders = paginatedOrders;
+  // Client-side filtering
+  const filteredOrders = React.useMemo(() => {
+    return orders.filter(order => {
+      // 1. Status Filter
+      if (filterStatus !== 'all') {
+        if (String(order.status).toUpperCase() !== String(filterStatus).toUpperCase()) {
+          return false;
+        }
+      }
+
+      // 2. Search query Filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim().toLowerCase();
+        const customerName = (order.customerName || '').toLowerCase();
+        const orderId = String(order.id).toLowerCase();
+        const customerPhone = (order.customerPhone || '').toLowerCase();
+        if (
+          !customerName.includes(query) &&
+          !orderId.includes(query) &&
+          !customerPhone.includes(query)
+        ) {
+          return false;
+        }
+      }
+
+      // 3. Date Filter
+      if (filterStartDate) {
+        const start = new Date(filterStartDate);
+        start.setHours(0, 0, 0, 0);
+        const orderTime = new Date(order.orderDate);
+        if (isNaN(orderTime.getTime()) || orderTime < start) {
+          return false;
+        }
+      }
+
+      if (filterEndDate) {
+        const end = new Date(filterEndDate);
+        end.setHours(23, 59, 59, 999);
+        const orderTime = new Date(order.orderDate);
+        if (isNaN(orderTime.getTime()) || orderTime > end) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [orders, filterStatus, searchQuery, filterStartDate, filterEndDate]);
+
+  // Calculate filtered orders count and revenue
+  const filteredTotalItems = filteredOrders.length;
+  
+  const filteredRevenue = React.useMemo(() => {
+    return filteredOrders
+      .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED')
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+  }, [filteredOrders]);
+
+  // Client-side pagination
+  const totalPages = Math.ceil(filteredTotalItems / pageSize) || 1;
+  
+  const pagedOrders = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredOrders.slice(startIndex, startIndex + pageSize);
+  }, [filteredOrders, currentPage, pageSize]);
 
   const formatCurrency = (amount: number) => formatVND(amount);
 
