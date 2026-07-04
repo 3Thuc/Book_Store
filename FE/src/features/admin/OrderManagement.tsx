@@ -174,7 +174,10 @@ export const OrderManagement: React.FC = () => {
   
   const filteredRevenue = React.useMemo(() => {
     return filteredOrders
-      .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED')
+      .filter(o => {
+        const s = String(o.status || '').toUpperCase();
+        return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+      })
       .reduce((sum, o) => sum + o.totalAmount, 0);
   }, [filteredOrders]);
 
@@ -459,12 +462,15 @@ export const OrderManagement: React.FC = () => {
       // Fallback: tính từ context orders (không chính xác nếu chưa load hết)
       if (orders.length > 0) {
         const totalRevenue = orders
-          .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED')
+          .filter(o => {
+            const s = String(o.status || '').toUpperCase();
+            return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+          })
           .reduce((sum, o) => sum + o.totalAmount, 0);
         setStatistics({
           totalOrders: orders.length,
-          pendingOrders: orders.filter(o => o.status === 'PENDING').length,
-          returnRequestedOrders: orders.filter(o => o.status === 'RETURN_REQUESTED').length,
+          pendingOrders: orders.filter(o => String(o.status || '').toUpperCase() === 'PENDING').length,
+          returnRequestedOrders: orders.filter(o => String(o.status || '').toUpperCase() === 'RETURN_REQUESTED').length,
           totalRevenue,
         });
       }

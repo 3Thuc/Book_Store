@@ -116,17 +116,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const userOrders = useMemo(() => {
     switch (orderFilter) {
       case 'pending':
-        return allOrders.filter(o => o.status === 'PENDING');
+        return allOrders.filter(o => String(o.status || '').toUpperCase() === 'PENDING');
       case 'processing':
-        return allOrders.filter(o => ['PROCESSING', 'CONFIRMED'].includes(o.status));
+        return allOrders.filter(o => ['PROCESSING', 'CONFIRMED'].includes(String(o.status || '').toUpperCase()));
       case 'shipped':
-        return allOrders.filter(o => o.status === 'SHIPPED');
+        return allOrders.filter(o => String(o.status || '').toUpperCase() === 'SHIPPED');
       case 'delivered':
-        return allOrders.filter(o => o.status === 'DELIVERED');
+        return allOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED');
       case 'cancelled':
-        return allOrders.filter(o => ['CANCEL_REQUESTED', 'CANCELLED'].includes(o.status));
+        return allOrders.filter(o => ['CANCEL_REQUESTED', 'CANCELLED'].includes(String(o.status || '').toUpperCase()));
       case 'return':
-        return allOrders.filter(o => ['RETURN_REQUESTED', 'RETURNED'].includes(o.status));
+        return allOrders.filter(o => ['RETURN_REQUESTED', 'RETURNED'].includes(String(o.status || '').toUpperCase()));
       default:
         return allOrders;
     }
@@ -201,9 +201,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
   const stats = {
     totalOrders: allOrders.length,
-    completedOrders: allOrders.filter(o => o.status === 'DELIVERED').length,
-    pendingOrders: allOrders.filter(o => ['PENDING', 'PAID', 'PROCESSING', 'CONFIRMED', 'SHIPPED'].includes(o.status)).length,
-    totalSpent: allOrders.reduce((sum, order) => sum + order.totalAmount, 0)
+    completedOrders: allOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length,
+    pendingOrders: allOrders.filter(o => ['PENDING', 'PAID', 'PROCESSING', 'CONFIRMED', 'SHIPPED'].includes(String(o.status || '').toUpperCase())).length,
+    totalSpent: allOrders
+      .filter(o => {
+        const s = String(o.status || '').toUpperCase();
+        return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+      })
+      .reduce((sum, order) => sum + order.totalAmount, 0)
   };
 
     useEffect(() => {
@@ -1112,7 +1117,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <Clock className="h-4 w-4" />
-                    Chờ xử lý ({allOrders.filter(o => o.status === 'PENDING').length})
+                    Chờ xử lý ({allOrders.filter(o => String(o.status || '').toUpperCase() === 'PENDING').length})
                   </Button>
                   <Button
                     variant={orderFilter === 'processing' ? 'default' : 'outline'}
@@ -1121,7 +1126,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    Đang xử lý ({allOrders.filter(o => ['PROCESSING', 'CONFIRMED'].includes(o.status)).length})
+                    Đang xử lý ({allOrders.filter(o => ['PROCESSING', 'CONFIRMED'].includes(String(o.status || '').toUpperCase())).length})
                   </Button>
                   <Button
                     variant={orderFilter === 'shipped' ? 'default' : 'outline'}
@@ -1130,7 +1135,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    Đang giao ({allOrders.filter(o => o.status === 'SHIPPED').length})
+                    Đang giao ({allOrders.filter(o => String(o.status || '').toUpperCase() === 'SHIPPED').length})
                   </Button>
                   <Button
                     variant={orderFilter === 'delivered' ? 'default' : 'outline'}
@@ -1139,7 +1144,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    Hoàn thành ({allOrders.filter(o => o.status === 'DELIVERED').length})
+                    Hoàn thành ({allOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length})
                   </Button>
                   <Button
                     variant={orderFilter === 'cancelled' ? 'default' : 'outline'}
@@ -1148,7 +1153,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <XCircle className="h-4 w-4" />
-                    Đã hủy ({allOrders.filter(o => ['CANCEL_REQUESTED', 'CANCELLED'].includes(o.status)).length})
+                    Đã hủy ({allOrders.filter(o => ['CANCEL_REQUESTED', 'CANCELLED'].includes(String(o.status || '').toUpperCase())).length})
                   </Button>
                   <Button
                     variant={orderFilter === 'return' ? 'default' : 'outline'}
@@ -1157,7 +1162,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     className="gap-2"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Trả hàng ({allOrders.filter(o => ['RETURN_REQUESTED', 'RETURNED'].includes(o.status)).length})
+                    Trả hàng ({allOrders.filter(o => ['RETURN_REQUESTED', 'RETURNED'].includes(String(o.status || '').toUpperCase())).length})
                   </Button>
                 </div>
               </CardContent>

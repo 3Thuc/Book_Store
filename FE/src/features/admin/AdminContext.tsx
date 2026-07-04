@@ -464,7 +464,34 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     } as any as Promotion;
   };
 
-    // (moved) inventory mapping is defined above so it can be reused by the polling effect
+  // (moved) inventory mapping is defined above so it can be reused by the polling effect
+
+  const mapServerOrderToUi = (o: any): Order => {
+    return {
+      id: String(o.id ?? ''),
+      userId: String(o.userId ?? ''),
+      items: Array.isArray(o.items) ? o.items.map((item: any) => ({
+        id: String(item.id ?? ''),
+        bookId: String(item.bookId ?? ''),
+        title: item.title ?? '',
+        author: item.author ?? '',
+        price: Number(item.price ?? 0),
+        quantity: Number(item.quantity ?? 0),
+        imageUrl: item.imageUrl ?? null,
+        isReviewed: Boolean(item.isReviewed ?? false),
+      })) : [],
+      totalAmount: Number(o.totalAmount ?? 0),
+      orderDate: o.orderDate ?? new Date().toISOString(),
+      status: String(o.status ?? 'PENDING').toUpperCase() as Order['status'],
+      deliveryDate: o.deliveryDate ?? new Date().toISOString(),
+      paymentMethod: o.paymentMethod ?? 'COD',
+      shippingAddress: o.shippingAddress ?? '',
+      customerName: o.customerName ?? '',
+      customerPhone: o.customerPhone ?? '',
+      note: o.note ?? null,
+      isPaid: Boolean(o.isPaid ?? false),
+    } as Order;
+  };
 
   // Extracted fetch logic so it can be invoked on-demand by consumers (e.g. Statistics page)
   const mountedRef = useRef(true);
@@ -477,7 +504,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     isRefreshingRef.current = true;
     try {
       console.log('[AdminContext] refreshAll: Calling dedicated dashboard API...');
-      
+
       // Call single dashboard endpoint instead of multiple APIs
       const dashboardRes = await adminService.getDashboard();
       const dashboard = dashboardRes?.result;
@@ -599,30 +626,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
 
       console.log('[AdminContext] ordersData extracted:', ordersData);
       const uiOrders = Array.isArray(ordersData)
-        ? (ordersData as any[]).map((o: any) => ({
-            id: String(o.id ?? ''),
-            userId: String(o.userId ?? ''),
-            items: Array.isArray(o.items) ? o.items.map((item: any) => ({
-              id: String(item.id ?? ''),
-              bookId: String(item.bookId ?? ''),
-              title: item.title ?? '',
-              author: item.author ?? '',
-              price: Number(item.price ?? 0),
-              quantity: Number(item.quantity ?? 0),
-              imageUrl: item.imageUrl ?? null,
-              isReviewed: Boolean(item.isReviewed ?? false),
-            })) : [],
-            totalAmount: Number(o.totalAmount ?? 0),
-            orderDate: o.orderDate ?? new Date().toISOString(),
-            status: String(o.status ?? 'PENDING') as Order['status'],
-            deliveryDate: o.deliveryDate ?? new Date().toISOString(),
-            paymentMethod: o.paymentMethod ?? 'COD',
-            shippingAddress: o.shippingAddress ?? '',
-            customerName: o.customerName ?? '',
-            customerPhone: o.customerPhone ?? '',
-            note: o.note ?? null,
-            isPaid: Boolean(o.isPaid ?? false),
-          }) as Order)
+        ? (ordersData as any[]).map(mapServerOrderToUi)
         : [];
 
       if (ordersData && mountedRef.current) {
@@ -641,7 +645,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   const dataLastLoadedRef = useRef<number>(0); // 0 = chưa load
   const DATA_TTL_MS = 5 * 60 * 1000; // 5 phút
   // Compat alias cho code cũ dùng dataLoadedRef
-  const dataLoadedRef = { 
+  const dataLoadedRef = {
     get current() { return dataLastLoadedRef.current > 0; },
     set current(v: boolean) { if (!v) dataLastLoadedRef.current = 0; }
   };
@@ -666,7 +670,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       if (mountedRef.current) {
         setInventory(uiInventory);
         // Cache vào localStorage → lần sau mở tab hiện data ngay, không chờ API
-        try { localStorage.setItem('admin_inventory', JSON.stringify(uiInventory)); } catch (_) {}
+        try { localStorage.setItem('admin_inventory', JSON.stringify(uiInventory)); } catch (_) { }
         inventoryLoadedRef.current = true;
       }
     } catch (err) {
@@ -810,15 +814,15 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         console.log('[AdminContext] Refreshing inventory only...');
         inventoryLoadedRef.current = false;
         isLoadingInventoryRef.current = false;
-        loadInventory().catch(() => {});
+        loadInventory().catch(() => { });
       } else {
-        refreshAllRef2.current().catch(() => {});
+        refreshAllRef2.current().catch(() => { });
       }
       dataLastLoadedRef.current = Date.now();
     };
     window.addEventListener('bookstore:data-changed', handler);
     return () => window.removeEventListener('bookstore:data-changed', handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -840,8 +844,8 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
         const threshold = 5;
         const statusVal: InventoryItem['status'] =
           stock === 0 ? 'out-of-stock'
-          : available <= threshold ? 'low-stock'
-          : 'in-stock';
+            : available <= threshold ? 'low-stock'
+              : 'in-stock';
         return {
           id: String(b.bookId),
           bookId: String(b.bookId),
@@ -893,7 +897,7 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     // Always create FormData (backend expects multipart/form-data with @ModelAttribute)
     const formData = new FormData();
     formData.append('title', ui.title || '');
-    
+
     // Resolve authorId: accept selectedAuthorId, authorId, or author name/string
     let resolvedAuthorId = '';
     if (ui.selectedAuthorId) resolvedAuthorId = String(ui.selectedAuthorId);
@@ -944,10 +948,10 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     if (!Number.isNaN(publisherIdNum) && publisherIdNum > 0) {
       formData.append('publisherId', String(publisherIdNum));
     }
-    
+
     formData.append('description', ui.description || '');
     formData.append('price', String(ui.price || 0));
-    
+
     // Resolve stock: support both inStock/stock and stockQuantity
     const stockValue = ui.stock !== undefined ? ui.stock : (ui.stockQuantity !== undefined ? ui.stockQuantity : 0);
     formData.append('stock', String(stockValue || 0));
@@ -960,12 +964,12 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
     categoryIds.forEach((id: number) => {
       formData.append('categoryIds', String(id));
     });
-    
+
     // Only append imageFile if present and is a File object
     if (ui.imageFile instanceof File) {
       formData.append('imageFile', ui.imageFile);
     }
-    
+
     return formData;
   };
 
@@ -1472,13 +1476,14 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
   // TODO-API: Send status update notification to customer
   // Order operations
   const updateOrderStatus = (orderId: string, status: Order['status']) => {
+    const updatedStatus = String(status).toUpperCase() as Order['status'];
     setOrders(prev => prev.map(order =>
-      order.id === orderId ? { ...order, status } : order
+      order.id === orderId ? { ...order, status: updatedStatus } : order
     ));
     // LOCALSTORAGE-TEMP: Also update in main localStorage - should be in database
     const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
     const updatedOrders = allOrders.map((order: Order) =>
-      order.id === orderId ? { ...order, status } : order
+      order.id === orderId ? { ...order, status: updatedStatus } : order
     );
     localStorage.setItem('orders', JSON.stringify(updatedOrders));
   };
@@ -1488,11 +1493,12 @@ export const AdminProvider: React.FC<AdminProviderProps> = ({ children }) => {
       const actualParams = params || { page: 1, size: 999999 };
       const ordersRes = await adminService.getOrders(actualParams);
       const ordersData = ordersRes?.result?.books ?? ordersRes?.result?.data ?? ordersRes?.result ?? ordersRes ?? [];
-      
+
       if (Array.isArray(ordersData)) {
-        setOrders(ordersData);
-        localStorage.setItem('admin_orders', JSON.stringify(ordersData));
-        console.log('Orders refreshed:', ordersData.length);
+        const mappedOrders = ordersData.map(mapServerOrderToUi);
+        setOrders(mappedOrders);
+        localStorage.setItem('admin_orders', JSON.stringify(mappedOrders));
+        console.log('Orders refreshed:', mappedOrders.length);
       }
     } catch (error) {
       console.error('Failed to refresh orders:', error);

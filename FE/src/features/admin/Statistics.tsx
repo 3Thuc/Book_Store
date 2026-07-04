@@ -143,14 +143,20 @@ export const Statistics: React.FC = () => {
       if (dy !== 0 && d.getDate()        !== dy) return false;
       return true;
     });
-    const computedRevenue = periodOrders.filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED').reduce((s, o) => s + o.totalAmount, 0);
+    const computedRevenue = periodOrders.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+    }).reduce((s, o) => s + o.totalAmount, 0);
     // Khi xem "Tất cả năm", dùng API totalRevenue (chính xác, đồng nhất với Quản lý đơn hàng)
     // Khi lọc theo năm/tháng/ngày, fallback về giá trị tính từ orders[]
     const isGlobalView = yr === 0 && mo === 0 && dy === 0;
     const totalRevenue = isGlobalView && apiTotalRevenue !== null ? apiTotalRevenue : computedRevenue;
     const totalOrders     = periodOrders.length;
-    const completedOrders = periodOrders.filter(o => o.status === 'DELIVERED').length;
-    const activeOrders    = periodOrders.filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'FAILED').length;
+    const completedOrders = periodOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length;
+    const activeOrders    = periodOrders.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+    }).length;
     
     // Use inventory for more accurate active books count
     const totalBooks      = inventory && inventory.length > 0 ? inventory.length : books.length;
