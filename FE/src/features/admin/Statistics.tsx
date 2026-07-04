@@ -151,12 +151,26 @@ export const Statistics: React.FC = () => {
     // Khi lọc theo năm/tháng/ngày, fallback về giá trị tính từ orders[]
     const isGlobalView = yr === 0 && mo === 0 && dy === 0;
     const totalRevenue = isGlobalView && apiTotalRevenue !== null ? apiTotalRevenue : computedRevenue;
+    
+    // Doanh thu thực nhận (delivered)
+    const deliveredRevenue = periodOrders.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return s === 'DELIVERED';
+    }).reduce((s, o) => s + o.totalAmount, 0);
+
+    // Đang thực hiện (pending, processing, shipped, confirmed)
+    const pendingRevenue = periodOrders.filter(o => {
+      const s = String(o.status || '').toUpperCase();
+      return ['PENDING', 'PROCESSING', 'SHIPPED', 'CONFIRMED'].includes(s);
+    }).reduce((s, o) => s + o.totalAmount, 0);
+
     const totalOrders     = periodOrders.length;
     const completedOrders = periodOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length;
     const activeOrders    = periodOrders.filter(o => {
       const s = String(o.status || '').toUpperCase();
       return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
     }).length;
+    const pendingOrders = periodOrders.filter(o => String(o.status || '').toUpperCase() === 'PENDING').length;
     
     // Use inventory for more accurate active books count
     const totalBooks      = inventory && inventory.length > 0 ? inventory.length : books.length;
@@ -165,7 +179,7 @@ export const Statistics: React.FC = () => {
                               : books.filter(b => b.stockQuantity).length;
                               
     const totalCustomers  = users.filter(u => u.role === 'customer').length;
-    return { totalRevenue, totalOrders, completedOrders, activeOrders,
+    return { totalRevenue, deliveredRevenue, pendingRevenue, totalOrders, completedOrders, activeOrders, pendingOrders,
              averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
              totalBooks, inStockBooks, totalCustomers };
   }, [orders, books, users, filter.year, filter.month, filter.day, apiTotalRevenue]);
@@ -295,18 +309,18 @@ export const Statistics: React.FC = () => {
 
   const statsCards: StatsCard[] = [
     {
-      title: 'Tổng doanh thu',
-      value: formatCurrency(stats.totalRevenue),
+      title: 'Doanh thu thực nhận',
+      value: formatCurrency(stats.deliveredRevenue),
       change: '+12.5%',
       changeType: 'increase',
       icon: DollarSign,
       color: 'from-emerald-500 to-green-600',
       iconBg: 'bg-emerald-50',
       iconColor: 'text-emerald-600',
-      subtitle: `${stats.activeOrders} đơn hàng có giá trị`,
+      subtitle: `Đang thực hiện: ${formatCurrency(stats.pendingRevenue)}`,
     },
     {
-      title: 'Đơn hàng đã bán',
+      title: 'Tổng đơn hàng',
       value: stats.totalOrders.toString(),
       change: '+8.2%',
       changeType: 'increase',
@@ -314,7 +328,7 @@ export const Statistics: React.FC = () => {
       color: 'from-primary to-primary/80',
       iconBg: 'bg-primary/10',
       iconColor: 'text-primary',
-      subtitle: 'Tổng đơn hàng đã bán',
+      subtitle: `+${stats.pendingOrders} đơn chờ xử lý`,
     },
     {
       title: 'Tổng sách',

@@ -121,17 +121,10 @@ export const OrderManagement: React.FC = () => {
     setSelectedOrderIds(new Set());
   }, [currentPage]);
 
-  // Client-side filtering
-  const filteredOrders = React.useMemo(() => {
+  // Base filtering (applied search and date query filters, but not status filter)
+  const baseOrders = React.useMemo(() => {
     return orders.filter(order => {
-      // 1. Status Filter
-      if (filterStatus !== 'all') {
-        if (String(order.status).toUpperCase() !== String(filterStatus).toUpperCase()) {
-          return false;
-        }
-      }
-
-      // 2. Search query Filter
+      // 1. Search query Filter
       if (searchQuery.trim()) {
         const query = searchQuery.trim().toLowerCase();
         const customerName = (order.customerName || '').toLowerCase();
@@ -146,7 +139,7 @@ export const OrderManagement: React.FC = () => {
         }
       }
 
-      // 3. Date Filter
+      // 2. Date Filter
       if (filterStartDate) {
         const start = new Date(filterStartDate);
         start.setHours(0, 0, 0, 0);
@@ -167,7 +160,13 @@ export const OrderManagement: React.FC = () => {
 
       return true;
     });
-  }, [orders, filterStatus, searchQuery, filterStartDate, filterEndDate]);
+  }, [orders, searchQuery, filterStartDate, filterEndDate]);
+
+  // Client-side filtering (applying status filter to baseOrders)
+  const filteredOrders = React.useMemo(() => {
+    if (filterStatus === 'all') return baseOrders;
+    return baseOrders.filter(order => String(order.status).toUpperCase() === String(filterStatus).toUpperCase());
+  }, [baseOrders, filterStatus]);
 
   // Calculate filtered orders count and revenue
   const filteredTotalItems = filteredOrders.length;
@@ -428,56 +427,36 @@ export const OrderManagement: React.FC = () => {
   };
 
   // Statistics fetched from dedicated API endpoint (accurate, not from partial context)
-  const [statistics, setStatistics] = useState<{
-    totalOrders: number;
-    pendingOrders: number;
-    returnRequestedOrders: number;
-    totalRevenue: number;
-  }>({
-    totalOrders: 0,
-    pendingOrders: 0,
-    returnRequestedOrders: 0,
-    totalRevenue: 0,
-  });
+  // Computed statistics (dynamic based on current search and date filters)
+  const statistics = React.useMemo(() => {
+    const totalOrders = baseOrders.length;
+    const pendingOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'PENDING').length;
+    const returnRequestedOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'RETURN_REQUESTED').length;
+    
+    const totalRevenue = baseOrders
+      .filter(o => {
+        const s = String(o.status || '').toUpperCase();
+        return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
+      })
+      .reduce((sum, o) => sum + o.totalAmount, 0);
 
-  // Fetch statistics from API — dùng ORDER_STATS thay vì tính từ orders[] (partial)
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await adminService.getOrderStats();
-        const data = res?.result ?? res?.data ?? res;
-        if (data) {
-          setStatistics({
-            totalOrders: data.totalOrders ?? data.total ?? 0,
-            pendingOrders: data.pendingOrders ?? data.pending ?? 0,
-            returnRequestedOrders: data.returnRequestedOrders ?? data.returnRequested ?? 0,
-            totalRevenue: data.totalRevenue ?? data.revenue ?? 0,
-          });
-          return; // API thành công → dùng luôn
-        }
-      } catch {
-        /* API chưa có → fallback tính từ context orders */
-      }
+    const deliveredRevenue = baseOrders
+      .filter(o => String(o.status).toUpperCase() === 'DELIVERED')
+      .reduce((sum, o) => sum + o.totalAmount, 0);
 
-      // Fallback: tính từ context orders (không chính xác nếu chưa load hết)
-      if (orders.length > 0) {
-        const totalRevenue = orders
-          .filter(o => {
-            const s = String(o.status || '').toUpperCase();
-            return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
-          })
-          .reduce((sum, o) => sum + o.totalAmount, 0);
-        setStatistics({
-          totalOrders: orders.length,
-          pendingOrders: orders.filter(o => String(o.status || '').toUpperCase() === 'PENDING').length,
-          returnRequestedOrders: orders.filter(o => String(o.status || '').toUpperCase() === 'RETURN_REQUESTED').length,
-          totalRevenue,
-        });
-      }
+    const pendingRevenue = baseOrders
+      .filter(o => ['PENDING', 'PROCESSING', 'SHIPPED', 'CONFIRMED'].includes(String(o.status).toUpperCase()))
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+
+    return {
+      totalOrders,
+      pendingOrders,
+      returnRequestedOrders,
+      totalRevenue,
+      deliveredRevenue,
+      pendingRevenue
     };
-
-    fetchStats();
-  }, [orders]); // Re-fetch khi orders thay đổi (auto-refresh trigger)
+  }, [baseOrders]);
 
   return (
     <div id="order-management" className="space-y-6">
@@ -532,13 +511,21 @@ export const OrderManagement: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Doanh thu</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {filterStatus === 'all' ? 'Doanh thu thực nhận' : 'Doanh thu'}
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(statistics.totalRevenue)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(
+                filterStatus === 'all' ? statistics.deliveredRevenue : filteredRevenue
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Tổng giá trị đơn hàng
+              {filterStatus === 'all'
+                ? `Đang thực hiện: ${formatCurrency(statistics.pendingRevenue)}`
+                : 'Tổng giá trị đơn hàng'}
             </p>
           </CardContent>
         </Card>
@@ -551,7 +538,19 @@ export const OrderManagement: React.FC = () => {
             <div>
               <CardTitle>Danh sách đơn hàng</CardTitle>
               <CardDescription>
-                {filteredTotalItems} đơn hàng - Tổng doanh thu {formatCurrency(filteredRevenue)}
+                {filteredTotalItems} đơn hàng
+                {' • '}
+                {filterStatus === 'all' ? (
+                  <>
+                    Doanh thu thực nhận: <span className="font-semibold text-emerald-600">{formatCurrency(statistics.deliveredRevenue)}</span>
+                    <span className="mx-1">|</span>
+                    Đang thực hiện: <span className="font-semibold text-blue-600">{formatCurrency(statistics.pendingRevenue)}</span>
+                  </>
+                ) : (
+                  <>
+                    Tổng doanh thu: <span className="font-semibold text-emerald-600">{formatCurrency(filteredRevenue)}</span>
+                  </>
+                )}
                 {selectedOrderIds.size > 0 && (
                   <span className="ml-2 text-primary font-medium">
                     • Đã chọn {selectedOrderIds.size}
