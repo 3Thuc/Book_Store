@@ -684,9 +684,13 @@ const ChatWidget: React.FC = () => {
 
         // Chỉ trigger optimistic update khi bot XÁC NHẬN thành công (có ✅)
         // KHÔNG trigger khi bot chỉ đang hiển thị thông tin đơn hàng
-        const isConfirmationSuccess = botAnswer.includes('✅') && (
-          botAnswer.includes('thành công') || botAnswer.includes('success')
-        );
+        const isConfirmationSuccess = (
+          botAnswer.includes('✅') ||
+          botAnswer.includes('Đã cập nhật') ||
+          botAnswer.includes('Đã khóa') || botAnswer.includes('Đã mở khóa') ||
+          botAnswer.includes('Đã đổi role')
+        ) && (botAnswer.includes('thành công') || botAnswer.includes('success'));
+
 
         if (isConfirmationSuccess) {
           // Trích xuất Order ID: "đơn #9264" hoặc "#9264"
