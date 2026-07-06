@@ -512,7 +512,7 @@ export const OrderManagement: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {filterStatus === 'all' ? 'Doanh thu thực nhận' : 'Doanh thu'}
+              {filterStatus === 'all' ? 'Tổng doanh thu' : 'Doanh thu'}
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -523,9 +523,7 @@ export const OrderManagement: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {filterStatus === 'all'
-                ? 'Từ đơn hàng đã giao'
-                : 'Tổng giá trị đơn hàng'}
+              Tổng doanh thu:
             </p>
           </CardContent>
         </Card>
@@ -540,15 +538,7 @@ export const OrderManagement: React.FC = () => {
               <CardDescription>
                 {filteredTotalItems} đơn hàng
                 {' • '}
-                {filterStatus === 'all' ? (
-                  <>
-                    Doanh thu thực nhận: <span className="font-semibold text-emerald-600">{formatCurrency(statistics.deliveredRevenue)}</span>
-                  </>
-                ) : (
-                  <>
-                    Tổng doanh thu: <span className="font-semibold text-emerald-600">{formatCurrency(filteredRevenue)}</span>
-                  </>
-                )}
+                Tổng doanh thu: <span className="font-semibold text-emerald-600">{formatCurrency(filterStatus === 'all' ? statistics.deliveredRevenue : filteredRevenue)}</span>
                 {selectedOrderIds.size > 0 && (
                   <span className="ml-2 text-primary font-medium">
                     • Đã chọn {selectedOrderIds.size}
