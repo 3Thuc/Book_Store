@@ -445,7 +445,7 @@ export const OrderManagement: React.FC = () => {
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
     const pendingRevenue = baseOrders
-      .filter(o => ['PENDING', 'PROCESSING', 'SHIPPED', 'CONFIRMED'].includes(String(o.status).toUpperCase()))
+      .filter(o => ['PENDING', 'PROCESSING', 'SHIPPED'].includes(String(o.status).toUpperCase()))
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
     return {

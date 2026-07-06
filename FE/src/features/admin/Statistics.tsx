@@ -99,7 +99,7 @@ export const Statistics: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-poll mỗi 60s — dừng khi tab ẩn để tiết kiệm tài nguyên
@@ -122,13 +122,13 @@ export const Statistics: React.FC = () => {
 
     handle = setInterval(poll, POLL_INTERVAL_MS);
     return () => { canceled = true; if (handle) clearInterval(handle); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reset filter về "Tất cả năm" mỗi khi vào Dashboard
   useEffect(() => {
     reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatCurrency = (amount: number) => formatVND(amount);
@@ -138,9 +138,9 @@ export const Statistics: React.FC = () => {
     const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const periodOrders = orders.filter(o => {
       const d = new Date(o.orderDate);
-      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (yr !== 0 && d.getFullYear() !== yr) return false;
       if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
-      if (dy !== 0 && d.getDate()        !== dy) return false;
+      if (dy !== 0 && d.getDate() !== dy) return false;
       return true;
     });
     const computedRevenue = periodOrders.filter(o => {
@@ -151,37 +151,39 @@ export const Statistics: React.FC = () => {
     // Khi lọc theo năm/tháng/ngày, fallback về giá trị tính từ orders[]
     const isGlobalView = yr === 0 && mo === 0 && dy === 0;
     const totalRevenue = isGlobalView && apiTotalRevenue !== null ? apiTotalRevenue : computedRevenue;
-    
+
     // Doanh thu thực nhận (delivered)
     const deliveredRevenue = periodOrders.filter(o => {
       const s = String(o.status || '').toUpperCase();
       return s === 'DELIVERED';
     }).reduce((s, o) => s + o.totalAmount, 0);
 
-    // Đang thực hiện (pending, processing, shipped, confirmed)
+    // Đang thực hiện (pending, processing, shipped)
     const pendingRevenue = periodOrders.filter(o => {
       const s = String(o.status || '').toUpperCase();
-      return ['PENDING', 'PROCESSING', 'SHIPPED', 'CONFIRMED'].includes(s);
+      return ['PENDING', 'PROCESSING', 'SHIPPED'].includes(s);
     }).reduce((s, o) => s + o.totalAmount, 0);
 
-    const totalOrders     = periodOrders.length;
+    const totalOrders = periodOrders.length;
     const completedOrders = periodOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length;
-    const activeOrders    = periodOrders.filter(o => {
+    const activeOrders = periodOrders.filter(o => {
       const s = String(o.status || '').toUpperCase();
       return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
     }).length;
     const pendingOrders = periodOrders.filter(o => String(o.status || '').toUpperCase() === 'PENDING').length;
-    
+
     // Use inventory for more accurate active books count
-    const totalBooks      = inventory && inventory.length > 0 ? inventory.length : books.length;
-    const inStockBooks    = inventory && inventory.length > 0 
-                              ? inventory.filter(b => Number(b.availableQuantity ?? b.stockQuantity ?? 0) > 0).length 
-                              : books.filter(b => b.stockQuantity).length;
-                              
-    const totalCustomers  = users.filter(u => u.role === 'customer').length;
-    return { totalRevenue, deliveredRevenue, pendingRevenue, totalOrders, completedOrders, activeOrders, pendingOrders,
-             averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
-             totalBooks, inStockBooks, totalCustomers };
+    const totalBooks = inventory && inventory.length > 0 ? inventory.length : books.length;
+    const inStockBooks = inventory && inventory.length > 0
+      ? inventory.filter(b => Number(b.availableQuantity ?? b.stockQuantity ?? 0) > 0).length
+      : books.filter(b => b.stockQuantity).length;
+
+    const totalCustomers = users.filter(u => u.role === 'customer').length;
+    return {
+      totalRevenue, deliveredRevenue, pendingRevenue, totalOrders, completedOrders, activeOrders, pendingOrders,
+      averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
+      totalBooks, inStockBooks, totalCustomers
+    };
   }, [orders, books, users, filter.year, filter.month, filter.day, apiTotalRevenue]);
 
   // ─── Top selling books ────────────────────────────────────────────────────
@@ -190,16 +192,16 @@ export const Statistics: React.FC = () => {
     const validStatuses = ['DELIVERED', 'COMPLETED', 'PROCESSING', 'SHIPPED', 'CONFIRMED'];
     const bookSales = new Map<string, number>();
     (orders || []).filter(o => {
-      if (!o.status || ['CANCELLED','RETURNED'].includes(o.status)) return false;
+      if (!o.status || ['CANCELLED', 'RETURNED'].includes(o.status)) return false;
       if (!validStatuses.includes(o.status)) return false;
       const d = new Date(o.orderDate);
-      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (yr !== 0 && d.getFullYear() !== yr) return false;
       if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
-      if (dy !== 0 && d.getDate()        !== dy) return false;
+      if (dy !== 0 && d.getDate() !== dy) return false;
       return true;
     }).forEach(order => {
       (order.items || []).forEach((item: any) => {
-        const id  = item?.bookId ?? item?.id ?? item?.book?.bookId ?? item?.book?.id;
+        const id = item?.bookId ?? item?.id ?? item?.book?.bookId ?? item?.book?.id;
         const qty = Number(item?.quantity ?? 0);
         if (id && qty > 0) bookSales.set(String(id), (bookSales.get(String(id)) || 0) + qty);
       });
@@ -221,9 +223,9 @@ export const Statistics: React.FC = () => {
     orders.filter(o => {
       if (o.status !== 'DELIVERED') return false;
       const d = new Date(o.orderDate);
-      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (yr !== 0 && d.getFullYear() !== yr) return false;
       if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
-      if (dy !== 0 && d.getDate()        !== dy) return false;
+      if (dy !== 0 && d.getDate() !== dy) return false;
       return true;
     }).forEach(order => {
       order.items.forEach(item => {
@@ -251,21 +253,21 @@ export const Statistics: React.FC = () => {
       });
     }
     if (mo === 0) {
-      const months = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+      const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
       return months.map((label, i) => {
-        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === i+1 && valid(o); });
+        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth() + 1) === i + 1 && valid(o); });
         return { label, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
       });
     }
     if (dy === 0) {
       const days = new Date(yr, mo, 0).getDate();
       return Array.from({ length: days }, (_, i) => i + 1).map(day => {
-        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === mo && d.getDate() === day && valid(o); });
+        const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth() + 1) === mo && d.getDate() === day && valid(o); });
         return { label: `${day}`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
       });
     }
     return Array.from({ length: 24 }, (_, h) => {
-      const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth()+1) === mo && d.getDate() === dy && d.getHours() === h && valid(o); });
+      const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth() + 1) === mo && d.getDate() === dy && d.getHours() === h && valid(o); });
       return { label: `${h}h`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
     });
   }, [orders, filter.year, filter.month, filter.day]);
@@ -273,17 +275,17 @@ export const Statistics: React.FC = () => {
   // ─── Inventory (real-time, no date filter) ────────────────────────────────
   const inventoryStatusData = useMemo(() => {
     if (!inventory || inventory.length === 0) return [];
-    
+
     // Inventory array items have availableQuantity or stockQuantity
     const getAvailable = (b: any) => Number(b.availableQuantity ?? b.stockQuantity ?? 0);
-    
-    const inStock    = inventory.filter(b => getAvailable(b) > 5).length;
-    const lowStock   = inventory.filter(b => { const q = getAvailable(b); return q >= 1 && q <= 5; }).length;
+
+    const inStock = inventory.filter(b => getAvailable(b) > 5).length;
+    const lowStock = inventory.filter(b => { const q = getAvailable(b); return q >= 1 && q <= 5; }).length;
     const outOfStock = inventory.filter(b => getAvailable(b) <= 0).length;
-    
+
     return [
-      { name: 'Đủ hàng',  value: inStock,    color: '#10b981' },
-      { name: 'Sắp hết',  value: lowStock,   color: '#f59e0b' },
+      { name: 'Đủ hàng', value: inStock, color: '#10b981' },
+      { name: 'Sắp hết', value: lowStock, color: '#f59e0b' },
       { name: 'Hết hàng', value: outOfStock, color: '#ef4444' },
     ].filter(x => x.value > 0);
   }, [inventory]);
@@ -292,13 +294,13 @@ export const Statistics: React.FC = () => {
   const orderStatusData = useMemo(() => {
     const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const statusMap = new Map<string, number>();
-    const T: Record<string,string> = { PENDING:'Chờ xử lý', CONFIRMED:'Đã xác nhận', PROCESSING:'Đang xử lý', SHIPPED:'Đang giao', DELIVERED:'Đã giao', COMPLETED:'Hoàn thành', CANCELLED:'Đã hủy', RETURNED:'Trả hàng', CANCEL_REQUESTED:'Yêu cầu hủy', RETURN_REQUESTED:'Yêu cầu trả', FAILED:'Thất bại' };
-    const C: Record<string,string> = { PENDING:'#f59e0b', CONFIRMED:'#3b82f6', PROCESSING:'#8b5cf6', SHIPPED:'#06b6d4', DELIVERED:'#10b981', COMPLETED:'#059669', CANCELLED:'#ef4444', RETURNED:'#dc2626', CANCEL_REQUESTED:'#6b7280', RETURN_REQUESTED:'#6b7280', FAILED:'#1f2937' };
+    const T: Record<string, string> = { PENDING: 'Chờ xử lý', CONFIRMED: 'Đã xác nhận', PROCESSING: 'Đang xử lý', SHIPPED: 'Đang giao', DELIVERED: 'Đã giao', COMPLETED: 'Hoàn thành', CANCELLED: 'Đã hủy', RETURNED: 'Trả hàng', CANCEL_REQUESTED: 'Yêu cầu hủy', RETURN_REQUESTED: 'Yêu cầu trả', FAILED: 'Thất bại' };
+    const C: Record<string, string> = { PENDING: '#f59e0b', CONFIRMED: '#3b82f6', PROCESSING: '#8b5cf6', SHIPPED: '#06b6d4', DELIVERED: '#10b981', COMPLETED: '#059669', CANCELLED: '#ef4444', RETURNED: '#dc2626', CANCEL_REQUESTED: '#6b7280', RETURN_REQUESTED: '#6b7280', FAILED: '#1f2937' };
     orders.filter(o => {
       const d = new Date(o.orderDate);
-      if (yr !== 0 && d.getFullYear()    !== yr) return false;
+      if (yr !== 0 && d.getFullYear() !== yr) return false;
       if (mo !== 0 && (d.getMonth() + 1) !== mo) return false;
-      if (dy !== 0 && d.getDate()        !== dy) return false;
+      if (dy !== 0 && d.getDate() !== dy) return false;
       return true;
     }).forEach(o => {
       const s = o.status || 'UNKNOWN';
@@ -416,11 +418,10 @@ export const Statistics: React.FC = () => {
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.iconBg} group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                   </div>
-                  <div className={`flex items-center gap-1 text-sm ${
-                    stat.changeType === 'increase' ? 'text-green-600' : 
-                    stat.changeType === 'decrease' ? 'text-red-600' : 
-                    'text-slate-500'
-                  }`}>
+                  <div className={`flex items-center gap-1 text-sm ${stat.changeType === 'increase' ? 'text-green-600' :
+                    stat.changeType === 'decrease' ? 'text-red-600' :
+                      'text-slate-500'
+                    }`}>
                     {stat.changeType === 'increase' && <ArrowUpRight className="h-4 w-4" />}
                     <span className="font-semibold">{stat.change}</span>
                   </div>
@@ -465,8 +466,8 @@ export const Statistics: React.FC = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -497,11 +498,11 @@ export const Statistics: React.FC = () => {
                   }}
                   formatter={(value: number, name: string) =>
                     name === 'revenue' ? [formatCurrency(value), 'Doanh thu'] :
-                    [value, 'Đơn hàng']
+                      [value, 'Đơn hàng']
                   }
                   labelFormatter={(label) =>
                     filter.day > 0 ? `${label}` :
-                    filter.month > 0 ? `Ngày ${label}` : `Tháng ${label.replace('T','')}`
+                      filter.month > 0 ? `Ngày ${label}` : `Tháng ${label.replace('T', '')}`
                   }
                 />
                 <Area
@@ -599,7 +600,7 @@ export const Statistics: React.FC = () => {
                             </div>
                           </div>
                         );
-                    })}
+                      })}
                   </div>
                 </div>
               </div>
@@ -695,7 +696,7 @@ export const Statistics: React.FC = () => {
                   </div>
 
                   {/* Footer note */}
-                  <div 
+                  <div
                     className="border-t border-border flex flex-wrap items-center justify-center text-[11px] text-muted-foreground"
                     style={{ marginTop: '20px', paddingTop: '16px', gap: '24px' }}
                   >
@@ -746,12 +747,11 @@ export const Statistics: React.FC = () => {
                   books.slice(0, 5).map((book: any, index: number) => (
                     <TableRow key={book.bookId} className="hover:bg-muted/50 transition-colors">
                       <TableCell>
-                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${
-                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
+                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
                           index === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
-                          index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
-                          'bg-muted text-foreground'
-                        }`}>
+                            index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                              'bg-muted text-foreground'
+                          }`}>
                           #{index + 1}
                         </div>
                       </TableCell>
@@ -778,7 +778,7 @@ export const Statistics: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
-                          {Array.isArray(book.categories) 
+                          {Array.isArray(book.categories)
                             ? book.categories.map((c: any) => c.categoryName || c.name || c).join(', ')
                             : book.categories}
                         </Badge>
@@ -804,12 +804,11 @@ export const Statistics: React.FC = () => {
                   topSellingBooks.map((item: TopSellingBook | null, index: number) => (
                     <TableRow key={item!.book.bookId} className="hover:bg-muted/50 transition-colors">
                       <TableCell>
-                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${
-                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
+                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
                           index === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
-                          index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
-                          'bg-muted text-foreground'
-                        }`}>
+                            index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                              'bg-muted text-foreground'
+                          }`}>
                           #{index + 1}
                         </div>
                       </TableCell>
@@ -836,7 +835,7 @@ export const Statistics: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
-                          {Array.isArray(item!.book.categories) 
+                          {Array.isArray(item!.book.categories)
                             ? item!.book.categories.map((c: any) => c.categoryName || c.name || c).join(', ')
                             : item!.book.categories}
                         </Badge>
