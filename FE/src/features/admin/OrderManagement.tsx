@@ -170,7 +170,7 @@ export const OrderManagement: React.FC = () => {
 
   // Calculate filtered orders count and revenue
   const filteredTotalItems = filteredOrders.length;
-  
+
   const filteredRevenue = React.useMemo(() => {
     return filteredOrders
       .filter(o => {
@@ -182,7 +182,7 @@ export const OrderManagement: React.FC = () => {
 
   // Client-side pagination
   const totalPages = Math.ceil(filteredTotalItems / pageSize) || 1;
-  
+
   const pagedOrders = React.useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredOrders.slice(startIndex, startIndex + pageSize);
@@ -432,7 +432,7 @@ export const OrderManagement: React.FC = () => {
     const totalOrders = baseOrders.length;
     const pendingOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'PENDING').length;
     const returnRequestedOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'RETURN_REQUESTED').length;
-    
+
     const totalRevenue = baseOrders
       .filter(o => {
         const s = String(o.status || '').toUpperCase();
@@ -524,7 +524,7 @@ export const OrderManagement: React.FC = () => {
             </div>
             <p className="text-xs text-muted-foreground">
               {filterStatus === 'all'
-                ? `Đang thực hiện: ${formatCurrency(statistics.pendingRevenue)}`
+                ? 'Từ đơn hàng đã giao'
                 : 'Tổng giá trị đơn hàng'}
             </p>
           </CardContent>
@@ -543,8 +543,6 @@ export const OrderManagement: React.FC = () => {
                 {filterStatus === 'all' ? (
                   <>
                     Doanh thu thực nhận: <span className="font-semibold text-emerald-600">{formatCurrency(statistics.deliveredRevenue)}</span>
-                    <span className="mx-1">|</span>
-                    Đang thực hiện: <span className="font-semibold text-blue-600">{formatCurrency(statistics.pendingRevenue)}</span>
                   </>
                 ) : (
                   <>
@@ -761,7 +759,7 @@ export const OrderManagement: React.FC = () => {
               </TableBody>
             </Table>
           </div>
-           <PaginationControls
+          <PaginationControls
             totalItems={filteredTotalItems}
             currentPage={currentPage}
             totalPages={totalPages}

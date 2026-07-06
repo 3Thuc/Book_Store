@@ -317,7 +317,7 @@ export const Statistics: React.FC = () => {
       color: 'from-emerald-500 to-green-600',
       iconBg: 'bg-emerald-50',
       iconColor: 'text-emerald-600',
-      subtitle: `Đang thực hiện: ${formatCurrency(stats.pendingRevenue)}`,
+      subtitle: 'Từ đơn hàng đã giao',
     },
     {
       title: 'Tổng đơn hàng',
