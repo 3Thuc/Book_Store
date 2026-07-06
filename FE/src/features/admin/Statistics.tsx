@@ -429,7 +429,6 @@ export const Statistics: React.FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
                   <p className="text-2xl font-bold text-foreground mb-1">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
                 </div>
               </CardContent>
               <div className={`h-1 bg-gradient-to-r ${stat.color}`}></div>
