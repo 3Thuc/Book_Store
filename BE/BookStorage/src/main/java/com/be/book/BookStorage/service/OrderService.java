@@ -364,6 +364,7 @@ public class OrderService {
                 .returnedOrders(orderRepository.countReturnedOrders())
                 .failedOrders(orderRepository.countFailedOrders())
                 .totalRevenue(orderRepository.calculateTotalRevenue())
+                .deliveredRevenue(orderRepository.calculateDeliveredRevenue())
                 .build();
     }
 

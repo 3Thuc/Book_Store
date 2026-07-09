@@ -152,4 +152,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
 
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status NOT IN ('cancelled', 'returned', 'failed')")
     Double calculateTotalRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'delivered'")
+    Double calculateDeliveredRevenue();
 }

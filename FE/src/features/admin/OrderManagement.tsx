@@ -58,6 +58,26 @@ export const OrderManagement: React.FC = () => {
     refreshOrders().finally(() => setIsInitialLoading(false));
   }, []);
 
+  const [apiStats, setApiStats] = useState<{ totalRevenue: number; deliveredRevenue: number } | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await adminService.getOrderStats();
+        const data = res?.result ?? res?.data ?? res;
+        if (data && typeof data.totalRevenue === 'number' && typeof data.deliveredRevenue === 'number') {
+          setApiStats({
+            totalRevenue: data.totalRevenue,
+            deliveredRevenue: data.deliveredRevenue
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch order stats', err);
+      }
+    };
+    fetchStats();
+  }, [orders]);
+
   // Lắng nghe sự kiện từ Chatbot (Optimistic Update)
   useEffect(() => {
     const handler = (e: Event) => {
@@ -433,14 +453,17 @@ export const OrderManagement: React.FC = () => {
     const pendingOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'PENDING').length;
     const returnRequestedOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'RETURN_REQUESTED').length;
 
-    const totalRevenue = baseOrders
+    // Use API values when there is no search or date query filter
+    const isGlobalView = !searchQuery.trim() && !filterStartDate && !filterEndDate;
+
+    const totalRevenue = isGlobalView && apiStats ? apiStats.totalRevenue : baseOrders
       .filter(o => {
         const s = String(o.status || '').toUpperCase();
         return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
       })
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
-    const deliveredRevenue = baseOrders
+    const deliveredRevenue = isGlobalView && apiStats ? apiStats.deliveredRevenue : baseOrders
       .filter(o => String(o.status).toUpperCase() === 'DELIVERED')
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -456,7 +479,7 @@ export const OrderManagement: React.FC = () => {
       deliveredRevenue,
       pendingRevenue
     };
-  }, [baseOrders]);
+  }, [baseOrders, apiStats, searchQuery, filterStartDate, filterEndDate]);
 
   return (
     <div id="order-management" className="space-y-6">

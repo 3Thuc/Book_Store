@@ -63,6 +63,7 @@ export const Statistics: React.FC = () => {
   // Doanh thu chính xác từ API /admin/order-statistics (SUM(total_amount) từ DB)
   // Đồng nhất với trang Quản lý đơn hàng — tránh recompute sai từ orders[]
   const [apiTotalRevenue, setApiTotalRevenue] = useState<number | null>(null);
+  const [apiDeliveredRevenue, setApiDeliveredRevenue] = useState<number | null>(null);
   const apiRevenueLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -72,6 +73,9 @@ export const Statistics: React.FC = () => {
         const data = res?.result ?? res?.data ?? res;
         if (data && typeof data.totalRevenue === 'number') {
           setApiTotalRevenue(data.totalRevenue);
+          if (typeof data.deliveredRevenue === 'number') {
+            setApiDeliveredRevenue(data.deliveredRevenue);
+          }
           apiRevenueLoadedRef.current = true;
         }
       } catch {
@@ -153,10 +157,11 @@ export const Statistics: React.FC = () => {
     const totalRevenue = isGlobalView && apiTotalRevenue !== null ? apiTotalRevenue : computedRevenue;
 
     // Doanh thu thực nhận (delivered)
-    const deliveredRevenue = periodOrders.filter(o => {
+    const computedDeliveredRevenue = periodOrders.filter(o => {
       const s = String(o.status || '').toUpperCase();
       return s === 'DELIVERED';
     }).reduce((s, o) => s + o.totalAmount, 0);
+    const deliveredRevenue = isGlobalView && apiDeliveredRevenue !== null ? apiDeliveredRevenue : computedDeliveredRevenue;
 
     // Đang thực hiện (pending, processing, shipped)
     const pendingRevenue = periodOrders.filter(o => {
@@ -184,7 +189,7 @@ export const Statistics: React.FC = () => {
       averageOrderValue: completedOrders > 0 ? totalRevenue / completedOrders : 0,
       totalBooks, inStockBooks, totalCustomers
     };
-  }, [orders, books, users, filter.year, filter.month, filter.day, apiTotalRevenue]);
+  }, [orders, books, users, filter.year, filter.month, filter.day, apiTotalRevenue, apiDeliveredRevenue]);
 
   // ─── Top selling books ────────────────────────────────────────────────────
   const topSellingBooks = useMemo(() => {

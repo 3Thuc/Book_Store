@@ -21,4 +21,5 @@ public class OrderStatisticsRes {
     private Long returnedOrders;
     private Long failedOrders;
     private Double totalRevenue;
+    private Double deliveredRevenue;
 }
