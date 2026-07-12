@@ -365,6 +365,14 @@ public class OrderService {
                 .failedOrders(orderRepository.countFailedOrders())
                 .totalRevenue(orderRepository.calculateTotalRevenue())
                 .deliveredRevenue(orderRepository.calculateDeliveredRevenue())
+                .pendingRevenue(orderRepository.calculatePendingRevenue())
+                .processingRevenue(orderRepository.calculateProcessingRevenue())
+                .shippedRevenue(orderRepository.calculateShippedRevenue())
+                .cancelRequestedRevenue(orderRepository.calculateCancelRequestedRevenue())
+                .cancelledRevenue(orderRepository.calculateCancelledRevenue())
+                .returnRequestedRevenue(orderRepository.calculateReturnRequestedRevenue())
+                .returnedRevenue(orderRepository.calculateReturnedRevenue())
+                .failedRevenue(orderRepository.calculateFailedRevenue())
                 .build();
     }
 

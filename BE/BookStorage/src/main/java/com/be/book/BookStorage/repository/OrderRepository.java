@@ -155,4 +155,28 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
 
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'delivered'")
     Double calculateDeliveredRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'pending'")
+    Double calculatePendingRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'processing'")
+    Double calculateProcessingRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'shipped'")
+    Double calculateShippedRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'cancel_requested'")
+    Double calculateCancelRequestedRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'cancelled'")
+    Double calculateCancelledRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'return_requested'")
+    Double calculateReturnRequestedRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'returned'")
+    Double calculateReturnedRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0.0) FROM OrderEntity o WHERE o.status = 'failed'")
+    Double calculateFailedRevenue();
 }

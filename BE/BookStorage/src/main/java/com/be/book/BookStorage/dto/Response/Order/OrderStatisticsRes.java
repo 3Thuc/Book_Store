@@ -22,4 +22,12 @@ public class OrderStatisticsRes {
     private Long failedOrders;
     private Double totalRevenue;
     private Double deliveredRevenue;
+    private Double pendingRevenue;
+    private Double processingRevenue;
+    private Double shippedRevenue;
+    private Double cancelRequestedRevenue;
+    private Double cancelledRevenue;
+    private Double returnRequestedRevenue;
+    private Double returnedRevenue;
+    private Double failedRevenue;
 }

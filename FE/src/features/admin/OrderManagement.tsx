@@ -58,18 +58,15 @@ export const OrderManagement: React.FC = () => {
     refreshOrders().finally(() => setIsInitialLoading(false));
   }, []);
 
-  const [apiStats, setApiStats] = useState<{ totalRevenue: number; deliveredRevenue: number } | null>(null);
+  const [apiStats, setApiStats] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await adminService.getOrderStats();
         const data = res?.result ?? res?.data ?? res;
-        if (data && typeof data.totalRevenue === 'number' && typeof data.deliveredRevenue === 'number') {
-          setApiStats({
-            totalRevenue: data.totalRevenue,
-            deliveredRevenue: data.deliveredRevenue
-          });
+        if (data) {
+          setApiStats(data);
         }
       } catch (err) {
         console.error('Failed to fetch order stats', err);
@@ -188,17 +185,57 @@ export const OrderManagement: React.FC = () => {
     return baseOrders.filter(order => String(order.status).toUpperCase() === String(filterStatus).toUpperCase());
   }, [baseOrders, filterStatus]);
 
-  // Calculate filtered orders count and revenue
-  const filteredTotalItems = filteredOrders.length;
+  // Calculate filtered orders count and revenue using backend stats if global view, fallback to client-side
+  const getStatusCountKey = (status: string): string => {
+    const keys: Record<string, string> = {
+      PENDING: 'pendingOrders',
+      PROCESSING: 'processingOrders',
+      SHIPPED: 'shippedOrders',
+      DELIVERED: 'deliveredOrders',
+      CANCEL_REQUESTED: 'cancelRequestedOrders',
+      CANCELLED: 'cancelledOrders',
+      RETURN_REQUESTED: 'returnRequestedOrders',
+      RETURNED: 'returnedOrders',
+      FAILED: 'failedOrders',
+    };
+    return keys[status.toUpperCase()] || 'totalOrders';
+  };
+
+  const getStatusRevenueKey = (status: string): string => {
+    const keys: Record<string, string> = {
+      PENDING: 'pendingRevenue',
+      PROCESSING: 'processingRevenue',
+      SHIPPED: 'shippedRevenue',
+      DELIVERED: 'deliveredRevenue',
+      CANCEL_REQUESTED: 'cancelRequestedRevenue',
+      CANCELLED: 'cancelledRevenue',
+      RETURN_REQUESTED: 'returnRequestedRevenue',
+      RETURNED: 'returnedRevenue',
+      FAILED: 'failedRevenue',
+    };
+    return keys[status.toUpperCase()] || 'totalRevenue';
+  };
+
+  const filteredTotalItems = React.useMemo(() => {
+    const isGlobalView = !searchQuery.trim() && !filterStartDate && !filterEndDate;
+    if (isGlobalView && apiStats) {
+      if (filterStatus === 'all') {
+        return apiStats.totalOrders ?? 0;
+      }
+      const countKey = getStatusCountKey(filterStatus);
+      return apiStats[countKey] ?? 0;
+    }
+    return filteredOrders.length;
+  }, [filteredOrders, filterStatus, searchQuery, filterStartDate, filterEndDate, apiStats]);
 
   const filteredRevenue = React.useMemo(() => {
-    return filteredOrders
-      .filter(o => {
-        const s = String(o.status || '').toUpperCase();
-        return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
-      })
-      .reduce((sum, o) => sum + o.totalAmount, 0);
-  }, [filteredOrders]);
+    const isGlobalView = !searchQuery.trim() && !filterStartDate && !filterEndDate;
+    if (isGlobalView && apiStats && filterStatus !== 'all') {
+      const revenueKey = getStatusRevenueKey(filterStatus);
+      return apiStats[revenueKey] ?? 0;
+    }
+    return filteredOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  }, [filteredOrders, filterStatus, searchQuery, filterStartDate, filterEndDate, apiStats]);
 
   // Client-side pagination
   const totalPages = Math.ceil(filteredTotalItems / pageSize) || 1;
@@ -449,21 +486,21 @@ export const OrderManagement: React.FC = () => {
   // Statistics fetched from dedicated API endpoint (accurate, not from partial context)
   // Computed statistics (dynamic based on current search and date filters)
   const statistics = React.useMemo(() => {
-    const totalOrders = baseOrders.length;
-    const pendingOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'PENDING').length;
-    const returnRequestedOrders = baseOrders.filter(o => String(o.status).toUpperCase() === 'RETURN_REQUESTED').length;
-
     // Use API values when there is no search or date query filter
     const isGlobalView = !searchQuery.trim() && !filterStartDate && !filterEndDate;
 
-    const totalRevenue = isGlobalView && apiStats ? apiStats.totalRevenue : baseOrders
+    const totalOrders = isGlobalView && apiStats ? (apiStats.totalOrders ?? 0) : baseOrders.length;
+    const pendingOrders = isGlobalView && apiStats ? (apiStats.pendingOrders ?? 0) : baseOrders.filter(o => String(o.status).toUpperCase() === 'PENDING').length;
+    const returnRequestedOrders = isGlobalView && apiStats ? (apiStats.returnRequestedOrders ?? 0) : baseOrders.filter(o => String(o.status).toUpperCase() === 'RETURN_REQUESTED').length;
+
+    const totalRevenue = isGlobalView && apiStats ? (apiStats.totalRevenue ?? 0) : baseOrders
       .filter(o => {
         const s = String(o.status || '').toUpperCase();
         return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
       })
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
-    const deliveredRevenue = isGlobalView && apiStats ? apiStats.deliveredRevenue : baseOrders
+    const deliveredRevenue = isGlobalView && apiStats ? (apiStats.deliveredRevenue ?? 0) : baseOrders
       .filter(o => String(o.status).toUpperCase() === 'DELIVERED')
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
@@ -535,7 +572,7 @@ export const OrderManagement: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {filterStatus === 'all' ? 'Tổng doanh thu' : 'Doanh thu'}
+              {filterStatus === 'all' ? 'Tổng doanh thu' : 'Tổng giá trị đơn'}
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -546,7 +583,7 @@ export const OrderManagement: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Tổng doanh thu:
+              {filterStatus === 'all' ? 'Tổng doanh thu' : 'Tổng giá trị đơn'}:
             </p>
           </CardContent>
         </Card>
@@ -561,7 +598,7 @@ export const OrderManagement: React.FC = () => {
               <CardDescription>
                 {filteredTotalItems} đơn hàng
                 {' • '}
-                Tổng doanh thu: <span className="font-semibold text-emerald-600">{formatCurrency(filterStatus === 'all' ? statistics.deliveredRevenue : filteredRevenue)}</span>
+                {filterStatus === 'all' ? 'Tổng doanh thu' : 'Tổng giá trị đơn'}: <span className="font-semibold text-emerald-600">{formatCurrency(filterStatus === 'all' ? statistics.deliveredRevenue : filteredRevenue)}</span>
                 {selectedOrderIds.size > 0 && (
                   <span className="ml-2 text-primary font-medium">
                     • Đã chọn {selectedOrderIds.size}
