@@ -208,6 +208,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       .reduce((sum, order) => sum + order.totalAmount, 0)
   };
 
+  // Log debug để kiểm tra danh sách đơn hàng thực tế tính vào tổng chi tiêu
+  console.log("--- DEBUG TỔNG CHI TIÊU ---");
+  console.log("Tất cả đơn hàng nhận từ API (allOrders):", allOrders);
+  console.log("Các đơn hàng ĐÃ GIAO (DELIVERED) được cộng dồn:", allOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED'));
+  console.log("Tổng tiền tính toán được:", stats.totalSpent);
+  console.log("---------------------------");
+
   useEffect(() => {
     if (!initializing && !user) {
       navigate('/login');
