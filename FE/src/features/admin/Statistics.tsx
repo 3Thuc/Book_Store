@@ -195,7 +195,9 @@ export const Statistics: React.FC = () => {
   const topSellingBooks = useMemo(() => {
     const yr = filter.year; const mo = filter.month; const dy = filter.day;
     const validStatuses = ['DELIVERED', 'COMPLETED', 'PROCESSING', 'SHIPPED', 'CONFIRMED'];
-    const bookSales = new Map<string, number>();
+    const bookSales = new Map<string, { quantity: number; revenue: number }>();
+    const fallbackBooksInfo = new Map<string, any>();
+
     (orders || []).filter(o => {
       if (!o.status || ['CANCELLED', 'RETURNED'].includes(o.status)) return false;
       if (!validStatuses.includes(o.status)) return false;
@@ -208,16 +210,50 @@ export const Statistics: React.FC = () => {
       (order.items || []).forEach((item: any) => {
         const id = item?.bookId ?? item?.id ?? item?.book?.bookId ?? item?.book?.id;
         const qty = Number(item?.quantity ?? 0);
-        if (id && qty > 0) bookSales.set(String(id), (bookSales.get(String(id)) || 0) + qty);
+        const itemRevenue = Number(item?.price ?? 0); // item.price là tổng tiền của dòng sản phẩm (price * qty)
+        if (id && qty > 0) {
+          const key = String(id);
+          const current = bookSales.get(key) || { quantity: 0, revenue: 0 };
+          bookSales.set(key, {
+            quantity: current.quantity + qty,
+            revenue: current.revenue + itemRevenue
+          });
+
+          // Lưu trữ thông tin dự phòng từ đơn hàng phòng trường hợp sách bị xóa mềm khỏi danh mục catalog
+          if (!fallbackBooksInfo.has(key)) {
+            fallbackBooksInfo.set(key, {
+              bookId: Number(key) || key,
+              title: item.title || 'Sách đã xóa',
+              author: item.author || 'Không rõ',
+              price: qty > 0 ? itemRevenue / qty : 0,
+              categories: [],
+              imageUrl: item.imageUrl || null,
+            });
+          }
+        }
       });
     });
+
     return Array.from(bookSales.entries())
-      .map(([bookId, quantity]) => {
+      .map(([bookId, stats]) => {
         const book = bookMapById.get(bookId);
-        return book ? { book, quantity, revenue: quantity * Number(book.price ?? 0) } : null;
+        if (book) {
+          return {
+            book,
+            quantity: stats.quantity,
+            revenue: stats.revenue,
+          };
+        }
+        // Fallback dùng thông tin từ đơn hàng khi sách bị xóa mềm
+        const fallbackBook = fallbackBooksInfo.get(bookId);
+        return fallbackBook ? {
+          book: fallbackBook,
+          quantity: stats.quantity,
+          revenue: stats.revenue,
+        } : null;
       })
-      .filter(x => x !== null)
-      .sort((a, b) => b!.quantity - a!.quantity)
+      .filter((x): x is { book: any; quantity: number; revenue: number } => x !== null)
+      .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10);
   }, [orders, bookMapById, filter.year, filter.month, filter.day]);
 
@@ -237,7 +273,8 @@ export const Statistics: React.FC = () => {
         const book = bookMapById.get(String(item.bookId));
         if (book) {
           const key = book.categories.map((c: any) => c.categoryName).join(', ') || 'Khác';
-          categoryRevenue.set(key, (categoryRevenue.get(key) || 0) + item.price * item.quantity);
+          // item.price là tổng tiền dòng sản phẩm (price * qty) nên cộng trực tiếp, không nhân thêm quantity
+          categoryRevenue.set(key, (categoryRevenue.get(key) || 0) + item.price);
         }
       });
     });
@@ -268,7 +305,7 @@ export const Statistics: React.FC = () => {
       const days = new Date(yr, mo, 0).getDate();
       return Array.from({ length: days }, (_, i) => i + 1).map(day => {
         const list = orders.filter(o => { const d = new Date(o.orderDate); return d.getFullYear() === yr && (d.getMonth() + 1) === mo && d.getDate() === day && valid(o); });
-        return { label: `${day}`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), orders: list.length };
+        return { label: `${day}`, revenue: list.reduce((s, o) => s + o.totalAmount, 0), sorders: list.length };
       });
     }
     return Array.from({ length: 24 }, (_, h) => {
@@ -748,62 +785,66 @@ export const Statistics: React.FC = () => {
               <TableBody>
                 {topSellingBooks.length === 0 ? (
                   // Hiển thị dữ liệu mẫu khi chưa có dữ liệu thực
-                  books.slice(0, 5).map((book: any, index: number) => (
-                    <TableRow key={book.bookId} className="hover:bg-muted/50 transition-colors">
-                      <TableCell>
-                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
-                          index === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
-                            index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
-                              'bg-muted text-foreground'
-                          }`}>
-                          #{index + 1}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {book.imageUrl ? (
-                            <ImageWithFallback
-                              src={book.imageUrl}
-                              alt={book.title}
-                              className="w-12 h-16 object-cover rounded shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                              <BookOpen className="h-6 w-6 text-gray-400" />
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-foreground max-w-[250px] truncate">
-                              {book.title}
-                            </div>
-                            <div className="text-sm text-muted-foreground">{book.author}</div>
+                  books.slice(0, 5).map((book: any, index: number) => {
+                    // Sử dụng số lượng cố định theo Index của sách để số liệu hiển thị ổn định, không bị nhảy số ngẫu nhiên khi re-render
+                    const demoQty = 45 - index * 6;
+                    return (
+                      <TableRow key={book.bookId} className="hover:bg-muted/50 transition-colors">
+                        <TableCell>
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-lg font-bold ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' :
+                            index === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white' :
+                              index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                                'bg-muted text-foreground'
+                            }`}>
+                            #{index + 1}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
-                          {Array.isArray(book.categories)
-                            ? book.categories.map((c: any) => c.categoryName || c.name || c).join(', ')
-                            : book.categories}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-semibold">{Math.floor(Math.random() * 50) + 10}</span>
-                          <span className="text-xs text-muted-foreground">(Demo)</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{formatCurrency(book.price || 0)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1 font-semibold text-emerald-600">
-                          <TrendingUp className="h-4 w-4" />
-                          {formatCurrency((book.price || 0) * (Math.floor(Math.random() * 50) + 10))}
-                          <span className="text-xs text-muted-foreground ml-1">(Demo)</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {book.imageUrl ? (
+                              <ImageWithFallback
+                                src={book.imageUrl}
+                                alt={book.title}
+                                className="w-12 h-16 object-cover rounded shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                                <BookOpen className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-foreground max-w-[250px] truncate">
+                                {book.title}
+                              </div>
+                              <div className="text-sm text-muted-foreground">{book.author}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
+                            {Array.isArray(book.categories)
+                              ? book.categories.map((c: any) => c.categoryName || c.name || c).join(', ')
+                              : book.categories}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold">{demoQty}</span>
+                            <span className="text-xs text-muted-foreground">(Demo)</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{formatCurrency(book.price || 0)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1 font-semibold text-emerald-600">
+                            <TrendingUp className="h-4 w-4" />
+                            {formatCurrency((book.price || 0) * demoQty)}
+                            <span className="text-xs text-muted-foreground ml-1">(Demo)</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   topSellingBooks.map((item: TopSellingBook | null, index: number) => (
                     <TableRow key={item!.book.bookId} className="hover:bg-muted/50 transition-colors">

@@ -267,7 +267,9 @@ private String minioPublicUrl;
                 entity.getStockQuantity(),
                 entity.getAvailableQuantity(),
                 entity.getStatus(),
-                null, // imageUrl = null → FE dùng icon placeholder, không ảnh hưởng stats
+                entity.getImage() != null && entity.getImage().getImageUrl() != null
+                        ? MINIO_PROXY_PREFIX + entity.getImage().getImageUrl().split(",")[0].trim()
+                        : null, // imageUrl (Dùng proxy path thay vì presigned URL để đạt 0 MinIO calls)
                 entity.getPublisher() != null ?
                         new PublisherRes(
                                 entity.getPublisher().getPublisherId(),

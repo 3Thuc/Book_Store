@@ -311,9 +311,11 @@ public class OrderService {
                                     .id(detail.getId().getOrderId() + "-" + detail.getId().getBookId())
                                     .bookId(String.valueOf(detail.getBook().getBookId()))
                                     .title(detail.getBook() != null ? detail.getBook().getTitle() : "")
-                                    .quantity(detail.getQuantity())
                                     .price(detail.getTotalPrice())
-                                    .imageUrl(null) // intentionally omitted for speed
+                                    .quantity(detail.getQuantity())
+                                    .imageUrl(detail.getBook() != null && detail.getBook().getImage() != null && detail.getBook().getImage().getImageUrl() != null
+                                            ? "/minio/bookstore/" + detail.getBook().getImage().getImageUrl().split(",")[0].trim()
+                                            : null) // Trả về proxy path thay vì null hoặc gọi MinIO SDK để giữ hiệu năng
                                     .isReviewed(false)
                                     .build())
                             .collect(Collectors.toList());
