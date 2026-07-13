@@ -99,7 +99,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     onConfirm: () => void;
     confirmText?: string;
     isDestructive?: boolean;
-  }>({ open: false, title: '', description: '', onConfirm: () => {} });
+  }>({ open: false, title: '', description: '', onConfirm: () => { } });
   const [returnReasonDialog, setReturnReasonDialog] = useState<{
     open: boolean;
     orderId: string;
@@ -111,7 +111,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
   // Backend already filters orders by current user, no need to filter again
   const allOrders = orders;
-  
+
   // Filter orders based on selected tab
   const userOrders = useMemo(() => {
     switch (orderFilter) {
@@ -204,91 +204,88 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     completedOrders: allOrders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length,
     pendingOrders: allOrders.filter(o => ['PENDING', 'PAID', 'PROCESSING', 'CONFIRMED', 'SHIPPED'].includes(String(o.status || '').toUpperCase())).length,
     totalSpent: allOrders
-      .filter(o => {
-        const s = String(o.status || '').toUpperCase();
-        return s !== 'CANCELLED' && s !== 'RETURNED' && s !== 'FAILED';
-      })
+      .filter(o => String(o.status || '').toUpperCase() === 'DELIVERED')
       .reduce((sum, order) => sum + order.totalAmount, 0)
   };
 
-    useEffect(() => {
-      if (!initializing && !user) {
-        navigate('/login');
+  useEffect(() => {
+    if (!initializing && !user) {
+      navigate('/login');
+    }
+  }, [initializing, user, navigate]);
+
+  useEffect(() => {
+    if (user && !initializing) {
+      // Check grace period before refreshing after user login
+      const timeSinceLastAction = Date.now() - lastActionTime;
+      if (timeSinceLastAction >= 15000) {
+        refreshOrders();
       }
-    }, [initializing, user, navigate]);
+    }
+  }, [user, initializing, lastActionTime]);
 
-    useEffect(() => {
-      if (user && !initializing) {
-        // Check grace period before refreshing after user login
-        const timeSinceLastAction = Date.now() - lastActionTime;
-        if (timeSinceLastAction >= 15000) {
-          refreshOrders();
-        }
+  // ── Auto-refresh đơn hàng khi đang ở tab "orders" ──────────────
+  // Dùng ref để tránh stale closure trong setInterval
+  const refreshOrdersRef = React.useRef(refreshOrders);
+  React.useEffect(() => {
+    refreshOrdersRef.current = refreshOrders;
+  });
+
+  useEffect(() => {
+    if (!user || initializing || activeTab !== 'orders') return;
+
+    // Refresh ngay khi switch sang tab orders
+    refreshOrdersRef.current();
+
+    // Polling 15s để đồng bộ thay đổi trạng thái từ admin/staff
+    // Skip polling nếu vừa thực hiện action < 15 giây (để server kịp persist)
+    const interval = setInterval(() => {
+      const timeSinceLastAction = Date.now() - lastActionTime;
+      // Nếu vừa thực hiện action < 15s, skip polling để tránh race condition
+      if (timeSinceLastAction < 15000) {
+        console.debug('Skip polling - waiting for server update after action');
+        return;
       }
-    }, [user, initializing, lastActionTime]);
-
-    // ── Auto-refresh đơn hàng khi đang ở tab "orders" ──────────────
-    // Dùng ref để tránh stale closure trong setInterval
-    const refreshOrdersRef = React.useRef(refreshOrders);
-    React.useEffect(() => {
-      refreshOrdersRef.current = refreshOrders;
-    });
-
-    useEffect(() => {
-      if (!user || initializing || activeTab !== 'orders') return;
-
-      // Refresh ngay khi switch sang tab orders
       refreshOrdersRef.current();
+    }, 15_000);
 
-      // Polling 15s để đồng bộ thay đổi trạng thái từ admin/staff
-      // Skip polling nếu vừa thực hiện action < 15 giây (để server kịp persist)
-      const interval = setInterval(() => {
-        const timeSinceLastAction = Date.now() - lastActionTime;
-        // Nếu vừa thực hiện action < 15s, skip polling để tránh race condition
-        if (timeSinceLastAction < 15000) {
-          console.debug('Skip polling - waiting for server update after action');
-          return;
-        }
+    return () => clearInterval(interval);
+  }, [user, initializing, activeTab, lastActionTime]);
+
+  // Refresh khi: (1) tab trình duyệt được focus lại, (2) cửa sổ được focus lại
+  // visibilitychange: đổi tab trong cùng cửa sổ
+  // window focus: đổi sang cửa sổ khác rồi quay lại (quan trọng trên Windows)
+  useEffect(() => {
+    if (!user || activeTab !== 'orders') return;
+
+    const handleFocus = () => {
+      // Check grace period before refreshing on focus
+      const timeSinceLastAction = Date.now() - lastActionTime;
+      if (timeSinceLastAction >= 15000) {
         refreshOrdersRef.current();
-      }, 15_000);
+      }
+    };
 
-      return () => clearInterval(interval);
-    }, [user, initializing, activeTab, lastActionTime]);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') handleFocus();
+    });
+    window.addEventListener('focus', handleFocus);
 
-    // Refresh khi: (1) tab trình duyệt được focus lại, (2) cửa sổ được focus lại
-    // visibilitychange: đổi tab trong cùng cửa sổ
-    // window focus: đổi sang cửa sổ khác rồi quay lại (quan trọng trên Windows)
-    useEffect(() => {
-      if (!user || activeTab !== 'orders') return;
-
-      const handleFocus = () => {
-        // Check grace period before refreshing on focus
-        const timeSinceLastAction = Date.now() - lastActionTime;
-        if (timeSinceLastAction >= 15000) {
-          refreshOrdersRef.current();
-        }
-      };
-
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') handleFocus();
-      });
-      window.addEventListener('focus', handleFocus);
-
-      return () => {
-        document.removeEventListener('visibilitychange', handleFocus);
-        window.removeEventListener('focus', handleFocus);
-      };
-    }, [user, activeTab, lastActionTime]);
+    return () => {
+      document.removeEventListener('visibilitychange', handleFocus);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, activeTab, lastActionTime]);
 
 
-  
-    if (initializing) {
-      return <PageLoader />;
-    }
-  
-    if (!user) {
-      return null;
-    }
+
+  if (initializing) {
+    return <PageLoader />;
+  }
+
+  if (!user) {
+    return null;
+  }
 
 
 
@@ -508,10 +505,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const handleSaveAddress = async () => {
     // Kiểm tra tất cả trường không được null hoặc rỗng
     if (!addressData.recipientName.trim() ||
-        !addressData.recipientPhone.trim() ||
-        !addressData.address.trim() ||
-        !addressData.district.trim() ||
-        !addressData.city.trim()) {
+      !addressData.recipientPhone.trim() ||
+      !addressData.address.trim() ||
+      !addressData.district.trim() ||
+      !addressData.city.trim()) {
       toast.error('Vui lòng nhập đầy đủ tất cả các trường');
       return;
     }
@@ -1170,8 +1167,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
             {userOrders.length > 0 ? (
               userOrders.map((order) => (
-                <Card 
-                  key={order.id} 
+                <Card
+                  key={order.id}
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => {
                     setSelectedOrder(order);
@@ -1194,91 +1191,91 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="space-y-4">
-                        {order.items.map((item: OrderItem) => (
+                      {order.items.map((item: OrderItem) => (
                         <div key={item.id} className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-accent transition-colors">
                           <div className="w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
-                          <ImageWithFallback
-                            src={getOrderItemImageUrl(item)}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
+                            <ImageWithFallback
+                              src={getOrderItemImageUrl(item)}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate mb-1 text-foreground">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {item.author}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <p className="text-sm text-muted-foreground">
-                            Số lượng: <span className="font-medium text-foreground">{item.quantity}</span>
+                            <h4 className="font-semibold truncate mb-1 text-foreground">{item.title}</h4>
+                            <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {item.author}
                             </p>
-                            <Separator orientation="vertical" className="h-4" />
-                            <p className="text-sm font-semibold text-primary">
-                            {formatPrice(item.price)}
+                            <div className="flex items-center gap-4 mt-2">
+                              <p className="text-sm text-muted-foreground">
+                                Số lượng: <span className="font-medium text-foreground">{item.quantity}</span>
+                              </p>
+                              <Separator orientation="vertical" className="h-4" />
+                              <p className="text-sm font-semibold text-primary">
+                                {formatPrice(item.price)}
 
-                            </p>
-                          </div>
-
-                          {/* Review button - only show if order is completed */}
-                          {order.status === 'DELIVERED' && (
-                            <div className="mt-3">
-                            {hasUserReviewedItem(item, order.id) ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const userReview = findUserReviewForItem(item, order.id);
-                                  if (userReview) {
-                                    setSelectedReviewItem({ item, orderId: order.id });
-                                    setEditingReviewId(userReview.rating_id);
-                                  } else {
-                                    loadReviewsForBook(String(item.bookId))
-                                      .then((loadedReviews) => {
-                                        const loadedReview = loadedReviews.find(
-                                          r =>
-                                            String(r.book_id) === String(item.bookId) &&
-                                            String(r.user_id) === String(user?.id ?? '') &&
-                                            (!r.order_id || String(r.order_id) === String(order.id))
-                                        );
-                                        if (loadedReview) {
-                                          setSelectedReviewItem({ item, orderId: order.id });
-                                          setEditingReviewId(loadedReview.rating_id);
-                                        } else {
-                                          toast.error('Không tìm thấy đánh giá để chỉnh sửa');
-                                        }
-                                      })
-                                      .catch(() => {
-                                        toast.error('Không thể tải đánh giá để chỉnh sửa');
-                                      });
-                                  }
-                                }}
-                                className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 border-green-300 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800 hover:text-green-700 dark:hover:text-green-200 gap-2 transition-colors"
-                              >
-                                <Star className="h-4 w-4 fill-green-600 dark:fill-green-400" />
-                                Đã đánh giá (sửa)
-                              </Button>
-                            ) : (
-                              <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingReviewId(null);
-                                setSelectedReviewItem({ item, orderId: order.id });
-                              }}
-                              className="gap-2"
-                              >
-                              <Star className="h-4 w-4" />
-                              Viết đánh giá
-                              </Button>
-                            )}
+                              </p>
                             </div>
-                          )}
+
+                            {/* Review button - only show if order is completed */}
+                            {order.status === 'DELIVERED' && (
+                              <div className="mt-3">
+                                {hasUserReviewedItem(item, order.id) ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const userReview = findUserReviewForItem(item, order.id);
+                                      if (userReview) {
+                                        setSelectedReviewItem({ item, orderId: order.id });
+                                        setEditingReviewId(userReview.rating_id);
+                                      } else {
+                                        loadReviewsForBook(String(item.bookId))
+                                          .then((loadedReviews) => {
+                                            const loadedReview = loadedReviews.find(
+                                              r =>
+                                                String(r.book_id) === String(item.bookId) &&
+                                                String(r.user_id) === String(user?.id ?? '') &&
+                                                (!r.order_id || String(r.order_id) === String(order.id))
+                                            );
+                                            if (loadedReview) {
+                                              setSelectedReviewItem({ item, orderId: order.id });
+                                              setEditingReviewId(loadedReview.rating_id);
+                                            } else {
+                                              toast.error('Không tìm thấy đánh giá để chỉnh sửa');
+                                            }
+                                          })
+                                          .catch(() => {
+                                            toast.error('Không thể tải đánh giá để chỉnh sửa');
+                                          });
+                                      }
+                                    }}
+                                    className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 border-green-300 dark:border-green-700 hover:bg-green-200 dark:hover:bg-green-800 hover:text-green-700 dark:hover:text-green-200 gap-2 transition-colors"
+                                  >
+                                    <Star className="h-4 w-4 fill-green-600 dark:fill-green-400" />
+                                    Đã đánh giá (sửa)
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingReviewId(null);
+                                      setSelectedReviewItem({ item, orderId: order.id });
+                                    }}
+                                    className="gap-2"
+                                  >
+                                    <Star className="h-4 w-4" />
+                                    Viết đánh giá
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
-                        ))}
+                      ))}
 
 
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4 border-t bg-muted/50 -mx-6 -mb-6 px-6 py-4 mt-6">
@@ -1297,63 +1294,45 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap justify-end gap-2 pt-4">
-                          {/* Confirm delivery and Return - for SHIPPED */}
-                          {order.status === 'SHIPPED' && (
-                            <>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setConfirmDialog({
-                                    open: true,
-                                    title: 'Xác nhận đã nhận hàng',
-                                    description: 'Bạn xác nhận đã nhận được hàng? Đơn hàng sẽ được chuyển sang trạng thái hoàn thành.',
-                                    confirmText: 'Đã nhận hàng',
-                                    onConfirm: async () => {
-                                      setIsProcessingAction(true);
-                                      try {
-                                        const response = await OrderService.confirmDelivery(order.id);
-                                        if (response?.result?.status === 'DELIVERED') {
-                                          updateOrderStatusLocal(order.id, 'DELIVERED');
-                                          setLastActionTime(Date.now()); // Pause polling for 15 seconds
-                                          toast.success('Xác nhận đã nhận hàng thành công');
-                                        } else {
-                                          throw new Error('Unexpected response from server');
-                                        }
-                                      } catch (error: any) {
-                                        console.error('confirmDelivery error:', error);
-                                        // Rollback local state if API fails - refetch from server
-                                        refreshOrders();
-                                        toast.error(error?.response?.data?.message || 'Xác nhận thất bại');
-                                      } finally {
-                                        setConfirmDialog({ ...confirmDialog, open: false });
-                                        setIsProcessingAction(false);
+                        {/* Confirm delivery and Return - for SHIPPED */}
+                        {order.status === 'SHIPPED' && (
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDialog({
+                                  open: true,
+                                  title: 'Xác nhận đã nhận hàng',
+                                  description: 'Bạn xác nhận đã nhận được hàng? Đơn hàng sẽ được chuyển sang trạng thái hoàn thành.',
+                                  confirmText: 'Đã nhận hàng',
+                                  onConfirm: async () => {
+                                    setIsProcessingAction(true);
+                                    try {
+                                      const response = await OrderService.confirmDelivery(order.id);
+                                      if (response?.result?.status === 'DELIVERED') {
+                                        updateOrderStatusLocal(order.id, 'DELIVERED');
+                                        setLastActionTime(Date.now()); // Pause polling for 15 seconds
+                                        toast.success('Xác nhận đã nhận hàng thành công');
+                                      } else {
+                                        throw new Error('Unexpected response from server');
                                       }
+                                    } catch (error: any) {
+                                      console.error('confirmDelivery error:', error);
+                                      // Rollback local state if API fails - refetch from server
+                                      refreshOrders();
+                                      toast.error(error?.response?.data?.message || 'Xác nhận thất bại');
+                                    } finally {
+                                      setConfirmDialog({ ...confirmDialog, open: false });
+                                      setIsProcessingAction(false);
                                     }
-                                  });
-                                }}
-                              >
-                                Đã nhận hàng
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReturnReasonDialog({ open: true, orderId: order.id });
-                                  setReturnReason('');
-                                }}
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                                Trả hàng
-                              </Button>
-                            </>
-                          )}
-
-                          {/* Request return - for DELIVERED */}
-                          {order.status === 'DELIVERED' && (
+                                  }
+                                });
+                              }}
+                            >
+                              Đã nhận hàng
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
@@ -1367,17 +1346,35 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                               <RotateCcw className="h-4 w-4" />
                               Trả hàng
                             </Button>
-                          )}
+                          </>
+                        )}
 
-                          {/* Return requested status */}
-                          {order.status === 'RETURN_REQUESTED' && (
-                            <div className="text-sm text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950 px-3 py-2 rounded border border-orange-200 dark:border-orange-800">
-                              Yêu cầu trả hàng đang được xử lý
-                            </div>
-                          )}
+                        {/* Request return - for DELIVERED */}
+                        {order.status === 'DELIVERED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReturnReasonDialog({ open: true, orderId: order.id });
+                              setReturnReason('');
+                            }}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Trả hàng
+                          </Button>
+                        )}
 
-                          {/* Cancel order button */}
-                          {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
+                        {/* Return requested status */}
+                        {order.status === 'RETURN_REQUESTED' && (
+                          <div className="text-sm text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950 px-3 py-2 rounded border border-orange-200 dark:border-orange-800">
+                            Yêu cầu trả hàng đang được xử lý
+                          </div>
+                        )}
+
+                        {/* Cancel order button */}
+                        {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -1415,7 +1412,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                           >
                             Hủy đơn hàng
                           </Button>
-                          )}
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -1785,13 +1782,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
+            <AlertDialogCancel
               onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
               disabled={isProcessingAction}
             >
               Hủy
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 confirmDialog.onConfirm();
@@ -1836,7 +1833,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             }} disabled={isProcessingAction}>
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={async () => {
                 if (!returnReason.trim()) {
                   toast.error('Vui lòng nhập lý do trả hàng');
