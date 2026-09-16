@@ -1,5 +1,13 @@
 # 📚 BookStorage
 
+[![Python](https://img.shields.io/badge/python-3.x%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Java](https://img.shields.io/badge/java-17%2B-ED8B00?logo=openjdk&logoColor=white)](https://www.java.com/)
+[![TypeScript](https://img.shields.io/badge/typescript-5.x%2B-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Spring Boot](https://img.shields.io/badge/spring--boot-3.x%2B-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/react-18.x%2B-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/fastapi-0.1xx%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+
+
 A distributed microservices platform for an online bookstore, combining a full-featured e-commerce experience with AI-powered features such as personalized recommendations, semantic search, OCR, and a RAG-based chatbot.
 
 Built by a team of 2 as a full-stack learning project, focused on real-world microservices architecture, distributed deployment, and integrating AI services into a production-style system.
@@ -144,3 +152,7 @@ MINIO_SECRET_KEY=
 - **TrongNghia** — Personalized recommendation system (Python)
 
 ---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
