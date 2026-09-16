@@ -152,7 +152,3 @@ MINIO_SECRET_KEY=
 - **TrongNghia** — Personalized recommendation system (Python)
 
 ---
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
