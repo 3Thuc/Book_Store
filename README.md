@@ -89,9 +89,11 @@ BookStorage is built as a set of independently deployable microservices rather t
 ## 🚀 Getting Started
 
 ```bash
+mkdir Book_Store
+cd Book_Store
 # Clone the repository
 git clone https://github.com/3Thuc/Book_Store.git
-cd bookstorage
+cd Book_Store
 
 # Start all services with Docker Compose
 docker compose up -d
