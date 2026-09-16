@@ -29,24 +29,24 @@ Built by a team of 2 as a full-stack learning project, focused on real-world mic
 BookStorage is built as a set of independently deployable microservices rather than a single monolith:
 
 ```
-┌─────────────────────┐
+┌──────────────────────┐
 │  Frontend (React)    │  ReactJS + Vite + Tailwind — deployed on Vercel
 └──────────┬───────────┘
            │
-┌──────────▼───────────┐      ┌──────────────────────────┐
-│  Core Backend         │      │  AI Services (Python)     │
-│  Java Spring Boot     │◄────►│  Recommendation           │
-│  - Users               │      │  Semantic Search           │
-│  - Book Catalog        │      │  OCR                       │
-│  - Cart & Orders       │      │  RAG Chatbot               │
-└──────────┬───────────┘      └────────────┬──────────────┘
+┌──────────▼─────────────┐      ┌──────────────────────────┐
+│  Core Backend          │      │  AI Services (Python)    │
+│  Java Spring Boot      │◄────►│  Recommendation          │
+│  - Users               │      │  Semantic Search         │
+│  - Book Catalog        │      │  OCR                     │
+│  - Cart & Orders       │      │  RAG Chatbot             │
+└──────────┬─────────────┘      └───────────┬──────────────┘
            │                                │
            ▼                                ▼
 ┌───────────────────────────────────────────────────────┐
-│                     Data Tier                          │
-│  MySQL (relational data) · Redis (shared cache)        │
-│  OpenSearch (vector / semantic search)                  │
-│  MinIO (image storage for OCR)                          │
+│                     Data Tier                         │
+│  MySQL (relational data) · Redis (shared cache)       │
+│  OpenSearch (vector / semantic search)                │
+│  MinIO (image storage for OCR)                        │
 └───────────────────────────────────────────────────────┘
 ```
 
